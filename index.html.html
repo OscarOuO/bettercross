@@ -1,0 +1,3614 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>四面 F2L & 錯槽 3D 視覺化教學 (白底綠前)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #090d16;
+      color: #e2e8f0;
+      overflow-x: hidden;
+    }
+    .font-mono-alg {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #090d16;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 3px;
+    }
+    .case-card {
+      background-color: #111827;
+      border: 1px solid #1e293b;
+      transition: border-color 0.15s ease, background-color 0.15s ease;
+    }
+    .case-card:hover {
+      border-color: #334155;
+    }
+    .case-card.active-card {
+      border-color: #38bdf8;
+      background-color: #131c31;
+    }
+    .alg-btn {
+      transition: all 0.12s ease;
+    }
+    .alg-btn:hover {
+      background-color: #1e293b;
+      border-color: #475569;
+    }
+    .alg-btn.selected-alg {
+      background-color: rgba(16, 185, 129, 0.15);
+      border-color: #10b981;
+      color: #34d399;
+    }
+    .move-pill {
+      transition: all 0.12s ease;
+    }
+    .move-pill.active-move {
+      background-color: #38bdf8;
+      color: #090d16;
+      border-color: #38bdf8;
+      font-weight: 700;
+    }
+    .move-pill.done-move {
+      background-color: #0f172a;
+      color: #64748b;
+      border-color: #1e293b;
+    }
+    .move-pill.phase-setup {
+      border-color: rgba(56, 189, 248, 0.55);
+      color: #7dd3fc;
+    }
+    .move-pill.phase-insert {
+      border-color: rgba(16, 185, 129, 0.55);
+      color: #6ee7b7;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Clean Single-Bar Top Navigation (Unified Library) -->
+  <header class="sticky top-0 z-30 bg-slate-950/90 backdrop-blur border-b border-slate-800/80 px-4 py-2.5">
+    <div class="max-w-[1440px] mx-auto flex flex-wrap items-center justify-between gap-2.5">
+      <!-- Brand & Unified Summary -->
+      <div class="flex flex-wrap items-center gap-2.5">
+        <div class="flex items-center gap-2 pr-2 border-r border-slate-800">
+          <span class="px-2 py-0.5 rounded bg-sky-500 text-slate-950 font-extrabold text-xs">F2L</span>
+          <span class="font-bold text-sm text-white">四面 & 錯槽全集 3D 教學</span>
+          <span class="text-[11px] text-slate-400 hidden sm:inline">白底綠前 • 單一整合總庫 (95組)</span>
+        </div>
+        <div class="hidden xl:flex items-center gap-2 text-[11px] text-slate-400">
+          <span><code class="text-sky-300 font-mono-alg">(Setup)</code> 配對</span>
+          <span>•</span>
+          <span><code class="text-emerald-300 font-mono-alg">[Insert]</code> 入槽</span>
+          <span>•</span>
+          <span class="text-amber-300">含空槽 Open / EO / 錯槽借位</span>
+        </div>
+      </div>
+
+      <!-- Right Controls: Mask & Thumbnail Cam -->
+      <div class="flex flex-wrap items-center gap-2 text-xs">
+        <div class="flex items-center bg-slate-900 border border-slate-800 rounded-lg p-0.5">
+          <button data-mask="f2l" class="mask-mode-btn px-2 py-1 rounded-md font-medium bg-sky-500/20 text-sky-300 transition">
+            頂層灰遮罩
+          </button>
+          <button data-mask="slot" class="mask-mode-btn px-2 py-1 rounded-md font-medium text-slate-400 hover:text-slate-200 transition">
+            聚焦單組
+          </button>
+          <button data-mask="full" class="mask-mode-btn px-2 py-1 rounded-md font-medium text-slate-400 hover:text-slate-200 transition">
+            完整六色
+          </button>
+        </div>
+
+        <div class="hidden md:flex items-center bg-slate-900 border border-slate-800 rounded-lg p-0.5">
+          <button data-thumbcam="ufr" class="thumb-cam-btn px-2 py-1 rounded-md font-medium bg-slate-800 text-slate-200 transition" title="縮圖固定顯示綠前與橘右">
+            縮圖: 固定前右
+          </button>
+          <button data-thumbcam="slot" class="thumb-cam-btn px-2 py-1 rounded-md font-medium text-slate-400 hover:text-slate-200 transition" title="自動旋轉縮圖對準目標槽">
+            縮圖: 對準槽位
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Layout (Natural Full-Page Scroll, Compact Left Sidebar) -->
+  <div class="max-w-[1440px] w-full mx-auto flex-1 flex flex-col lg:flex-row items-start gap-5 p-4">
+
+    <!-- LEFT PANEL: Compact Sticky 3D Player (310px wide on Desktop) -->
+    <aside class="w-full lg:w-[310px] shrink-0 lg:sticky lg:top-14">
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-3.5 flex flex-col gap-3 shadow-lg">
+
+        <!-- Compact Case Header -->
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
+              <span id="player-slot-badge" class="px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 font-semibold">
+                FR 綠橘槽
+              </span>
+              <span id="player-wrong-slot-badge" class="hidden px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 font-semibold">
+                錯放: BR
+              </span>
+              <span id="player-cat-badge" class="text-slate-400 truncate">Basic</span>
+            </div>
+            <h2 id="player-case-title" class="text-sm font-bold text-white mt-1 truncate">
+              Case #1 • 基礎入槽
+            </h2>
+          </div>
+          <span id="step-counter-badge" class="shrink-0 text-[11px] font-mono-alg text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
+            0 / 4
+          </span>
+        </div>
+
+        <!-- Compact 3D Canvas (210px height, wheel scrolling passes through to page!) -->
+        <div class="relative w-full h-[210px] bg-slate-950 rounded-lg border border-slate-800/90 overflow-hidden select-none">
+          <div id="three-canvas-container" class="w-full h-full cursor-grab active:cursor-grabbing"></div>
+
+          <!-- Minimal Orientation Legend -->
+          <div class="pointer-events-none absolute top-2 left-2 flex items-center gap-1.5 bg-slate-900/80 px-2 py-0.5 rounded text-[10px] text-slate-300 border border-slate-800">
+            <span class="w-2 h-2 rounded-full bg-green-500"></span>F綠
+            <span class="w-2 h-2 rounded-full bg-orange-500 ml-0.5"></span>R橘
+            <span class="w-2 h-2 rounded-full bg-white ml-0.5"></span>D白
+          </div>
+
+          <!-- Camera Angle Quick Switch -->
+          <div class="absolute bottom-1.5 inset-x-1.5 flex items-center justify-between gap-1">
+            <div class="flex items-center gap-1">
+              <button data-cam="FR" class="cam-preset-btn px-1.5 py-0.5 rounded bg-slate-900/90 hover:bg-slate-800 text-[10px] font-medium text-slate-300 border border-slate-700/80 transition">FR</button>
+              <button data-cam="BR" class="cam-preset-btn px-1.5 py-0.5 rounded bg-slate-900/90 hover:bg-slate-800 text-[10px] font-medium text-slate-300 border border-slate-700/80 transition">BR</button>
+              <button data-cam="FL" class="cam-preset-btn px-1.5 py-0.5 rounded bg-slate-900/90 hover:bg-slate-800 text-[10px] font-medium text-slate-300 border border-slate-700/80 transition">FL</button>
+              <button data-cam="BL" class="cam-preset-btn px-1.5 py-0.5 rounded bg-slate-900/90 hover:bg-slate-800 text-[10px] font-medium text-slate-300 border border-slate-700/80 transition">BL</button>
+            </div>
+            <button data-cam="BOTTOM" class="cam-preset-btn px-1.5 py-0.5 rounded bg-slate-900/90 hover:bg-slate-800 text-[10px] font-medium text-slate-300 border border-slate-700/80 transition">看白底</button>
+          </div>
+        </div>
+
+        <!-- Active Algorithm & Step Pills -->
+        <div class="bg-slate-950 border border-slate-800/80 rounded-lg p-2.5 flex flex-col gap-2">
+          <div class="flex items-center justify-between gap-2 text-xs">
+            <span class="text-slate-400 text-[11px]">公式步驟:</span>
+            <span id="raw-alg-display" class="font-mono-alg text-emerald-400 font-semibold text-xs truncate">U (R U' R')</span>
+          </div>
+          <!-- Phase Legend (shown when (setup) or [insert] brackets exist) -->
+          <div id="phase-legend-bar" class="hidden flex items-center gap-2 text-[10px] text-slate-400 border-b border-slate-800/80 pb-1">
+            <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-sky-400/80"></span>(Setup 配對)</span>
+            <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-emerald-400/80"></span>[Insert 入槽]</span>
+          </div>
+          <div id="move-tokens-container" class="flex flex-wrap items-center gap-1 min-h-[26px]"></div>
+          <div id="alg-note-banner" class="hidden text-[11px] text-amber-300/90 bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded"></div>
+        </div>
+
+        <!-- Interactive Chinese Mnemonic Generator Box (口訣生成器) -->
+        <div class="bg-slate-950 border border-slate-800/90 rounded-lg p-2.5 flex flex-col gap-1.5">
+          <div class="flex items-center justify-between text-[11px]">
+            <span class="font-semibold text-amber-300 flex items-center gap-1">
+              <span>💡 直覺中文口訣</span>
+            </span>
+            <span class="text-[10px] text-slate-500 font-mono-alg">F壓/回 • U左/右 • R,L'上 • R',L下</span>
+          </div>
+          <div id="mnemonic-phrase-display" class="text-xs font-bold tracking-wide text-slate-100 bg-slate-900/90 border border-slate-800 rounded px-2.5 py-1.5 leading-relaxed">
+            左 (上 右 下)
+          </div>
+          <div id="mnemonic-steps-detail" class="flex flex-wrap items-center gap-1 pt-0.5"></div>
+        </div>
+
+        <!-- Compact Playback Controls -->
+        <div class="grid grid-cols-5 gap-1.5 text-xs">
+          <button id="btn-to-start" title="重置回未解狀態" class="py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium flex items-center justify-center border border-slate-700/80 transition">
+            重置
+          </button>
+          <button id="btn-step-prev" title="上一步" class="py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium flex items-center justify-center border border-slate-700/80 transition">
+            ◀
+          </button>
+          <button id="btn-play-pause" class="py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold flex items-center justify-center gap-1 transition">
+            <span id="label-play-pause">播放</span>
+          </button>
+          <button id="btn-step-next" title="下一步" class="py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium flex items-center justify-center border border-slate-700/80 transition">
+            ▶
+          </button>
+          <button id="btn-to-end" title="跳至完成" class="py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium flex items-center justify-center border border-slate-700/80 transition">
+            完成
+          </button>
+        </div>
+
+        <!-- Speed & Loop -->
+        <div class="flex items-center justify-between gap-3 text-[11px] text-slate-400 pt-0.5">
+          <div class="flex items-center gap-1.5 flex-1">
+            <span>速度</span>
+            <input id="speed-slider" type="range" min="0.4" max="2.8" step="0.2" value="1.2" class="w-full accent-sky-400 cursor-pointer h-1">
+            <span id="speed-label" class="font-mono-alg text-slate-300 w-7 text-right">1.2x</span>
+          </div>
+          <label class="flex items-center gap-1 cursor-pointer select-none hover:text-slate-200">
+            <input id="loop-checkbox" type="checkbox" class="rounded accent-emerald-500 w-3 h-3">
+            <span>循環</span>
+          </label>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- RIGHT PANEL: Unified Formula Library (Standard #1-41 + Wrong Slot #42-95) -->
+    <main class="flex-1 min-w-0 w-full flex flex-col gap-4">
+
+      <!-- Unified Filter & Slot Bar -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 flex flex-col gap-2.5">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <!-- Slot Selector + 4-Slot Compare Toggle -->
+          <div class="flex flex-wrap items-center gap-1">
+            <span class="text-[11px] text-slate-400 mr-1">目標槽位:</span>
+            <button data-slot="FR" class="slot-tab-btn px-2.5 py-1 rounded-lg text-xs font-semibold bg-sky-500 text-slate-950 transition">
+              FR 綠橘
+            </button>
+            <button data-slot="BR" class="slot-tab-btn px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-300 hover:bg-slate-800 transition">
+              BR 橘藍
+            </button>
+            <button data-slot="FL" class="slot-tab-btn px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-300 hover:bg-slate-800 transition">
+              FL 綠紅
+            </button>
+            <button data-slot="BL" class="slot-tab-btn px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-300 hover:bg-slate-800 transition">
+              BL 藍紅
+            </button>
+            <span class="mx-1 text-slate-700">|</span>
+            <button id="view-mode-toggle" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:text-white transition">
+              切換：單槽列表
+            </button>
+          </div>
+
+          <!-- Search Input -->
+          <div class="relative w-full sm:w-60">
+            <input id="search-input" type="text" placeholder="搜尋編號 (#1~#95)、標籤或公式..." class="w-full bg-slate-950 border border-slate-800 focus:border-slate-600 rounded-lg pl-2.5 pr-2.5 py-1 text-xs text-slate-200 placeholder-slate-500 outline-none">
+          </div>
+        </div>
+
+        <!-- Unified Category Filter Pills (11 Categories: 8 Standard + 3 Wrong-Slot) -->
+        <div id="category-filter-bar" class="flex flex-wrap items-center gap-1 pt-2 border-t border-slate-800/70"></div>
+      </div>
+
+      <!-- Collapsible Custom Wrong-Slot Builder -->
+      <details class="bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 group">
+        <summary class="flex items-center justify-between cursor-pointer list-none text-xs font-semibold text-slate-300 hover:text-white">
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold text-[11px]">自訂錯槽產生器</span>
+            <span class="text-slate-400 font-normal">自由指定「哪一組目標 Pair」卡在「哪個錯槽」即時模擬</span>
+          </div>
+          <span class="text-slate-500 group-open:rotate-180 transition-transform">▼</span>
+        </summary>
+        <div class="pt-3 mt-2 border-t border-slate-800 grid grid-cols-1 sm:grid-cols-4 gap-2.5 items-end text-xs">
+          <div class="flex flex-col gap-1">
+            <label class="text-slate-400">1. 目標 Pair (正確槽)</label>
+            <select id="ws-gen-target" class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 font-semibold text-emerald-300 outline-none">
+              <option value="FR" selected>綠橘 Pair (FR)</option>
+              <option value="BR">橘藍 Pair (BR)</option>
+              <option value="FL">綠紅 Pair (FL)</option>
+              <option value="BL">藍紅 Pair (BL)</option>
+            </select>
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-slate-400">2. 目前卡在哪個錯槽</label>
+            <select id="ws-gen-wrong" class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 font-semibold text-amber-300 outline-none">
+              <option value="BR" selected>BR 右後槽 (橘藍)</option>
+              <option value="FL">FL 左前槽 (綠紅)</option>
+              <option value="BL">BL 左後槽 (藍紅)</option>
+              <option value="FR">FR 右前槽 (綠橘)</option>
+            </select>
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-slate-400">3. 錯槽內卡住型態</label>
+            <select id="ws-gen-type" class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 font-semibold text-sky-300 outline-none">
+              <option value="PAIR_SOLVED" selected>整組標配 Pair 連好</option>
+              <option value="PAIR_FLIPPED">整組反相 Pair 連塊</option>
+              <option value="EDGE_ONLY">僅「邊塊」卡在錯槽</option>
+              <option value="CORNER_ONLY">僅「角塊」卡在錯槽</option>
+            </select>
+          </div>
+          <button id="btn-generate-wrong-slot" class="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition h-[34px]">
+            生成並播放 ▶
+          </button>
+        </div>
+      </details>
+
+      <!-- Unified Cases Container -->
+      <div id="cases-list-container" class="flex flex-col gap-6 pb-10"></div>
+
+    </main>
+  </div>
+
+  <script>
+    /*************************************************************************
+     * 1. UNIFIED CATEGORIES (STANDARD #1-41 + WRONG SLOT #42-95)
+     *************************************************************************/
+    const F2L_CATEGORIES = [
+      { id: "ALL", name: "全部總覽 (95組)", short: "全部 (95)" },
+      { id: "BASIC", name: "1. Basic Inserts 基礎入槽 (#1-#4)", short: "1. 基礎入槽" },
+      { id: "CASE1", name: "2. F2L Case 1 頂層分離型一 (#5-#10)", short: "2. 分離型一" },
+      { id: "CASE2", name: "3. F2L Case 2 頂層分離型二 (#11-#14)", short: "3. 分離型二" },
+      { id: "CASE3", name: "4. F2L Case 3 白朝上分離型 (#15-#18)", short: "4. 白朝上分離" },
+      { id: "INCORRECT", name: "5. Connected Pairs 頂層錯誤相連 (#19-#24)", short: "5. 頂層連塊" },
+      { id: "CORNER_IN", name: "6. Corner in Slot 角在目標槽 (#25-#30)", short: "6. 角在槽" },
+      { id: "EDGE_IN", name: "7. Edge in Slot 邊在目標槽 (#31-#36)", short: "7. 邊在槽" },
+      { id: "BOTH_IN", name: "8. Both in Slot 邊角皆在目標槽 (#37-#41)", short: "8. 皆在槽" },
+      { id: "TRAPPED_CORNER", name: "9. Corner in Wrong Slot 角塊卡在錯槽 (#42-#59)", short: "9. 錯槽:角卡住", isWrongSlot: true },
+      { id: "TRAPPED_EDGE", name: "10. Edge in Wrong Slot 邊塊卡在錯槽 (#60-#77)", short: "10. 錯槽:邊卡住", isWrongSlot: true },
+      { id: "BOTH_TRAPPED", name: "11. Both Trapped / Swap 雙塊卡錯槽與互換 (#78-#95)", short: "11. 錯槽:整組/互換", isWrongSlot: true }
+    ];
+
+    const F2L_CASES = [
+      // 1. BASIC INSERTS (1-4)
+      {
+        id: 1, cat: "BASIC", title: "白朝前/後、遠離配對入槽",
+        FR: ["U (R U' R')"],
+        BR: ["y U (R U' R')", "y' U (L U' L')"],
+        FL: ["y' U (R U' R')", "y U (L U' L')"],
+        BL: ["U (L U' L')"]
+      },
+      {
+        id: 2, cat: "BASIC", title: "白朝右/左、遠離配對入槽",
+        FR: ["y' U' (R' U R)", "y U' (L' U L)", "U' (F' U F)"],
+        BR: ["U' (R' U R)"],
+        FL: ["U' (L' U L)"],
+        BL: ["y U' (R' U R)", "y' U' (L' U L)"]
+      },
+      {
+        id: 3, cat: "BASIC", title: "已成對、前/左側直接入槽",
+        FR: ["y' (R' U' R)", "y (L' U' L)", "(F' U' F)"],
+        BR: ["(R' U' R)"],
+        FL: ["(L' U' L)"],
+        BL: ["y (R' U' R)", "y' (L' U' L)"]
+      },
+      {
+        id: 4, cat: "BASIC", title: "已成對、右/後側直接入槽",
+        FR: ["(R U R')"],
+        BR: ["y (R U R')", "y' (L U L')"],
+        FL: ["y' (R U R')", "y (L U L')"],
+        BL: ["(L U L')"]
+      },
+
+      // 2. F2L CASE 1 (5-10)
+      {
+        id: 5, cat: "CASE1", title: "白朝前/後、同色在頂藏角配對",
+        FR: ["U' (R U' R' U) y' (R' U' R)", "y' U (R' U' R U') (R' U' R)"],
+        BR: ["U (R' U' R U') (R' U' R)"],
+        FL: ["U (L' U' L U') (L' U' L)"],
+        BL: ["y U (R' U' R U') (R' U' R)"]
+      },
+      {
+        id: 6, cat: "CASE1", title: "白朝右/左、同色在頂順手藏角",
+        FR: ["U' (R U R' U) (R U R')"],
+        BR: ["U (R' U R U') y (R U R')"],
+        FL: ["U (L' U L U') y' (R U R')"],
+        BL: ["U' (L U L' U) (L U L')"]
+      },
+      {
+        id: 7, cat: "CASE1", title: "白朝前/後、邊塊在遠端 U2 配對",
+        FR: ["U' (R U2' R' U) y' (R' U' R)", "U' (R U2' R') d (R' U' R)"],
+        BR: ["R U2' R2' U' (R2 U' R')"],
+        FL: ["L U2' L2' U' (L2 U' L')"],
+        BL: ["y R U2' R2' U' (R2 U' R')"]
+      },
+      {
+        id: 8, cat: "CASE1", title: "白朝右/左、邊塊在遠端 U2 配對",
+        FR: ["R' U2' R2 U R2' U R", "y' U (R' U2 R) U' y (R U R')", "(R U' R' U) (R U' R') U2 (R U' R')"],
+        BR: ["U (R' U2 R) U' y (R U R')"],
+        FL: ["U (L' U2 L) U' y' (R U R')"],
+        BL: ["L' U2 L2 U (L2' U L)"]
+      },
+      {
+        id: 9, cat: "CASE1", title: "白朝前/後、邊塊在旁側藏角",
+        FR: ["y' U (R' U R U') (R' U' R)"],
+        BR: ["U (R' U R U') (R' U' R)"],
+        FL: ["U (L' U L U') (L' U' L)"],
+        BL: ["y U (R' U R U') (R' U' R)"]
+      },
+      {
+        id: 10, cat: "CASE1", title: "白朝右/左、標準分離藏角",
+        FR: ["U' (R U' R' U) (R U R')"],
+        BR: ["y U' (R U' R' U) (R U R')"],
+        FL: ["y' U' (R U' R' U) (R U R')"],
+        BL: ["U' (L U' L' U) (L U L')"]
+      },
+
+      // 3. F2L CASE 2 (11-14)
+      {
+        id: 11, cat: "CASE2", title: "白朝右/左、異色對邊挑起 U2",
+        FR: ["(U' R U R') U2 (R U' R')"],
+        BR: ["y (U' R U R') U2 (R U' R')", "U r' (U R U' R') U' r"],
+        FL: ["y' (U' R U R') U2 (R U' R')"],
+        BL: ["(U' L U L') U2 (L U' L')"]
+      },
+      {
+        id: 12, cat: "CASE2", title: "白朝前/後、異色對邊挑起 U2",
+        FR: ["y' (U R' U' R) U2' (R' U R)", "d (R' U' R) U2' (R' U R)"],
+        BR: ["(U R' U' R) U2' (R' U R)"],
+        FL: ["(U L' U' L) U2' (L' U L)"],
+        BL: ["y (U R' U' R) U2' (R' U R)"]
+      },
+      {
+        id: 13, cat: "CASE2", title: "白朝右/左、同側異向分離",
+        FR: ["U' (R U2' R') U2 (R U' R')"],
+        BR: ["y U' (R U2' R') U2 (R U' R')"],
+        FL: ["y' U' (R U2' R') U2 (R U' R')"],
+        BL: ["U' (L U2 L') U2 (L U' L')"]
+      },
+      {
+        id: 14, cat: "CASE2", title: "白朝前/後、同側異向分離",
+        FR: ["y' U (R' U2 R) U2' (R' U R)", "d (R' U2 R) U2' (R' U R)"],
+        BR: ["U (R' U2 R) U2' (R' U R)"],
+        FL: ["U (L' U2 L) U2' (L' U L)"],
+        BL: ["y U (R' U2' R) U2' (R' U R)"]
+      },
+
+      // 4. F2L CASE 3 (15-18)
+      {
+        id: 15, cat: "CASE3", title: "白朝上、邊塊在右/後側對齊壓角",
+        FR: ["U (R U2' R') U (R U' R')"],
+        BR: ["y U (R U2' R') U (R U' R')"],
+        FL: ["y' U (R U2' R') U (R U' R')"],
+        BL: ["U (L U2' L') U (L U' L')"]
+      },
+      {
+        id: 16, cat: "CASE3", title: "白朝上、邊塊在前/左側對齊壓角",
+        FR: ["y' U' (R' U2 R) U' (R' U R)"],
+        BR: ["U' (R' U2 R) U' (R' U R)"],
+        FL: ["U' (L' U2 L) U' (L' U L)"],
+        BL: ["y U' (R' U2 R) U' (R' U R)"]
+      },
+      {
+        id: 17, cat: "CASE3", title: "白朝上、邊塊在左/前遠端",
+        FR: ["U2 (R U R' U) (R U' R')", "(R U' R') U2 (R U R')"],
+        BR: ["y U2 (R U R' U) (R U' R')"],
+        FL: ["F R U2' R' F'"],
+        BL: ["y' F R U2' R' F'"]
+      },
+      {
+        id: 18, cat: "CASE3", title: "白朝上、邊塊在後/右遠端",
+        FR: ["y' U2 (R' U' R) U' (R' U R)", "F' L' U2 L F"],
+        BR: ["U2 (R' U' R) U' (R' U R)", "R' F' U2 F R"],
+        FL: ["U2 (L' U' L) U' (L' U L)"],
+        BL: ["y U2 (R' U' R) U' (R' U R)", "y R' F' U2 F R"]
+      },
+
+      // 5. INCORRECTLY CONNECTED PIECES (19-24)
+      {
+        id: 19, cat: "INCORRECT", title: "白朝上、前/後側並排相連",
+        FR: ["y' (R' U R) U2' y (R U R')", "(R U R') U2 (R U' R' U) (R U' R')"],
+        BR: ["(R' U R) U2' y (R U R')", "(R2' F R F' R) U2' (R' U R)"],
+        FL: ["(L' U L) U2' y' (R U R')"],
+        BL: ["y (R' U R) U2' y (R U R')"]
+      },
+      {
+        id: 20, cat: "INCORRECT", title: "白朝上、右/左側並排相連",
+        FR: ["(R U' R' U2) y' (R' U' R)", "U F (R U R' U') F' (U R U' R')"],
+        BR: ["y (R U' R' U2) y' (R' U' R)"],
+        FL: ["y' (R U' R' U2) y' (R' U' R)"],
+        BL: ["(L U' L' U2) y (R' U' R)"]
+      },
+      {
+        id: 21, cat: "INCORRECT", title: "白朝右/左、頂層同色相連",
+        FR: ["(R U2 R') U' (R U R')"],
+        BR: ["y (R U2 R') U' (R U R')"],
+        FL: ["y' (R U2 R') U' (R U R')"],
+        BL: ["(L U2 L') U' (L U L')"]
+      },
+      {
+        id: 22, cat: "INCORRECT", title: "白朝前/後、頂層同色相連",
+        FR: ["y' (R' U2 R) U (R' U' R)"],
+        BR: ["(R' U2' R) U (R' U' R)"],
+        FL: ["(L' U2 L) U (L' U' L)"],
+        BL: ["y (R' U2' R) U (R' U' R)"]
+      },
+      {
+        id: 23, cat: "INCORRECT", title: "白朝右/左、頂層異色相連",
+        FR: ["U (R U' R' U') (R U' R' U) (R U' R')", "(R U R' U2') (R U R' U') (R U R')"],
+        BR: ["(R' U' R U' y) (R U' R' U) (R U' R')", "(U R' U2' R) y (R U2' R' U) (R U' R')"],
+        FL: ["y' U (R U' R' U') (R U' R' U R U' R')", "y' (R U R' U2') (R U R' U') (R U R')"],
+        BL: ["U (L U' L' U') (L U' L' U) (L U' L')"]
+      },
+      {
+        id: 24, cat: "INCORRECT", title: "白朝前/後、頂層異色相連",
+        FR: ["F (U R U' R') F' (R U' R')", "y' U' (R' U R U) (R' U R U') (R' U R)"],
+        BR: ["U' (R' U R U) (R' U R U') (R' U R)", "y F (U R U' R') F' (R U' R')"],
+        FL: ["U' (L' U L U) (L' U L U') (L' U L)", "y' F (U R U' R') F' (R U' R')"],
+        BL: ["y U' (R' U R U) (R' U R U') (R' U R)"]
+      },
+
+      // 6. CORNER IN PLACE, EDGE IN U FACE (25-30)
+      {
+        id: 25, cat: "CORNER_IN", title: "角塊已復原、邊塊反色朝上",
+        FR: ["U' F' (R U R' U') R' F R", "R' F' R U (R U' R') F", "U' (R' F R F') (R U R')"],
+        BR: ["(U' R' U R) y U (R U' R')", "U R B L U' L' B' R'"],
+        FL: ["(U' L' U L) d (R U' R')", "U F (L' U' L U) L F' L'"],
+        BL: ["(U L U' L') y' U' (L' U L)", "y2 y' (U' L' U L) d (R U' R')"]
+      },
+      {
+        id: 26, cat: "CORNER_IN", title: "角塊已復原、邊塊同色朝上",
+        FR: ["U (R U' R') U' (F' U F)", "U (R U' R') (F R' F' R)"],
+        BR: ["y U (R U' R') U' (F' U F)", "U' (R' U R) U (B U' B')"],
+        FL: ["y' U (R U' R') U' (F' U F)", "U' (L' U L) U (F U' F')"],
+        BL: ["U (L U' L') d' (R' U R)", "y2 U (L U' L') d' (R' U R)"]
+      },
+      {
+        id: 27, cat: "CORNER_IN", title: "角塊白朝右/後、邊塊同色朝上",
+        FR: ["(R U' R' U) (R U' R')"],
+        BR: ["y (R U' R' U) (R U' R')", "R' U2 R' F R F' R"],
+        FL: ["y' (R U' R' U) (R U' R')"],
+        BL: ["(L U' L' U) (L U' L')"]
+      },
+      {
+        id: 28, cat: "CORNER_IN", title: "角塊白朝右/後、邊塊反色朝上",
+        FR: ["y' (R' U R U') (R' U R)", "(R U' R') U' (F' U F)"],
+        BR: ["(R' U R U') (R' U R)"],
+        FL: ["(L' U L U') (L' U L)"],
+        BL: ["y (R' U R U') (R' U R)"]
+      },
+      {
+        id: 29, cat: "CORNER_IN", title: "角塊白朝前/左、邊塊反色朝上",
+        FR: ["y' (R' U' R U) (R' U' R)", "(R' F R F') U (R U' R')"],
+        BR: ["(R' U' R U) (R' U' R)"],
+        FL: ["(L' U' L U) (L' U' L)"],
+        BL: ["y (R' U' R U) (R' U' R)"]
+      },
+      {
+        id: 30, cat: "CORNER_IN", title: "角塊白朝前/左、邊塊同色朝上",
+        FR: ["(R U R' U') (R U R')"],
+        BR: ["y (R U R' U') (R U R')"],
+        FL: ["y' (R U R' U') (R U R')", "(r U' r' F) (r U' r' F)"],
+        BL: ["(L U L' U') (L U L')"]
+      },
+
+      // 7. EDGE IN PLACE, CORNER IN U FACE (31-36)
+      {
+        id: 31, cat: "EDGE_IN", title: "邊塊反色、角塊白朝上",
+        FR: ["(R U' R' U) y' (R' U R)", "U' (R' F R F') (R U' R')"],
+        BR: ["(R' U R' F) (R F' R)", "(R' U R U') y (R U' R')"],
+        FL: ["(L' U L U') y' (R U' R')"],
+        BL: ["y (R' U R' F) (R F' R)"]
+      },
+      {
+        id: 32, cat: "EDGE_IN", title: "邊塊正色、角塊白朝上 (Sexy ×3)",
+        FR: ["(U R U' R') (U R U' R') (U R U' R')", "(R U2 R') U' (R U R')"],
+        BR: ["(U' R' U R) (U' R' U R) (U' R' U R)"],
+        FL: ["(U' L' U L) (U' L' U L) (U' L' U L)"],
+        BL: ["(U L U' L') (U L U' L') (U L U' L')"]
+      },
+      {
+        id: 33, cat: "EDGE_IN", title: "邊塊正色、角塊白朝右/後",
+        FR: ["(U' R U' R') U2 (R U' R')"],
+        BR: ["(U' R' U' R) U2 (R' U' R)"],
+        FL: ["(U' L' U' L) U2 (L' U' L)"],
+        BL: ["(U' L U' L') U2 (L U' L')"]
+      },
+      {
+        id: 34, cat: "EDGE_IN", title: "邊塊正色、角塊白朝前/左",
+        FR: ["U (R U R') U2 (R U R')"],
+        BR: ["U (R' U R) U2' (R' U R)"],
+        FL: ["U (L' U L) U2' (L' U L)"],
+        BL: ["U (L U L') U2 (L U L')"]
+      },
+      {
+        id: 35, cat: "EDGE_IN", title: "邊塊反色、角塊白朝右/後",
+        FR: ["(U' R U R') d (R' U' R)", "U' (R U R') U (F' U' F)"],
+        BR: ["y (U' R U R') d (R' U' R)"],
+        FL: ["y' (U' R U R') d (R' U' R)"],
+        BL: ["(U2' L U L') d' (R' U R)"]
+      },
+      {
+        id: 36, cat: "EDGE_IN", title: "邊塊反色、角塊白朝前/左",
+        FR: ["U (F' U' F) U' (R U R')"],
+        BR: ["U (R' U' R) y U' (R U R')"],
+        FL: ["U (L' U' L) y' U' (R U R')"],
+        BL: ["y U2' (R' U R) d (L U L')"]
+      },
+
+      // 8. EDGE AND CORNER IN PLACE (37-41)
+      {
+        id: 37, cat: "BOTH_IN", title: "角塊正確、邊塊原地翻轉",
+        FR: ["(R U' R') d (R' U2 R) U2' (R' U R)", "(R U2 R') U (R U2 R') U (F' U' F)"],
+        BR: ["(R' U R) d' (R U2' R') U2 (R U' R')"],
+        FL: ["(L' U L U') y' (R U2' R' U2 R U' R')"],
+        BL: ["y (R' U R) d' (R U2' R' U2 R U' R')"]
+      },
+      {
+        id: 38, cat: "BOTH_IN", title: "角塊白朝右/後、邊塊正色",
+        FR: ["(R U' R' U') R U R' U2 (R U' R')", "(R U R' U') R U2 R' U' (R U R')"],
+        BR: ["(R' U R U') (R' U2 R U') (R' U R)"],
+        FL: ["(L' U L U') (L' U2 L U') (L' U L)"],
+        BL: ["(L U L' U') (L U2 L' U') (L U L')"]
+      },
+      {
+        id: 39, cat: "BOTH_IN", title: "角塊白朝前/左、邊塊正色",
+        FR: ["(R U' R' U) (R U2' R') U (R U' R')", "(R U R') U2' (R U' R' U) (R U R')"],
+        BR: ["(R' U' R U) (R' U2' R) U (R' U' R)", "(R' U R U) (R' U' R U2') (R' U R)"],
+        FL: ["(L' U' L U) (L' U2' L) U (L' U' L)", "(L' U L U) (L' U' L U2') (L' U L)"],
+        BL: ["(L U' L' U) (L U2' L') U (L U' L')"]
+      },
+      {
+        id: 40, cat: "BOTH_IN", title: "角塊白朝右/後、邊塊反色",
+        FR: ["(F' U F) U2 (R U R' U) (R U' R')", "(R U' R') F (R U R' U') F' (R U' R')"],
+        BR: ["(R' U R) U2' y (R U R' U) (R U' R')"],
+        FL: ["(L' U L) F R U2' R' F'"],
+        BL: ["y (R' U R) U2' y (R U R' U R U' R')"]
+      },
+      {
+        id: 41, cat: "BOTH_IN", title: "角塊白朝前/左、邊塊反色",
+        FR: ["(R U R' U') (R U' R') U2 y' (R' U' R)"],
+        BR: ["(R' U R U) (R' U R U') y (R U R')"],
+        FL: ["(L' U L U) (L' U L U') y (L U L')"],
+        BL: ["(L U' L') d' (U' R' U' R U') (R' U R)"]
+      }
+    ];
+
+    /*************************************************************************
+     * 1B. SPEEDCUBEDB ADVANCED F2L COMPLETE 54-CASE DATASET (AF2L 1 - 54)
+     * Reference: https://speedcubedb.com/a/3x3/AdvancedF2L
+     * Divided into:
+     *   - Trapped Corner (AF2L 1 - 18)
+     *   - Trapped Edge (AF2L 19 - 36)
+     *   - Both Pieces Trapped (AF2L 37 - 54)
+     * Supports all 4 target slots (FR, FL, BR, BL) via symmetry/slot mapping!
+     *************************************************************************/
+    const AF2L_CATEGORIES = [
+      { id: "ALL", name: "全部 (54)", short: "全部 54 組" },
+      { id: "TRAPPED_CORNER", name: "1. Trapped Corner 角塊卡在錯槽 (AF2L 1-18)", short: "1. 角塊卡在錯槽 (1-18)" },
+      { id: "TRAPPED_EDGE", name: "2. Trapped Edge 邊塊卡在錯槽 (AF2L 19-36)", short: "2. 邊塊卡在錯槽 (19-36)" },
+      { id: "BOTH_TRAPPED", name: "3. Both Pieces Trapped 雙塊皆卡在底槽 (AF2L 37-54)", short: "3. 雙塊卡槽/互換 (37-54)" }
+    ];
+
+    const SPEEDCUBEDB_AF2L_CASES = [
+      // ==================== 1. TRAPPED CORNER (AF2L 1 - 18) ====================
+      {
+        id: 101, af2lNum: 1, cat: "TRAPPED_CORNER",
+        title: "角卡在 FL(白朝下) ＋ 邊在頂層同色",
+        wrongRel: "FL",
+        FR: ["(L' U' L) U (R U' R')", "U2 (L' U' L) (R U' R')"],
+        FL: ["(L' U L) U' (L' U L)", "y' (R U R') U' (L' U L)"],
+        BR: ["(R U R') U' (R' U R)", "U2 (R U R') (R' U R)"],
+        BL: ["(L' U' L) U' (L U' L')", "U2 (L' U' L) (L U' L')"]
+      },
+      {
+        id: 102, af2lNum: 2, cat: "TRAPPED_CORNER",
+        title: "角卡在 FL(白朝下) ＋ 邊在頂層反色",
+        wrongRel: "FL",
+        FR: ["(L' U L) F' U F", "U' (L' U L) y' U (R' U' R)", "(L' U' L) U2 F' U' F"],
+        FL: ["(R U' R') F U' F'"],
+        BR: ["(R U' R') U (R' U' R)"],
+        BL: ["(L' U L) U' (L U L')"]
+      },
+      {
+        id: 103, af2lNum: 3, cat: "TRAPPED_CORNER",
+        title: "角卡在 BR(白朝下) ＋ 邊在頂層同色",
+        wrongRel: "BR",
+        FR: ["(R' U R) U (R U' R')", "U (R' U' R) U' (R U R')"],
+        FL: ["(L U' L') U' (L' U L)"],
+        BR: ["(R U' R') U' (R' U R)"],
+        BL: ["(R' U R) U' (L U' L')"]
+      },
+      {
+        id: 104, af2lNum: 4, cat: "TRAPPED_CORNER",
+        title: "角卡在 BR(白朝下) ＋ 邊在頂層反色",
+        wrongRel: "BR",
+        FR: ["R' F R F'", "(R' U R) U' y' (R' U' R)", "(R' U' R) U' F' U' F"],
+        FL: ["L F' L' F", "(L U' L') U (F U F')"],
+        BR: ["(R U R') U (R' U' R)"],
+        BL: ["(R' U' R) U (L U L')"]
+      },
+      {
+        id: 105, af2lNum: 5, cat: "TRAPPED_CORNER",
+        title: "角卡在 BL(白朝下) ＋ 邊在頂層同色",
+        wrongRel: "BL",
+        FR: ["(L U L') U (R U' R')", "U2 (L U' L') U' (R U R')"],
+        FL: ["(L U L') U' (L' U L)"],
+        BR: ["(L U L') U' (R' U R)"],
+        BL: ["(R U' R') U' (L U' L')"]
+      },
+      {
+        id: 106, af2lNum: 6, cat: "TRAPPED_CORNER",
+        title: "角卡在 BL(白朝下) ＋ 邊在頂層反色",
+        wrongRel: "BL",
+        FR: ["(L U' L') U' F' U' F", "(L U L') y' U (R' U' R)"],
+        FL: ["(L U' L') U (L' U' L)"],
+        BR: ["(L U' L') U2 (R' U' R)"],
+        BL: ["(R U R') U (L U L')"]
+      },
+      {
+        id: 107, af2lNum: 7, cat: "TRAPPED_CORNER",
+        title: "角卡在 FL(白朝前) ＋ 邊在頂層配對位",
+        wrongRel: "FL",
+        FR: ["U' (L' U L) U (R U' R')", "S' L' S", "f' L' f"],
+        FL: ["U (R U' R') U' (L' U L)"],
+        BR: ["U (R U' R') U' (R' U R)"],
+        BL: ["U' (L' U L) U' (L U' L')"]
+      },
+      {
+        id: 108, af2lNum: 8, cat: "TRAPPED_CORNER",
+        title: "角卡在 FL(白朝前) ＋ 邊在頂層遠端",
+        wrongRel: "FL",
+        FR: ["(L' U L) U' (R U R')", "(L' U' L) U' (R U R')"],
+        FL: ["(R U' R') U (L' U' L)"],
+        BR: ["(R U' R') U (R' U' R)"],
+        BL: ["(L' U L) U (L U L')"]
+      },
+      {
+        id: 109, af2lNum: 9, cat: "TRAPPED_CORNER",
+        title: "角卡在 FL(白朝左) ＋ 邊在頂層同色",
+        wrongRel: "FL",
+        FR: ["(L' U' L) U (R U R')", "U (L' U' L) U' (R U' R')"],
+        FL: ["(R U R') U' (L' U' L)"],
+        BR: ["(R U R') U' (R' U' R)"],
+        BL: ["(L' U' L) U' (L U L')"]
+      },
+      {
+        id: 110, af2lNum: 10, cat: "TRAPPED_CORNER",
+        title: "角卡在 FL(白朝左) ＋ 邊在頂層反色",
+        wrongRel: "FL",
+        FR: ["U (L' U L) F' U' F", "(L' U2 L) U' y' (R' U R)"],
+        FL: ["U' (R U' R') F U F'"],
+        BR: ["U' (R U' R') U2 (R' U R)"],
+        BL: ["U (L' U L) U2 (L U' L')"]
+      },
+      {
+        id: 111, af2lNum: 11, cat: "TRAPPED_CORNER",
+        title: "角卡在 BR(白朝右) ＋ 邊在頂層配對位",
+        wrongRel: "BR",
+        FR: ["(R' U' R) U (R U' R')", "U' (R' U R) U (R U R')"],
+        FL: ["(L U L') U' (L' U L)"],
+        BR: ["(R U R') U' (R' U R)"],
+        BL: ["(R' U' R) U' (L U' L')"]
+      },
+      {
+        id: 112, af2lNum: 12, cat: "TRAPPED_CORNER",
+        title: "角卡在 BR(白朝右) ＋ 邊在頂層反色",
+        wrongRel: "BR",
+        FR: ["S R' S'", "U (R' U' R) U' F' U F", "(R' U2 R) y' U (R' U' R)"],
+        FL: ["S' L S", "U' (L U L') U F U' F'"],
+        BR: ["S' R S", "U' (R U R') U (R' U' R)"],
+        BL: ["S L' S'", "U (R' U' R) U (L U L')"]
+      },
+      {
+        id: 113, af2lNum: 13, cat: "TRAPPED_CORNER",
+        title: "角卡在 BR(白朝後) ＋ 邊在頂層同色",
+        wrongRel: "BR",
+        FR: ["(R' U R) U' (R U R')", "U (R' U R) U (R U' R')"],
+        FL: ["(L U' L') U (L' U' L)"],
+        BR: ["(R U' R') U (R' U' R)"],
+        BL: ["(R' U R) U (L U L')"]
+      },
+      {
+        id: 114, af2lNum: 14, cat: "TRAPPED_CORNER",
+        title: "角卡在 BR(白朝後) ＋ 邊在頂層反色",
+        wrongRel: "BR",
+        FR: ["(R' U' R) F' U' F", "U' (R' U' R) y' U' (R' U R)"],
+        FL: ["(L U L') F U F'"],
+        BR: ["(R U R') U' (R' U R)"],
+        BL: ["(R' U' R) U' (L U' L')"]
+      },
+      {
+        id: 115, af2lNum: 15, cat: "TRAPPED_CORNER",
+        title: "角卡在 BL(白朝左) ＋ 邊在頂層配對位",
+        wrongRel: "BL",
+        FR: ["(L U' L') U (R U' R')", "U' (L U L') U (R U R')"],
+        FL: ["(L U' L') U' (L' U L)"],
+        BR: ["(L U' L') U' (R' U R)"],
+        BL: ["(R U R') U' (L U' L')"]
+      },
+      {
+        id: 116, af2lNum: 16, cat: "TRAPPED_CORNER",
+        title: "角卡在 BL(白朝左) ＋ 邊在頂層反色",
+        wrongRel: "BL",
+        FR: ["U (L U' L') U' F' U F", "(L U2 L') y' U (R' U' R)"],
+        FL: ["U (L U' L') U (L' U' L)"],
+        BR: ["U (L U' L') U2 (R' U' R)"],
+        BL: ["U' (R U R') U2 (L U L')"]
+      },
+      {
+        id: 117, af2lNum: 17, cat: "TRAPPED_CORNER",
+        title: "角卡在 BL(白朝後) ＋ 邊在頂層同色",
+        wrongRel: "BL",
+        FR: ["(L U L') U' (R U R')", "U (L U L') U (R U' R')"],
+        FL: ["(L U L') U (L' U' L)"],
+        BR: ["(L U L') U (R' U' R)"],
+        BL: ["(R U' R') U (L U L')"]
+      },
+      {
+        id: 118, af2lNum: 18, cat: "TRAPPED_CORNER",
+        title: "角卡在 BL(白朝後) ＋ 邊在頂層反色",
+        wrongRel: "BL",
+        FR: ["(L U' L') F' U' F", "U' (L U' L') y' U' (R' U R)"],
+        FL: ["(L U' L') U' (L' U L)"],
+        BR: ["(L U' L') U' (R' U R)"],
+        BL: ["(R U R') U' (L U' L')"]
+      },
+
+      // ==================== 2. TRAPPED EDGE (AF2L 19 - 36) ====================
+      {
+        id: 119, af2lNum: 19, cat: "TRAPPED_EDGE",
+        title: "邊卡在 FL(正色) ＋ 角在頂(白朝右)",
+        wrongRel: "FL",
+        FR: ["L' U' L U' (R U R')", "U' (L' U L) U (R U' R')"],
+        FL: ["R U R' U (L' U' L)"],
+        BR: ["R U R' U (R' U' R)"],
+        BL: ["L' U' L U (L U L')"]
+      },
+      {
+        id: 120, af2lNum: 20, cat: "TRAPPED_EDGE",
+        title: "邊卡在 FL(正色) ＋ 角在頂(白朝前)",
+        wrongRel: "FL",
+        FR: ["U (L' U' L) U' (R U R')", "(L' U L) U2 (R U' R')"],
+        FL: ["U' (R U R') U (L' U' L)"],
+        BR: ["U' (R U R') U (R' U' R)"],
+        BL: ["U (L' U' L) U (L U L')"]
+      },
+      {
+        id: 121, af2lNum: 21, cat: "TRAPPED_EDGE",
+        title: "邊卡在 FL(正色) ＋ 角在頂(白朝上)",
+        wrongRel: "FL",
+        FR: ["(L' U2 L) U (R U' R')", "U (L' U L) U (R U' R')"],
+        FL: ["(R U2 R') U' (L' U L)"],
+        BR: ["(R U2 R') U' (R' U R)"],
+        BL: ["(L' U2 L) U' (L U' L')"]
+      },
+      {
+        id: 122, af2lNum: 22, cat: "TRAPPED_EDGE",
+        title: "邊卡在 FL(反色) ＋ 角在頂(白朝右)",
+        wrongRel: "FL",
+        FR: ["U' (L' U' L) F' U' F", "(L' U' L) y' U (R' U' R)"],
+        FL: ["U (R U R') F U F'"],
+        BR: ["U (R U R') U2 (R' U' R)"],
+        BL: ["U' (L' U' L) U (L U L')"]
+      },
+      {
+        id: 123, af2lNum: 23, cat: "TRAPPED_EDGE",
+        title: "邊卡在 FL(反色) ＋ 角在頂(白朝前)",
+        wrongRel: "FL",
+        FR: ["F (U R U' R') F' (L' U' L)", "(L' U L) U' F' U' F"],
+        FL: ["F' (U' L' U L) F (R U R')"],
+        BR: ["(R U' R') U (R' U' R)"],
+        BL: ["(L' U L) U' (L U L')"]
+      },
+      {
+        id: 124, af2lNum: 24, cat: "TRAPPED_EDGE",
+        title: "邊卡在 FL(反色) ＋ 角在頂(白朝上)",
+        wrongRel: "FL",
+        FR: ["(L' U2 L) F' U' F", "(L' U2 L) y' U' (R' U R)"],
+        FL: ["(R U2 R') F U F'"],
+        BR: ["(R U2 R') U' (R' U R)"],
+        BL: ["(L' U2 L) U' (L U' L')"]
+      },
+      {
+        id: 125, af2lNum: 25, cat: "TRAPPED_EDGE",
+        title: "邊卡在 BR(正色) ＋ 角在頂(白朝右)",
+        wrongRel: "BR",
+        FR: ["R' U' R2 U R'", "U' (R' U' R) U (R U' R')"],
+        FL: ["L U L2' U' L"],
+        BR: ["R U R2' U' R"],
+        BL: ["U' (R' U' R) U' (L U' L')"]
+      },
+      {
+        id: 126, af2lNum: 26, cat: "TRAPPED_EDGE",
+        title: "邊卡在 BR(正色) ＋ 角在頂(白朝前)",
+        wrongRel: "BR",
+        FR: ["U' (R' U R) U' (R U R')", "(R' U' R) U2 (R U' R')"],
+        FL: ["U (L U' L') U (L' U' L)"],
+        BR: ["U (R U' R') U (R' U' R)"],
+        BL: ["U' (R' U R) U (L U L')"]
+      },
+      {
+        id: 127, af2lNum: 27, cat: "TRAPPED_EDGE",
+        title: "邊卡在 BR(正色) ＋ 角在頂(白朝上)",
+        wrongRel: "BR",
+        FR: ["(R' U2 R) U (R U' R')", "R' U2 R2 U' R'"],
+        FL: ["(L U2 L') U' (L' U L)"],
+        BR: ["(R U2 R') U' (R' U R)"],
+        BL: ["(R' U2 R) U' (L U' L')"]
+      },
+      {
+        id: 128, af2lNum: 28, cat: "TRAPPED_EDGE",
+        title: "邊卡在 BR(反色) ＋ 角在頂(白朝右)",
+        wrongRel: "BR",
+        FR: ["(R' U R) U' F' U' F", "U (R' U' R) y' U (R' U' R)"],
+        FL: ["(L U' L') U F U F'"],
+        BR: ["(R U' R') U (R' U' R)"],
+        BL: ["(R' U R) U (L U L')"]
+      },
+      {
+        id: 129, af2lNum: 29, cat: "TRAPPED_EDGE",
+        title: "邊卡在 BR(反色) ＋ 角在頂(白朝前)",
+        wrongRel: "BR",
+        FR: ["U' (R' U' R) F' U' F", "S R S'", "(R' U R) y' U (R' U' R)"],
+        FL: ["S' L' S", "U (L U L') F U F'"],
+        BR: ["S' R' S", "U (R U R') U (R' U' R)"],
+        BL: ["S L S'", "U' (R' U' R) U (L U L')"]
+      },
+      {
+        id: 130, af2lNum: 30, cat: "TRAPPED_EDGE",
+        title: "邊卡在 BR(反色) ＋ 角在頂(白朝上)",
+        wrongRel: "BR",
+        FR: ["(R' U2 R) F' U' F", "(R' U2 R) y' U' (R' U R)"],
+        FL: ["(L U2 L') F U F'"],
+        BR: ["(R U2 R') U' (R' U R)"],
+        BL: ["(R' U2 R) U' (L U' L')"]
+      },
+      {
+        id: 131, af2lNum: 31, cat: "TRAPPED_EDGE",
+        title: "邊卡在 BL(正色) ＋ 角在頂(白朝右)",
+        wrongRel: "BL",
+        FR: ["U' (L U' L') U (R U' R')", "L U' L' U' (R U R')"],
+        FL: ["L U' L2' U L"],
+        BR: ["U' (L U' L') U' (R' U R)"],
+        BL: ["R U R2' U' R"]
+      },
+      {
+        id: 132, af2lNum: 32, cat: "TRAPPED_EDGE",
+        title: "邊卡在 BL(正色) ＋ 角在頂(白朝前)",
+        wrongRel: "BL",
+        FR: ["U (L U' L') U' (R U R')", "(L U L') U2 (R U' R')"],
+        FL: ["U (L U' L') U (L' U' L)"],
+        BR: ["U (L U' L') U (R' U' R)"],
+        BL: ["U' (R U R') U (L U L')"]
+      },
+      {
+        id: 133, af2lNum: 33, cat: "TRAPPED_EDGE",
+        title: "邊卡在 BL(正色) ＋ 角在頂(白朝上)",
+        wrongRel: "BL",
+        FR: ["(L U2 L') U (R U' R')", "U (L U L') U (R U' R')"],
+        FL: ["(L U2 L') U' (L' U L)"],
+        BR: ["(L U2 L') U' (R' U R)"],
+        BL: ["(R U2 R') U' (L U' L')"]
+      },
+      {
+        id: 134, af2lNum: 34, cat: "TRAPPED_EDGE",
+        title: "邊卡在 BL(反色) ＋ 角在頂(白朝右)",
+        wrongRel: "BL",
+        FR: ["(L U L') U' F' U' F", "U' (L U' L') F' U' F"],
+        FL: ["(L U L') U (L' U' L)"],
+        BR: ["(L U L') U2 (R' U' R)"],
+        BL: ["(R U' R') U (L U L')"]
+      },
+      {
+        id: 135, af2lNum: 35, cat: "TRAPPED_EDGE",
+        title: "邊卡在 BL(反色) ＋ 角在頂(白朝前)",
+        wrongRel: "BL",
+        FR: ["U' (L U L') F' U' F", "(L U L') y' U (R' U' R)"],
+        FL: ["U' (L U L') U (L' U' L)"],
+        BR: ["U' (L U L') U (R' U' R)"],
+        BL: ["U (R U R') U (L U L')"]
+      },
+      {
+        id: 136, af2lNum: 36, cat: "TRAPPED_EDGE",
+        title: "邊卡在 BL(反色) ＋ 角在頂(白朝上)",
+        wrongRel: "BL",
+        FR: ["(L U2 L') F' U' F", "(L U2 L') y' U' (R' U R)"],
+        FL: ["(L U2 L') U' (L' U L)"],
+        BR: ["(L U2 L') U' (R' U R)"],
+        BL: ["(R U2 R') U' (L U' L')"]
+      },
+
+      // ==================== 3. BOTH PIECES TRAPPED (AF2L 37 - 54) ====================
+      {
+        id: 137, af2lNum: 37, cat: "BOTH_TRAPPED",
+        title: "整組標配 Pair 完整卡在 BR (橘藍槽)",
+        wrongRel: "BR",
+        FR: ["R' U2 R2 U R'", "(R' U R) U (R U' R')"],
+        FL: ["L U2 L2' U' L", "(L U' L') U' (L' U L)"],
+        BR: ["R U2 R2' U' R", "(R U' R') U' (R' U R)"],
+        BL: ["L' U2 L2 U L'", "(R' U R) U' (L U' L')"]
+      },
+      {
+        id: 138, af2lNum: 38, cat: "BOTH_TRAPPED",
+        title: "整組反相 Pair 卡在 BR (橘藍槽)",
+        wrongRel: "BR",
+        FR: ["(R' U' R) U' (R U R')", "(R' U R) U' (R U R')"],
+        FL: ["(L U L') U (L' U' L)"],
+        BR: ["(R U R') U (R' U' R)"],
+        BL: ["(R' U' R) U (L U L')"]
+      },
+      {
+        id: 139, af2lNum: 39, cat: "BOTH_TRAPPED",
+        title: "整組標配 Pair 完整卡在 FL (綠紅槽)",
+        wrongRel: "FL",
+        FR: ["(L' U' L) U' (R U R')", "(L' U L) U (R U' R')"],
+        FL: ["(R U R') U (L' U' L)"],
+        BR: ["(R U R') U (R' U' R)"],
+        BL: ["(L' U' L) U (L U L')"]
+      },
+      {
+        id: 140, af2lNum: 40, cat: "BOTH_TRAPPED",
+        title: "整組反相 Pair 卡在 FL (綠紅槽)",
+        wrongRel: "FL",
+        FR: ["(L' U L) U' (R U R')", "(L' U' L) U (R U' R')"],
+        FL: ["(R U' R') U (L' U' L)"],
+        BR: ["(R U' R') U (R' U' R)"],
+        BL: ["(L' U L) U (L U L')"]
+      },
+      {
+        id: 141, af2lNum: 41, cat: "BOTH_TRAPPED",
+        title: "整組標配 Pair 完整卡在 BL (藍紅槽)",
+        wrongRel: "BL",
+        FR: ["(L U L') U (R U' R')", "(L U' L') U2 (R U R')"],
+        FL: ["(L U L') U' (L' U L)"],
+        BR: ["(L U L') U' (R' U R)"],
+        BL: ["(R U' R') U' (L U' L')"]
+      },
+      {
+        id: 142, af2lNum: 42, cat: "BOTH_TRAPPED",
+        title: "整組反相 Pair 卡在 BL (藍紅槽)",
+        wrongRel: "BL",
+        FR: ["(L U' L') U' (R U R')", "(L U L') U2 (R U' R')"],
+        FL: ["(L U' L') U (L' U' L)"],
+        BR: ["(L U' L') U (R' U' R)"],
+        BL: ["(R U R') U (L U L')"]
+      },
+      {
+        id: 143, af2lNum: 43, cat: "BOTH_TRAPPED",
+        title: "FR 與 BR 兩組標配 Pair 整對互換",
+        wrongRel: "BR",
+        FR: ["R2 U' R2 U R2", "(R' U R) U (R U' R') U' (R' U R)"],
+        FL: ["L2 U L2' U' L2"],
+        BR: ["R2 U' R2 U R2"],
+        BL: ["L2 U L2' U' L2"]
+      },
+      {
+        id: 144, af2lNum: 44, cat: "BOTH_TRAPPED",
+        title: "FR 與 BR 兩邊塊互換 (角塊皆已復原)",
+        wrongRel: "BR",
+        FR: ["R2 U2 R2 U2 R2", "(R U' R') U' (R' U' R) U' (R U R')"],
+        FL: ["L2 U2 L2 U2 L2"],
+        BR: ["R2 U2 R2 U2 R2"],
+        BL: ["L2 U2 L2 U2 L2"]
+      },
+      {
+        id: 145, af2lNum: 45, cat: "BOTH_TRAPPED",
+        title: "FR 與 FL 兩邊塊互換 (S 層秒解)",
+        wrongRel: "FL",
+        FR: ["S' U2 S", "(L' U' L) U' (R U R') U (L' U L)"],
+        FL: ["S' U2 S"],
+        BR: ["S U2 S'"],
+        BL: ["S U2 S'"]
+      },
+      {
+        id: 146, af2lNum: 46, cat: "BOTH_TRAPPED",
+        title: "角在 FR(已復原) ＋ 邊卡在 BR(正色)",
+        wrongRel: "BR",
+        FR: ["(R' U' R) U' (R U R')", "R' U' R2 U R' U' (R U R')"],
+        FL: ["(L U L') U (L' U' L)"],
+        BR: ["(R U R') U (R' U' R)"],
+        BL: ["(R' U' R) U (L U L')"]
+      },
+      {
+        id: 147, af2lNum: 47, cat: "BOTH_TRAPPED",
+        title: "角在 FR(已復原) ＋ 邊卡在 FL(正色)",
+        wrongRel: "FL",
+        FR: ["(L' U' L) U (R U' R') U2 (R U' R')", "D (L' U' L) U (L' U L) D'"],
+        FL: ["(R U R') U' (L' U L) U2 (L' U L)"],
+        BR: ["(R U R') U' (R' U R) U2 (R' U R)"],
+        BL: ["(L' U' L) U' (L U' L') U2 (L U' L')"]
+      },
+      {
+        id: 148, af2lNum: 48, cat: "BOTH_TRAPPED",
+        title: "邊在 FR(已復原) ＋ 角卡在 BR(白朝下)",
+        wrongRel: "BR",
+        FR: ["(R' U R) U' (R U R')", "D' (R' U R) U' (R' U' R) D"],
+        FL: ["(L U' L') U (L' U' L)"],
+        BR: ["(R U' R') U (R' U' R)"],
+        BL: ["(R' U R) U (L U L')"]
+      },
+      {
+        id: 149, af2lNum: 49, cat: "BOTH_TRAPPED",
+        title: "邊在 FR(已復原) ＋ 角卡在 FL(白朝下)",
+        wrongRel: "FL",
+        FR: ["(L' U' L) U (R U R') U2 (R U' R')", "D (L' U L) U' (L' U' L) D'"],
+        FL: ["(R U R') U' (L' U' L) U2 (L' U L)"],
+        BR: ["(R U R') U' (R' U' R) U2 (R' U R)"],
+        BL: ["(L' U' L) U' (L U L') U2 (L U' L')"]
+      },
+      {
+        id: 150, af2lNum: 50, cat: "BOTH_TRAPPED",
+        title: "角卡在 FL(白朝下) ＋ 邊卡在 BR(正色)",
+        wrongRel: "BR",
+        FR: ["(R' U' R) (L' U' L) U (R U' R')", "(L' U' L) (R' U' R) U' (R U R')"],
+        FL: ["(L U L') (R U R') U' (L' U L)"],
+        BR: ["(R U R') (L U L') U' (R' U R)"],
+        BL: ["(R' U' R) (L' U' L) U' (L U' L')"]
+      },
+      {
+        id: 151, af2lNum: 51, cat: "BOTH_TRAPPED",
+        title: "角卡在 BR(白朝下) ＋ 邊卡在 FL(正色)",
+        wrongRel: "FL",
+        FR: ["(L' U' L) (R' U R) U (R U' R')", "(R' U R) (L' U' L) U' (R U R')"],
+        FL: ["(R U R') (L U' L') U' (L' U L)"],
+        BR: ["(L' U' L) (R U' R') U' (R' U R)"],
+        BL: ["(L' U' L) (R' U R) U' (L U' L')"]
+      },
+      {
+        id: 152, af2lNum: 52, cat: "BOTH_TRAPPED",
+        title: "角在 FR(白朝右) ＋ 邊卡在 BR(正色)",
+        wrongRel: "BR",
+        FR: ["(R' U' R) U (R U' R')", "R' U' R2 U R' U (R U' R')"],
+        FL: ["(L U L') U' (L' U L)"],
+        BR: ["(R U R') U' (R' U R)"],
+        BL: ["(R' U' R) U' (L U' L')"]
+      },
+      {
+        id: 153, af2lNum: 53, cat: "BOTH_TRAPPED",
+        title: "角在 FR(白朝前) ＋ 邊卡在 BR(正色)",
+        wrongRel: "BR",
+        FR: ["(R' U' R) U2 (R U' R') U' (R U R')", "(R' U R) U (R U R') U2 (R U' R')"],
+        FL: ["(L U L') U2 (L' U L) U (L' U' L)"],
+        BR: ["(R U R') U2 (R' U R) U (R' U' R)"],
+        BL: ["(R' U' R) U2 (L U' L') U (L U L')"]
+      },
+      {
+        id: 154, af2lNum: 54, cat: "BOTH_TRAPPED",
+        title: "FR 與 BL 對角雙槽整組 Pair 互換",
+        wrongRel: "BL",
+        FR: ["(L U L') U (R U' R') U' (L U' L')", "R2 L2 U2 R2 L2"],
+        FL: ["(R' U' R) U' (L' U L) U (R' U R)"],
+        BR: ["(L' U' L) U' (R' U R) U (L' U L)"],
+        BL: ["(R U' R') U' (L U' L') U (R U R')"]
+      }
+    ];
+
+    /*************************************************************************
+     * 1C. CUBE ACADEMY FREE F2L COMPLETE DATASET (77 CASES ACROSS 8 SECTIONS)
+     * Reference: Uploaded PDF "Cube Academy: Free F2L" (Pages 1 - 11)
+     * Includes (setup) and [easy insert] bracketed triggers, Keyhole tags,
+     * EO tags, Open-Slot tricks (BR open, BL open, etc.), and multi-angle algs.
+     *************************************************************************/
+    const CUBE_ACADEMY_CATEGORIES = [
+      { id: "ALL", name: "全部 (77)", short: "全部 (77)" },
+      { id: "CA_EASY", name: "1. Easy Inserts 基礎入槽 (4組)", short: "1. 基礎入槽 (4)" },
+      { id: "CA_DISCONN", name: "2. Disconnected Pairs 分離邊角 (10組)", short: "2. 分離邊角 (10)" },
+      { id: "CA_CORNER_SLOT", name: "3. Corner in Slot 角塊在槽 (6組)", short: "3. 角塊在槽 (6)" },
+      { id: "CA_EDGE_SLOT", name: "4. Edge in Slot 邊塊在槽 (6組)", short: "4. 邊塊在槽 (6)" },
+      { id: "CA_CONN", name: "5. Connected Pairs 頂層連塊 (10組)", short: "5. 頂層連塊 (10)" },
+      { id: "CA_BOTH_SLOT", name: "6. Both Pieces in Slot 雙塊皆在槽 (5組)", short: "6. 雙塊在槽 (5)" },
+      { id: "CA_EDGE_WRONG", name: "7. Edge in Wrong Slot 邊塊卡錯槽 (18組)", short: "7. 邊卡錯槽 (18)" },
+      { id: "CA_CORNER_WRONG", name: "8. Corner in Wrong Slot 角塊卡錯槽 (18組)", short: "8. 角卡錯槽 (18)" }
+    ];
+
+    const CUBE_ACADEMY_CASES = [
+      // ==================== 1. EASY INSERTS (4) ====================
+      {
+        id: 201, cat: "CA_EASY", code: "Easy 1", title: "Right Pair 右側遠離入槽",
+        tags: ["EO 控邊可選"],
+        algs: [
+          { slot: "FR", alg: "U (R U' R')" },
+          { slot: "FR", alg: "U2 (R U2' R')" },
+          { slot: "FR", alg: "(R' F R F')", badge: "EO 控邊" },
+          { slot: "FL", alg: "y' (F' L F L')" },
+          { slot: "FL", alg: "U (F U' F')" },
+          { slot: "BL", alg: "y2 U2 (L U2 L')" },
+          { slot: "BL", alg: "y2 U (L U' L')" },
+          { slot: "BR", alg: "y' U (f R' f')" }
+        ]
+      },
+      {
+        id: 202, cat: "CA_EASY", code: "Easy 2", title: "Left Pair 左側遠離入槽",
+        tags: ["EO 控邊可選"],
+        algs: [
+          { slot: "FL", alg: "U' (L' U L)" },
+          { slot: "FL", alg: "U2 (L' U2 L)" },
+          { slot: "FL", alg: "(L F' L' F)", badge: "EO 控邊" },
+          { slot: "FR", alg: "y (F R' F' R)" },
+          { slot: "FR", alg: "U' (F' U F)" },
+          { slot: "BR", alg: "y2 U2 (R' U2' R)" },
+          { slot: "BR", alg: "y2 U' (R' U R)" },
+          { slot: "BL", alg: "y U' (f' L f)" }
+        ]
+      },
+      {
+        id: 203, cat: "CA_EASY", code: "Easy 3", title: "Right Insert 右側直接入槽",
+        tags: [],
+        algs: [
+          { slot: "FR", alg: "[R U R']" },
+          { slot: "FL", alg: "y' [F U F']" },
+          { slot: "BL", alg: "y2 [L U L']" },
+          { slot: "BR", alg: "y' [f R f']" }
+        ]
+      },
+      {
+        id: 204, cat: "CA_EASY", code: "Easy 4", title: "Left Insert 左側直接入槽",
+        tags: [],
+        algs: [
+          { slot: "FL", alg: "[L' U' L]" },
+          { slot: "FR", alg: "y [F' U' F]" },
+          { slot: "BR", alg: "y2 [R' U' R]" },
+          { slot: "BL", alg: "y [f' L' f]" }
+        ]
+      },
+
+      // ==================== 2. DISCONNECTED PAIRS (10) ====================
+      {
+        id: 205, cat: "CA_DISCONN", code: "Disc 1", title: "白朝右、對邊異色挑起配對",
+        tags: [],
+        algs: [
+          { slot: "FR", alg: "U' (R U R') [U2 R U' R']" },
+          { slot: "BL", alg: "y2 U' (L U L') [U' L U2 L']" }
+        ]
+      },
+      {
+        id: 206, cat: "CA_DISCONN", code: "Disc 2", title: "白朝左、對邊異色挑起配對",
+        tags: [],
+        algs: [
+          { slot: "FL", alg: "U (L' U' L) [U2' L' U L]" },
+          { slot: "BR", alg: "y2 U (R' U' R) [U R' U2' R]" }
+        ]
+      },
+      {
+        id: 207, cat: "CA_DISCONN", code: "Disc 3", title: "白朝右、同側異色 U2 壓角",
+        tags: [],
+        algs: [
+          { slot: "FR", alg: "U' (R U2' R') [U2 R U' R']" },
+          { slot: "BL", alg: "y2 U' (L U2 L') [U' L U2 L']" }
+        ]
+      },
+      {
+        id: 208, cat: "CA_DISCONN", code: "Disc 4", title: "白朝左、同側異色 U2 壓角",
+        tags: [],
+        algs: [
+          { slot: "FL", alg: "U (L' U2 L) [U2' L' U L]" },
+          { slot: "BR", alg: "y2 U (R' U2' R) [U R' U2' R]" }
+        ]
+      },
+      {
+        id: 209, cat: "CA_DISCONN", code: "Disc 5", title: "白朝右、同色在頂藏角配對",
+        tags: ["BR open 空槽技巧"],
+        algs: [
+          { slot: "FR", alg: "U' (R U R') [U R U R']" },
+          { slot: "FR", alg: "U2 (R U' R') [U' R U R']" },
+          { slot: "FR", alg: "(R' U R2 U R')", badge: "BR open" },
+          { slot: "BL", alg: "y2 U' (L U L') [U L U L']" },
+          { slot: "BL", alg: "y2 U2 (L U' L') [U' L U L']" },
+          { slot: "BL", alg: "y2 (L' U L2 U L')", badge: "BR open" }
+        ]
+      },
+      {
+        id: 210, cat: "CA_DISCONN", code: "Disc 6", title: "白朝左、同色在頂藏角配對",
+        tags: ["BL/FR open 空槽技巧"],
+        algs: [
+          { slot: "FL", alg: "U (L' U' L) [U' L' U' L]" },
+          { slot: "FL", alg: "U2 (L' U L) [U L' U' L]" },
+          { slot: "FL", alg: "(L U' L2' U' L)", badge: "BL open" },
+          { slot: "BR", alg: "y2 U (R' U' R) [U' R' U' R]" },
+          { slot: "BR", alg: "y2 U2 (R' U R) [U R' U' R]" },
+          { slot: "BR", alg: "y2 (R U' R2' U' R)", badge: "FR open" }
+        ]
+      },
+      {
+        id: 211, cat: "CA_DISCONN", code: "Disc 7", title: "白朝上、邊塊在右側對齊壓角",
+        tags: [],
+        algs: [
+          { slot: "FR", alg: "U (R U2' R') [U R U' R']" },
+          { slot: "BL", alg: "y2 U (L U2 L') [U L U' L']", badge: "* 換手" }
+        ]
+      },
+      {
+        id: 212, cat: "CA_DISCONN", code: "Disc 8", title: "白朝上、邊塊在左側對齊壓角",
+        tags: [],
+        algs: [
+          { slot: "FL", alg: "U' (L' U2 L) [U' L' U L]" },
+          { slot: "BR", alg: "y2 U' (R' U2' R) [U' R' U R]", badge: "* 換手" }
+        ]
+      },
+      {
+        id: 213, cat: "CA_DISCONN", code: "Disc 9", title: "白朝上、邊塊在遠端 (右槽)",
+        tags: [],
+        algs: [
+          { slot: "FR", alg: "U2 (R U R') [U R U' R']" },
+          { slot: "FR", alg: "(R U' R') [U2 R U R']" },
+          { slot: "BL", alg: "y2 U2 (L U L') [U L U' L']", badge: "* 換手" },
+          { slot: "BL", alg: "y2 (L U' L') [U2' L U L']" }
+        ]
+      },
+      {
+        id: 214, cat: "CA_DISCONN", code: "Disc 10", title: "白朝上、邊塊在遠端 (左槽)",
+        tags: [],
+        algs: [
+          { slot: "FL", alg: "U2 (L' U' L) [U' L' U L]" },
+          { slot: "FL", alg: "(L' U L) [U2' L' U' L]" },
+          { slot: "BR", alg: "y2 U2 (R' U' R) [U' R' U R]", badge: "* 換手" },
+          { slot: "BR", alg: "y2 (R' U R) [U2 R' U' R]" }
+        ]
+      },
+
+      // ==================== 3. CORNER IN SLOT (6) ====================
+      {
+        id: 215, cat: "CA_CORNER_SLOT", code: "Corner 1", title: "角塊已復原、邊塊在頂反色 (右)",
+        tags: ["Keyhole 潛力"],
+        algs: [
+          { slot: "FR", alg: "U' (R' F R F') [R U R']" },
+          { slot: "FL", alg: "y' U' (L' U L) [F' L F L']" },
+          { slot: "BL", alg: "y2 U' (f' L f) [U L U' L']" },
+          { slot: "BL", alg: "y2 (L U' L') (U' L U' L') [U L U L']", badge: "* 換手" },
+          { slot: "BR", alg: "y' U' (R' U R) [U f R' f']" }
+        ]
+      },
+      {
+        id: 216, cat: "CA_CORNER_SLOT", code: "Corner 2", title: "角塊已復原、邊塊在頂反色 (左)",
+        tags: ["Keyhole 潛力"],
+        algs: [
+          { slot: "FL", alg: "U (L F' L' F) [L' U' L]" },
+          { slot: "FR", alg: "y U (R U' R') [F R' F' R]" },
+          { slot: "BR", alg: "y2 U (f R' f') [U' R' U R]" },
+          { slot: "BR", alg: "y2 (R' U R) (U R' U R) [U' R' U' R]", badge: "* 換手" },
+          { slot: "BL", alg: "y U (L U' L') [U' f' L f]" }
+        ]
+      },
+      {
+        id: 217, cat: "CA_CORNER_SLOT", code: "Corner 3", title: "角塊白朝右、邊塊在頂同色",
+        tags: [],
+        algs: [
+          { slot: "FR", alg: "(R U' R') [U R U' R']" },
+          { slot: "BL", alg: "y2 (L U' L') [U L U' L']", badge: "* 換手" }
+        ]
+      },
+      {
+        id: 218, cat: "CA_CORNER_SLOT", code: "Corner 4", title: "角塊白朝左、邊塊在頂同色",
+        tags: [],
+        algs: [
+          { slot: "FL", alg: "(L' U L) [U' L' U L]" },
+          { slot: "BR", alg: "y2 (R' U R) [U' R' U R]", badge: "* 換手" }
+        ]
+      },
+      {
+        id: 219, cat: "CA_CORNER_SLOT", code: "Corner 5", title: "角塊白朝前、邊塊在頂同色 (右)",
+        tags: [],
+        algs: [
+          { slot: "FR", alg: "(R U R') [U' R U R']" },
+          { slot: "FL", alg: "y' (L F' L' F) [U L' U' L]" },
+          { slot: "BL", alg: "y2 (L U L') [U' L U L']" }
+        ]
+      },
+      {
+        id: 220, cat: "CA_CORNER_SLOT", code: "Corner 6", title: "角塊白朝前、邊塊在頂同色 (左)",
+        tags: [],
+        algs: [
+          { slot: "FL", alg: "(L' U' L) [U L' U' L]" },
+          { slot: "FR", alg: "y (R' F R F') [U R U' R']" },
+          { slot: "BR", alg: "y2 (R' U' R) [U R' U' R]" }
+        ]
+      },
+
+      // ==================== 4. EDGE IN SLOT (6) ====================
+      {
+        id: 221, cat: "CA_EDGE_SLOT", code: "Edge 1", title: "邊塊已復原、角塊白朝上 (Sexy*3)",
+        tags: ["Keyhole 潛力"],
+        algs: [
+          { slot: "FR", alg: "(U R U' R')*3" },
+          { slot: "FL", alg: "y' (U' L' U L)*3" },
+          { slot: "BL", alg: "y2 (L U L' U')*2 [L U L']" },
+          { slot: "BR", alg: "y' (R' U' R U)*2 [R' U' R]" }
+        ]
+      },
+      {
+        id: 222, cat: "CA_EDGE_SLOT", code: "Edge 2", title: "邊塊反色在槽、角塊白朝上",
+        tags: [],
+        algs: [
+          { slot: "FR", alg: "U' (R' F R F') [R U' R']" },
+          { slot: "FR", alg: "(R U' R') [d R' U R]" },
+          { slot: "FL", alg: "y' U (L F' L' F) [L' U L]" },
+          { slot: "FL", alg: "y' (L' U L) [d' L U' L']" },
+          { slot: "BL", alg: "y2 (L U' L') [U f' L f]" },
+          { slot: "BR", alg: "y' (R' U R) [U' f R' f']" }
+        ]
+      },
+      {
+        id: 223, cat: "CA_EDGE_SLOT", code: "Edge 3", title: "邊塊已復原、角塊白朝右",
+        tags: ["Keyhole 潛力"],
+        algs: [
+          { slot: "FR", alg: "U' (R U' R') [U2 R U' R']" },
+          { slot: "FL", alg: "y' U' (L' U' L) [U2 L' U' L]" },
+          { slot: "FL", alg: "y' U (L' U2 L) [U' L' U' L]" },
+          { slot: "BL", alg: "y2 U' (L U' L') [U' L U2 L']" },
+          { slot: "BR", alg: "y' U' (R' U' R) [U2 R' U' R]" },
+          { slot: "BR", alg: "y' U (R' U2' R) [U' R' U' R]" }
+        ]
+      },
+      {
+        id: 224, cat: "CA_EDGE_SLOT", code: "Edge 4", title: "邊塊已復原、角塊白朝前",
+        tags: ["Keyhole 潛力"],
+        algs: [
+          { slot: "FR", alg: "U (R U R') [U2' R U R']" },
+          { slot: "FR", alg: "U' (R U2' R') [U R U R']" },
+          { slot: "FL", alg: "y' U (L' U L) [U2' L' U L]" },
+          { slot: "BL", alg: "y2 U (L U L') [U2' L U L']" },
+          { slot: "BL", alg: "y2 U' (L U2 L') [U L U L']" },
+          { slot: "BR", alg: "y' U (R' U R) [U R' U2' R]" }
+        ]
+      },
+      {
+        id: 225, cat: "CA_EDGE_SLOT", code: "Edge 5", title: "邊塊反色在槽、角塊白朝前",
+        tags: ["免轉體 F/f 控邊"],
+        algs: [
+          { slot: "FR", alg: "U2 (R U R') [F R' F' R]" },
+          { slot: "FR", alg: "U2 (F' U' F) [U R U' R']" },
+          { slot: "FL", alg: "y' U2 (F U F') [U' L' U L]" },
+          { slot: "FL", alg: "y' U2 (L' U' L) [F' L F L']" },
+          { slot: "BL", alg: "y2 U2 (L U L') [U' f' L f]" },
+          { slot: "BL", alg: "y2 U2 (f' L' f) [U L U' L']" },
+          { slot: "BR", alg: "y' U2 (f R f') [U' R' U R]" },
+          { slot: "BR", alg: "y' U2 (R' U' R) [U f R f']" }
+        ]
+      },
+      {
+        id: 226, cat: "CA_EDGE_SLOT", code: "Edge 6", title: "邊塊反色在槽、角塊白朝右",
+        tags: ["免轉體 F/f 控邊"],
+        algs: [
+          { slot: "FR", alg: "(U' R U R') [d R' U' R]" },
+          { slot: "FR", alg: "U' (R U R') [U F' U' F]" },
+          { slot: "FL", alg: "y' (U' R U R') [d R' U' R]" },
+          { slot: "BL", alg: "y2 (U2' L U L') [d' R' U R]" },
+          { slot: "BR", alg: "y (U' R U R') [d R' U' R]" }
+        ]
+      },
+
+      // ==================== 5. CONNECTED PAIRS (10) ====================
+      {
+        id: 227, cat: "CA_CONN", code: "Conn 1", title: "白朝右、邊塊在遠端連塊 (右)",
+        tags: ["BR/FL open 空槽技巧"],
+        algs: [
+          { slot: "FR", alg: "(R U' R') (U R U' R') [U2 R U' R']" },
+          { slot: "FR", alg: "(R' U2' R2 U R')", badge: "BR open" },
+          { slot: "BL", alg: "y2 (L' U2 L2 U L2' U L)" },
+          { slot: "BL", alg: "y2 (L' U2 L2 U L')", badge: "FL open" }
+        ]
+      },
+      {
+        id: 228, cat: "CA_CONN", code: "Conn 2", title: "白朝左、邊塊在遠端連塊 (左)",
+        tags: ["BL/FR open 空槽技巧"],
+        algs: [
+          { slot: "FL", alg: "(L' U L) (U' L' U L) [U2' L' U L]" },
+          { slot: "FL", alg: "(L U2 L2' U' L)", badge: "BL open" },
+          { slot: "BR", alg: "y2 (R U2' R2' U' R2 U' R')" },
+          { slot: "BR", alg: "y2 (R U2' R2' U' R)", badge: "FR open" }
+        ]
+      },
+      {
+        id: 229, cat: "CA_CONN", code: "Conn 3", title: "白朝右、標準分離連塊拆解 (右)",
+        tags: [],
+        algs: [
+          { slot: "FR", alg: "U' (R U' R') [U R U R']" },
+          { slot: "BL", alg: "y2 U' (L U' L') [U L U L']" }
+        ]
+      },
+      {
+        id: 230, cat: "CA_CONN", code: "Conn 4", title: "白朝左、標準分離連塊拆解 (左)",
+        tags: [],
+        algs: [
+          { slot: "FL", alg: "U (L' U L) [U' L' U' L]" },
+          { slot: "BR", alg: "y2 U (R' U R) [U' R' U' R]" }
+        ]
+      },
+      {
+        id: 231, cat: "CA_CONN", code: "Conn 5", title: "白朝上、前側並排錯誤相連 (右)",
+        tags: ["BR/FL open 空槽技巧"],
+        algs: [
+          { slot: "FR", alg: "(R U R') (U2 R U' R') [U R U' R']" },
+          { slot: "FR", alg: "U' (R' U R) [U' R U R']", badge: "BR open" },
+          { slot: "FL", alg: "y' (L' U L) [U2' F U F']" },
+          { slot: "BL", alg: "y2 U2 (L U L') (U' L U2 L') [U L U L']" },
+          { slot: "BL", alg: "y2 (f' L f) [U2' L U L']" },
+          { slot: "BL", alg: "y2 U' (L' U L) [U' L U L']", badge: "FL open" },
+          { slot: "BR", alg: "y' (R' U R) [U2 f R f']" }
+        ]
+      },
+      {
+        id: 232, cat: "CA_CONN", code: "Conn 6", title: "白朝上、前側並排錯誤相連 (左)",
+        tags: ["BL/FR open 空槽技巧"],
+        algs: [
+          { slot: "FL", alg: "(L' U' L) (U2' L' U L) [U' L' U L]" },
+          { slot: "FL", alg: "U (L U' L') [U L' U' L]", badge: "BL open" },
+          { slot: "FR", alg: "y (R U' R') [U2 F' U' F]" },
+          { slot: "BR", alg: "y2 U2 (R' U' R) (U R' U2 R) [U' R' U' R]" },
+          { slot: "BR", alg: "y2 (f R' f') [U2 R' U' R]" },
+          { slot: "BR", alg: "y2 U (R U' R') [U R' U' R]", badge: "FR open" },
+          { slot: "BL", alg: "y (L U' L') [U2' f' L' f]" }
+        ]
+      },
+      {
+        id: 233, cat: "CA_CONN", code: "Conn 7", title: "白朝右、頂層同色連塊 (右)",
+        tags: [],
+        algs: [
+          { slot: "FR", alg: "(R U2' R') [U' R U R']" },
+          { slot: "BL", alg: "y2 (L U2 L') [U' L U L']" }
+        ]
+      },
+      {
+        id: 234, cat: "CA_CONN", code: "Conn 8", title: "白朝左、頂層同色連塊 (左)",
+        tags: [],
+        algs: [
+          { slot: "FL", alg: "(L' U2 L) [U L' U' L]" },
+          { slot: "BR", alg: "y2 (R' U2' R) [U R' U' R]" }
+        ]
+      },
+      {
+        id: 235, cat: "CA_CONN", code: "Conn 9", title: "白朝右、頂層異色連塊 (右)",
+        tags: ["Keyhole 潛力"],
+        algs: [
+          { slot: "FR", alg: "U (R U' R') (U' R U' R') [U R U' R']" },
+          { slot: "FL", alg: "y' U (L' U' L2 F' L' F) [L' U L]" },
+          { slot: "BL", alg: "y2 (L U L') (U2' L U L') [U' L U L']" }
+        ]
+      },
+      {
+        id: 236, cat: "CA_CONN", code: "Conn 10", title: "白朝左、頂層異色連塊 (左)",
+        tags: ["Keyhole 潛力"],
+        algs: [
+          { slot: "FL", alg: "U' (L' U L) (U L' U L) [U' L' U L]" },
+          { slot: "FR", alg: "y U' (R U R2' F R F') [R U' R']" },
+          { slot: "BR", alg: "y2 (R' U' R) (U2 R' U' R) [U R' U' R]" }
+        ]
+      },
+
+      // ==================== 6. BOTH PIECES IN SLOT (5) ====================
+      {
+        id: 237, cat: "CA_BOTH_SLOT", code: "Both 1", title: "角塊白朝右、邊塊正色在槽",
+        tags: ["Keyhole 潛力"],
+        algs: [
+          { slot: "FR", alg: "(R U' R') (U' R U R') [U2 R U' R']" },
+          { slot: "FL", alg: "y' (L' U L) (U' L' U2 L) [U' L' U L]" },
+          { slot: "BL", alg: "y2 (L U L') (U' L U2 L') [U' L U L']" },
+          { slot: "BR", alg: "y' (R' U' R) (U2 R' U R) [U' R' U' R]" }
+        ]
+      },
+      {
+        id: 238, cat: "CA_BOTH_SLOT", code: "Both 2", title: "角塊白朝前、邊塊正色在槽",
+        tags: ["Keyhole 潛力"],
+        algs: [
+          { slot: "FR", alg: "(R U' R') (U R U2' R') [U R U' R']" },
+          { slot: "FL", alg: "y' (L' U L) (U L' U' L) [U2' L' U L]" },
+          { slot: "BL", alg: "y2 (L U L') (U2' L U' L') [U L U L']" },
+          { slot: "BR", alg: "y' (R' U' R) (U R' U2' R) [U R' U' R]" }
+        ]
+      },
+      {
+        id: 239, cat: "CA_BOTH_SLOT", code: "Both 3", title: "角塊白朝右、邊塊反色在槽",
+        tags: ["BR open 空槽技巧"],
+        algs: [
+          { slot: "FR", alg: "(R U' R') (U' R U' R') [d R' U' R]" },
+          { slot: "FR", alg: "(R U' R2' U' R) [y L' U' L]", badge: "BR open" },
+          { slot: "FL", alg: "y' (L' U' L) (U L' U L) [U2' y L U L']" },
+          { slot: "BL", alg: "y2 (f' L f) (U2' L U L') [U L U' L']" },
+          { slot: "BR", alg: "y' (f R' f') (U R' U' R) [U' R' U' R]" }
+        ]
+      },
+      {
+        id: 240, cat: "CA_BOTH_SLOT", code: "Both 4", title: "角塊白朝前、邊塊反色在槽",
+        tags: ["BL open 空槽技巧"],
+        algs: [
+          { slot: "FR", alg: "(R U R') (U' R U' R') [U2 y' R' U' R]" },
+          { slot: "FL", alg: "y' (L' U L) (U L' U L) [d' L U L']" },
+          { slot: "FL", alg: "y' (L' U L2 U L') [y' R U R']", badge: "BL open" },
+          { slot: "BL", alg: "y2 (f' L f) (U' L U L') [U L U L']" },
+          { slot: "BR", alg: "y' (f R' f') (U2 R' U' R) [U' R' U R]" }
+        ]
+      },
+      {
+        id: 241, cat: "CA_BOTH_SLOT", code: "Both 5", title: "角塊已復原、邊塊原地翻轉",
+        tags: ["Keyhole 潛力", "BR/BL open"],
+        algs: [
+          { slot: "FR", alg: "(R U' R') (d R' U2' R) [U R' U2' R]" },
+          { slot: "FR", alg: "(R' F R F') (R' U2' R2 U R')", badge: "BR open" },
+          { slot: "FL", alg: "y' (L' U L) (d' L U2 L') [U' L U2 L']" },
+          { slot: "FL", alg: "y' (L F' L' F) (L U2 L2' U' L)", badge: "BL open" },
+          { slot: "BL", alg: "y2 (f' L f) (U' L U2 L') [U' L U2 L']" },
+          { slot: "BR", alg: "y' (f R' f') (U R' U2' R) [U R' U2' R]" }
+        ]
+      },
+
+      // ==================== 7. EDGE IN WRONG SLOT (18) ====================
+      {
+        id: 242, cat: "CA_EDGE_WRONG", code: "E-Wrong WU1", title: "White Up 1 • 邊卡 BR 槽、角在頂白朝上 (右)",
+        wrongSlot: "BR",
+        algs: [
+          { slot: "FR", alg: "U' (R' U R2 U' R')" },
+          { slot: "BL", alg: "y2 U' (L' U L2 U' L')" }
+        ]
+      },
+      {
+        id: 243, cat: "CA_EDGE_WRONG", code: "E-Wrong WU2", title: "White Up 2 • 邊卡 BL 槽、角在頂白朝上 (左)",
+        wrongSlot: "BL",
+        algs: [
+          { slot: "FL", alg: "U (L U' L2' U L)" },
+          { slot: "BR", alg: "y2 U (R U' R2' U R)" }
+        ]
+      },
+      {
+        id: 244, cat: "CA_EDGE_WRONG", code: "E-Wrong WU3", title: "White Up 3 • 邊反色卡鄰槽、角白朝上 (左)",
+        wrongSlot: "BR",
+        algs: [
+          { slot: "FL", alg: "y' (R' F R2 U' R' U2 F')" },
+          { slot: "BL", alg: "y2 U2 (L F' L' F) [L U L']" }
+        ]
+      },
+      {
+        id: 245, cat: "CA_EDGE_WRONG", code: "E-Wrong WU4", title: "White Up 4 • 邊反色卡鄰槽、角白朝上 (右)",
+        wrongSlot: "BL",
+        algs: [
+          { slot: "FR", alg: "y (L F' L2' U L U2' F)" },
+          { slot: "BR", alg: "y2 U2 (R' F R F') [R' U' R]" }
+        ]
+      },
+      {
+        id: 246, cat: "CA_EDGE_WRONG", code: "E-Wrong WU5", title: "White Up 5 • 邊卡對角槽、角白朝上",
+        wrongSlot: "BL",
+        algs: [
+          { slot: "FR", alg: "(L U L' U' L U L') [U R U R']" },
+          { slot: "FL", alg: "(R' U' R U R' U' R) [U' L' U' L]" },
+          { slot: "BL", alg: "y2 U (R U' R' U R U' R') [L U2 L']" },
+          { slot: "BR", alg: "y2 U' (L' U L U' L' U L) [R' U2' R]" }
+        ]
+      },
+      {
+        id: 247, cat: "CA_EDGE_WRONG", code: "E-Wrong WU6", title: "White Up 6 • 邊反色卡對角槽、角白朝上",
+        wrongSlot: "BL",
+        algs: [
+          { slot: "FR", alg: "(L U' L') [d' L' U L]" },
+          { slot: "BL", alg: "y2 L [F' U F] L'" },
+          { slot: "BR", alg: "y' R' [F U' F'] R" }
+        ]
+      },
+      {
+        id: 248, cat: "CA_EDGE_WRONG", code: "E-Wrong WR1", title: "White Right 1 • 邊卡 BR 槽、角白朝右",
+        wrongSlot: "BR",
+        algs: [
+          { slot: "FR", alg: "(R' U' R2 U R')" },
+          { slot: "BL", alg: "y2 (L' U' L2 U L')" }
+        ]
+      },
+      {
+        id: 249, cat: "CA_EDGE_WRONG", code: "E-Wrong WL1", title: "White Left 1 • 邊卡 BL 槽、角白朝左",
+        wrongSlot: "BL",
+        algs: [
+          { slot: "FL", alg: "(L U L2' U' L)" },
+          { slot: "BR", alg: "y2 (R U R2' U' R)" }
+        ]
+      },
+      {
+        id: 250, cat: "CA_EDGE_WRONG", code: "E-Wrong WR2", title: "White Right 2 • 邊反色卡 BR、角白朝右",
+        wrongSlot: "BR",
+        algs: [
+          { slot: "FR", alg: "(R' U R) [d' L' U L]" },
+          { slot: "FR", alg: "(F D R D' F')" },
+          { slot: "FL", alg: "y' R [F U F'] R'" },
+          { slot: "BL", alg: "y2 F [L U L'] F'" },
+          { slot: "BR", alg: "y' (R u R u' R')" }
+        ]
+      },
+      {
+        id: 251, cat: "CA_EDGE_WRONG", code: "E-Wrong WL2", title: "White Left 2 • 邊反色卡 FL、角白朝左",
+        wrongSlot: "FL",
+        algs: [
+          { slot: "FL", alg: "(L' U' L) [d R U' R']" },
+          { slot: "FL", alg: "(F' D' L' D F)" },
+          { slot: "FR", alg: "y L' [F' U' F] L" },
+          { slot: "BR", alg: "y2 F' [R' U' R] F" },
+          { slot: "BL", alg: "y (L' u' L' u L)" }
+        ]
+      },
+      {
+        id: 252, cat: "CA_EDGE_WRONG", code: "E-Wrong WR3", title: "White Right 3 • 邊卡 FL 槽、角白朝右",
+        wrongSlot: "FL",
+        algs: [
+          { slot: "FR", alg: "U' (L' U' L) [R U' R']" },
+          { slot: "FL", alg: "y' U2 (L' U' L2 U L2' U' L)" },
+          { slot: "BL", alg: "y2 U' (R' U' R) [L U' L']" },
+          { slot: "BR", alg: "y' U2 (R' U' R2 U R2' U' R)" }
+        ]
+      },
+      {
+        id: 253, cat: "CA_EDGE_WRONG", code: "E-Wrong WL3", title: "White Left 3 • 邊卡 FR 槽、角白朝左",
+        wrongSlot: "FR",
+        algs: [
+          { slot: "FL", alg: "U (R U R') [L' U L]" },
+          { slot: "FR", alg: "y U2 (R U R2' U' R2 U R')" },
+          { slot: "BR", alg: "y2 U (L U L') [R' U R]" },
+          { slot: "BL", alg: "y U2 (L U L2' U' L2 U L')" }
+        ]
+      },
+      {
+        id: 254, cat: "CA_EDGE_WRONG", code: "E-Wrong WR4", title: "White Right 4 • 邊反色卡 FL、角白朝右",
+        wrongSlot: "FL",
+        algs: [
+          { slot: "FR", alg: "(F U2' F') [R U R']" },
+          { slot: "FR", alg: "U2 (L' U L) [y' R' U2' R]" },
+          { slot: "FL", alg: "y' (L U2 L') [F U F']" },
+          { slot: "BL", alg: "y2 U2 (R' U R) [U f' L f]" },
+          { slot: "BR", alg: "y' (R U2' R') [f R f']" }
+        ]
+      },
+      {
+        id: 255, cat: "CA_EDGE_WRONG", code: "E-Wrong WL4", title: "White Left 4 • 邊反色卡 FR、角白朝左",
+        wrongSlot: "FR",
+        algs: [
+          { slot: "FL", alg: "(F' U2' F) [L' U' L]" },
+          { slot: "FL", alg: "U2 (R U' R') [y L U2 L']" },
+          { slot: "FR", alg: "y (R' U2' R) [F' U' F]" },
+          { slot: "BR", alg: "y2 U2 (L U' L') [U' f R' f']" },
+          { slot: "BL", alg: "y (L' U2 L) [f' L' f]" }
+        ]
+      },
+      {
+        id: 256, cat: "CA_EDGE_WRONG", code: "E-Wrong WR5", title: "White Right 5 • 邊卡 BL 槽、角白朝右",
+        wrongSlot: "BL",
+        algs: [
+          { slot: "FR", alg: "U (L U L') [R U R']" },
+          { slot: "FR", alg: "U' (L U2 L') [U' R U R']" },
+          { slot: "FL", alg: "y' U (R' U R) [L' U L]" },
+          { slot: "BL", alg: "y2 U (R U R') [L U L']" },
+          { slot: "BR", alg: "y' U' (L' U' L) [R' U' R]" }
+        ]
+      },
+      {
+        id: 257, cat: "CA_EDGE_WRONG", code: "E-Wrong WL5", title: "White Left 5 • 邊卡 BL 槽、角白朝前",
+        wrongSlot: "BL",
+        algs: [
+          { slot: "FR", alg: "U' (L U' L') [R U' R']" },
+          { slot: "FL", alg: "y' U' (R' U' R) [L' U' L]" },
+          { slot: "FL", alg: "y' U (R' U2' R) [U L' U' L]" },
+          { slot: "BL", alg: "y2 U' (R U' R') [L U' L']" },
+          { slot: "BR", alg: "y' U (L' U L) [R' U R]" }
+        ]
+      },
+      {
+        id: 258, cat: "CA_EDGE_WRONG", code: "E-Wrong WR6", title: "White Right 6 • 邊反色卡 BL、角白朝右",
+        wrongSlot: "BL",
+        algs: [
+          { slot: "FR", alg: "U2 (F' U L U' L' F)" },
+          { slot: "FL", alg: "y' U (R' U' R) [U F U F']" },
+          { slot: "BL", alg: "y2 U (F' U' F) [U L U L']" },
+          { slot: "BR", alg: "y' U (L' U' L) [d L U L']" }
+        ]
+      },
+      {
+        id: 259, cat: "CA_EDGE_WRONG", code: "E-Wrong WL6", title: "White Left 6 • 邊反色卡 BL、角白朝前",
+        wrongSlot: "BL",
+        algs: [
+          { slot: "FR", alg: "U' (L U L') [d' L' U' L]" },
+          { slot: "FR", alg: "U2 (L F' U' F L')" },
+          { slot: "FL", alg: "y' U' (f R f') [U' L' U' L]" },
+          { slot: "BL", alg: "y2 U' (R U R') [d' R' U' R]" },
+          { slot: "BR", alg: "y' U' (F U F') [U' R' U' R]" }
+        ]
+      },
+
+      // ==================== 8. CORNER IN WRONG SLOT (18) ====================
+      {
+        id: 260, cat: "CA_CORNER_WRONG", code: "C-Wrong WD1", title: "White Down 1 • 角卡 FR(白朝下)、邊在頂 (右後解)",
+        wrongSlot: "FR",
+        algs: [
+          { slot: "BR", alg: "U2 (R U' R') [U R' U2' R]" },
+          { slot: "BR", alg: "(R U2' R') [U R' U' R]" },
+          { slot: "FL", alg: "y2 U2 (L U' L') [U2 L' U L]" }
+        ]
+      },
+      {
+        id: 261, cat: "CA_CORNER_WRONG", code: "C-Wrong WD2", title: "White Down 2 • 角卡 BR(白朝下)、邊在頂",
+        wrongSlot: "BR",
+        algs: [
+          { slot: "FL", alg: "(R' U2' R) [U R' U R]" },
+          { slot: "BR", alg: "y2 (R' U2' R) [U R' U R]" }
+        ]
+      },
+      {
+        id: 262, cat: "CA_CORNER_WRONG", code: "C-Wrong WD3", title: "White Down 3 • 角卡 FR(白朝下)、入 FL 槽",
+        wrongSlot: "FR",
+        algs: [
+          { slot: "FL", alg: "U2 (R U' R') [L' U L]" },
+          { slot: "BR", alg: "y2 U2 (L U L') [R' U' R]" }
+        ]
+      },
+      {
+        id: 263, cat: "CA_CORNER_WRONG", code: "C-Wrong WD4", title: "White Down 4 • 角卡 FL(白朝下)、入 FR 槽",
+        wrongSlot: "FL",
+        algs: [
+          { slot: "FR", alg: "U2 (L' U' L) [R U' R']" },
+          { slot: "BL", alg: "y2 U2 (R' U' R) [L U L']" }
+        ]
+      },
+      {
+        id: 264, cat: "CA_CORNER_WRONG", code: "C-Wrong WD5", title: "White Down 5 • 角卡對角槽(白朝下)、邊反色 (左)",
+        wrongSlot: "FR",
+        algs: [
+          { slot: "BL", alg: "U' (F' U F) [L U2 L']" },
+          { slot: "BL", alg: "U (R U' R' U R U R') [L U L']" },
+          { slot: "BR", alg: "y' U' (L' U L) [U' f R' f']" },
+          { slot: "FL", alg: "y' U (R' U2' R) [F U F']" }
+        ]
+      },
+      {
+        id: 265, cat: "CA_CORNER_WRONG", code: "C-Wrong WD6", title: "White Down 6 • 角卡對角槽(白朝下)、邊反色 (右)",
+        wrongSlot: "FL",
+        algs: [
+          { slot: "BR", alg: "U (F U' F') [R' U2 R]" },
+          { slot: "BR", alg: "U' (L' U L U' L' U' L) [R' U' R]" },
+          { slot: "BL", alg: "y U (R U' R') [U f' L f]" },
+          { slot: "FR", alg: "y U' (L U2 L') [F' U' F]" }
+        ]
+      },
+      {
+        id: 266, cat: "CA_CORNER_WRONG", code: "C-Wrong WL1", title: "White Left 1 • 角卡 FR(白朝前)、入 BR 槽",
+        wrongSlot: "FR",
+        algs: [
+          { slot: "BR", alg: "U' (R U' R' U') [R' U' R]" },
+          { slot: "BR", alg: "U (F U' F') [R' U' R]" },
+          { slot: "FR", alg: "y U (L' U' L) [F' U' F]" },
+          { slot: "FL", alg: "y2 U' (L U' L') [U' L' U' L]" }
+        ]
+      },
+      {
+        id: 267, cat: "CA_CORNER_WRONG", code: "C-Wrong WR1", title: "White Right 1 • 角卡 FL(白朝前)、入 BL 槽",
+        wrongSlot: "FL",
+        algs: [
+          { slot: "BL", alg: "U (L' U L U) [L U L']" },
+          { slot: "BL", alg: "U' (F' U F) [L U L']" },
+          { slot: "FL", alg: "y' U' (R U R') [F U F']" },
+          { slot: "FR", alg: "y2 U (R' U R) [U R U R']" }
+        ]
+      },
+      {
+        id: 268, cat: "CA_CORNER_WRONG", code: "C-Wrong WL2", title: "White Left 2 • 角卡 FR(白朝前)、入 FL 槽",
+        wrongSlot: "FR",
+        algs: [
+          { slot: "FL", alg: "U' (R U' R') [U L' U' L]" },
+          { slot: "BL", alg: "y U (F' L F L') [U' L U2 L']" },
+          { slot: "BR", alg: "y2 U' (L U' L') [U R' U' R]" }
+        ]
+      },
+      {
+        id: 269, cat: "CA_CORNER_WRONG", code: "C-Wrong WR2", title: "White Right 2 • 角卡 FL(白朝前)、入 FR 槽",
+        wrongSlot: "FL",
+        algs: [
+          { slot: "FR", alg: "U (L' U L) [U' R U R']" },
+          { slot: "BR", alg: "y' U' (F R' F' R) [U R' U2 R]" },
+          { slot: "BL", alg: "y2 U (R' U R) [U' L U L']" }
+        ]
+      },
+      {
+        id: 270, cat: "CA_CORNER_WRONG", code: "C-Wrong WL3", title: "White Left 3 • 角卡 FR(白朝右)、對角入 BL",
+        wrongSlot: "FR",
+        algs: [
+          { slot: "BL", alg: "(R U' R') [L U2 L']" },
+          { slot: "BR", alg: "y (L' U' L) [f R' f']" },
+          { slot: "FR", alg: "y2 (L U' L') [R U2' R']" },
+          { slot: "FL", alg: "y' (R' U' R) [F U' F']" }
+        ]
+      },
+      {
+        id: 271, cat: "CA_CORNER_WRONG", code: "C-Wrong WR3", title: "White Right 3 • 角卡 FL(白朝左)、對角入 BR",
+        wrongSlot: "FL",
+        algs: [
+          { slot: "BR", alg: "(L' U L) [R' U2 R]" },
+          { slot: "BL", alg: "y' (R U R') [f' L f]" },
+          { slot: "FL", alg: "y2 (R' U R) [L' U2 L]" },
+          { slot: "FR", alg: "y (L U L') [F' U F]" }
+        ]
+      },
+      {
+        id: 272, cat: "CA_CORNER_WRONG", code: "C-Wrong WL4", title: "White Left 4 • S R' S' 經典中層秒解",
+        wrongSlot: "BR",
+        algs: [
+          { slot: "FR", alg: "(S R' S')" },
+          { slot: "BR", alg: "(R U' R') [f R' f']" },
+          { slot: "FR", alg: "y (L' U' L) [U R U' R']" },
+          { slot: "FL", alg: "(S' L S)" }
+        ]
+      },
+      {
+        id: 273, cat: "CA_CORNER_WRONG", code: "C-Wrong WR4", title: "White Right 4 • S' L S 經典中層秒解",
+        wrongSlot: "FL",
+        algs: [
+          { slot: "FR", alg: "(S' L' S)" },
+          { slot: "BL", alg: "(L' U L) [f' L f]" },
+          { slot: "FL", alg: "y' (R U R') [U' L' U L]" }
+        ]
+      },
+      {
+        id: 274, cat: "CA_CORNER_WRONG", code: "C-Wrong WL5", title: "White Left 5 • 角卡 BR、雙層 R2 U2' R' 秒提",
+        wrongSlot: "BR",
+        algs: [
+          { slot: "FR", alg: "(R' U' R2 U2' R')" },
+          { slot: "BL", alg: "y2 (L' U' L2 U2 L')" }
+        ]
+      },
+      {
+        id: 275, cat: "CA_CORNER_WRONG", code: "C-Wrong WR5", title: "White Right 5 • 角卡 BL、雙層 L2' U2' L 秒提",
+        wrongSlot: "BL",
+        algs: [
+          { slot: "FL", alg: "(L U L2' U2' L)" },
+          { slot: "BR", alg: "y2 (R U R2' U2' R)" }
+        ]
+      },
+      {
+        id: 276, cat: "CA_CORNER_WRONG", code: "C-Wrong WL6", title: "White Left 6 • 角卡對角槽、Sledge 提角入槽 (左)",
+        wrongSlot: "FR",
+        algs: [
+          { slot: "BL", alg: "U (R' F R F') [L U2 L']" },
+          { slot: "BR", alg: "y U2 (L' U2 L) [R' U' R]" },
+          { slot: "BR", alg: "y U (L' U' L) [U' R' U' R]" },
+          { slot: "FL", alg: "y' U2 (R' U2' R) [L' U' L]" }
+        ]
+      },
+      {
+        id: 277, cat: "CA_CORNER_WRONG", code: "C-Wrong WR6", title: "White Right 6 • 角卡對角槽、Sledge 提角入槽 (右)",
+        wrongSlot: "FL",
+        algs: [
+          { slot: "BR", alg: "U' (L F' L' F) [R' U2' R]" },
+          { slot: "BL", alg: "y' U2 (R U2' R') [L U L']" },
+          { slot: "BL", alg: "y' U' (R U R') [U L U L']" },
+          { slot: "FR", alg: "y U2 (L U2 L') [R U R']" }
+        ]
+      }
+    ];
+
+    /*************************************************************************
+     * 1D. CURATED WRONG-SLOT (錯槽 F2L) DATABASE
+     *************************************************************************/
+    const WRONG_SLOT_SECTIONS = [
+      {
+        id: "WS_PAIR",
+        name: "一、整組 Pair 連塊卡在錯槽 (例：綠橘 Pair 在橘藍 BR 槽)",
+        cases: [
+          {
+            id: 101, code: "WS-1",
+            title: "綠橘 Pair 完整卡在 BR (橘藍槽)",
+            targetSlot: "FR", wrongSlot: "BR",
+            algs: ["R' U2 R2 U R'", "(R' U R) U (R U' R')"],
+            note: "全 RU 連撥提出並順勢入槽"
+          },
+          {
+            id: 102, code: "WS-2",
+            title: "綠橘反相 Pair 卡在 BR (橘藍槽)",
+            targetSlot: "FR", wrongSlot: "BR",
+            algs: ["(R' U' R) U' (R U R')", "(R' U R) U' (R U R')"],
+            note: "R' U' R 提出同時拆開配對"
+          },
+          {
+            id: 103, code: "WS-3",
+            title: "綠橘 Pair 完整卡在 FL (綠紅槽)",
+            targetSlot: "FR", wrongSlot: "FL",
+            algs: ["(L' U' L) U' (R U R')", "L' U' L U (R U' R')"],
+            note: "左手提出、右手接走入槽"
+          },
+          {
+            id: 104, code: "WS-4",
+            title: "綠橘 Pair 完整卡在 BL (藍紅槽)",
+            targetSlot: "FR", wrongSlot: "BL",
+            algs: ["(L U L') U (R U' R')", "(L U' L') U2 (R U R')"],
+            note: "左後槽提出後直接入右前槽"
+          }
+        ]
+      },
+      {
+        id: "WS_EDGE",
+        name: "二、綠橘「邊塊」卡在錯槽 ＋ 角塊在頂層",
+        cases: [
+          {
+            id: 105, code: "WS-5",
+            title: "綠橘邊在 BR (橘藍槽) ＋ 角在頂(白朝右)",
+            targetSlot: "FR", wrongSlot: "BR",
+            algs: ["R' U' R2 U R'", "U' (R' U' R) U (R U' R')"],
+            note: "利用 BR 錯槽直接配對並 R2 U R' 入槽"
+          },
+          {
+            id: 106, code: "WS-6",
+            title: "綠橘邊在 BR (橘藍槽) ＋ 角在頂(白朝前)",
+            targetSlot: "FR", wrongSlot: "BR",
+            algs: ["U' (R' U R) U' (R U R')"],
+            note: "移開角塊後挑出邊塊同時配對"
+          },
+          {
+            id: 107, code: "WS-7",
+            title: "綠橘邊在 BR 反相 ＋ 角在頂(白朝上)",
+            targetSlot: "FR", wrongSlot: "BR",
+            algs: ["R' U2 R U (R U' R')"],
+            note: "直接壓向 BR 槽將邊角連成對"
+          },
+          {
+            id: 108, code: "WS-8",
+            title: "綠橘邊在 FL (綠紅槽) ＋ 角在頂(白朝右)",
+            targetSlot: "FR", wrongSlot: "FL",
+            algs: ["L' U' L U' (R U R')"],
+            note: "左前槽挑出邊塊順勢配對"
+          }
+        ]
+      },
+      {
+        id: "WS_CORNER",
+        name: "三、綠橘「角塊」卡在錯槽 ＋ 邊塊在頂層",
+        cases: [
+          {
+            id: 109, code: "WS-9",
+            title: "綠橘角在 BR (白朝底) ＋ 綠橘邊在頂",
+            targetSlot: "FR", wrongSlot: "BR",
+            algs: ["(R' U R) U (R U' R')", "U (R' U' R) U' (R U R')"],
+            note: "提出角塊同時與頂層邊塊配對"
+          },
+          {
+            id: 110, code: "WS-10",
+            title: "綠橘角在 BR (白朝右) ＋ 綠橘邊在頂",
+            targetSlot: "FR", wrongSlot: "BR",
+            algs: ["(R' U' R) U (R U' R')"],
+            note: "R' U' R 挑出成對後入 FR 槽"
+          },
+          {
+            id: 111, code: "WS-11",
+            title: "綠橘角在 FL (白朝底) ＋ 綠橘邊在頂",
+            targetSlot: "FR", wrongSlot: "FL",
+            algs: ["(L' U' L) U (R U' R')"],
+            note: "左手從 FL 槽挑出角塊配對"
+          }
+        ]
+      },
+      {
+        id: "WS_SWAP",
+        name: "四、雙槽錯位對調秒解 (FR 綠橘 與 BR 橘藍 互換)",
+        cases: [
+          {
+            id: 112, code: "WS-12",
+            title: "FR (綠橘 Pair) 與 BR (橘藍 Pair) 整對互換",
+            targetSlot: "FR", wrongSlot: "BR",
+            algs: ["R2 U' R2 U R2"],
+            note: "5 步同時復原右前與右後兩個槽位"
+          },
+          {
+            id: 113, code: "WS-13",
+            title: "FR (綠橘邊) 與 BR (橘藍邊) 兩邊塊互換",
+            targetSlot: "FR", wrongSlot: "BR",
+            algs: ["R2 U2 R2 U2 R2"],
+            note: "瞬間交換右側面兩個槽位的邊塊"
+          }
+        ]
+      }
+    ];
+
+    /*************************************************************************
+     * 2. MATHEMATICAL CUBE ENGINE (STRICT WHITE-BOTTOM, GREEN-FRONT)
+     *************************************************************************/
+    const FACE_COLORS = {
+      U: '#facc15',
+      D: '#ffffff',
+      F: '#16a34a',
+      B: '#2563eb',
+      R: '#ff7a00',
+      L: '#dc2626',
+      GREY: '#64748b',
+      CORE: '#0f172a'
+    };
+
+    const SLOT_HOME_COORDS = {
+      FR: [1, 1],
+      BR: [1, -1],
+      FL: [-1, 1],
+      BL: [-1, -1]
+    };
+
+    const BASE_MOVES = {
+      'R': { axis: 'x', layers: [1],  dir: -1 },
+      'L': { axis: 'x', layers: [-1], dir:  1 },
+      'U': { axis: 'y', layers: [1],  dir: -1 },
+      'D': { axis: 'y', layers: [-1], dir:  1 },
+      'F': { axis: 'z', layers: [1],  dir: -1 },
+      'B': { axis: 'z', layers: [-1], dir:  1 },
+      'r': { axis: 'x', layers: [0, 1],  dir: -1 },
+      'l': { axis: 'x', layers: [-1, 0], dir:  1 },
+      'u': { axis: 'y', layers: [0, 1],  dir: -1 },
+      'd': { axis: 'y', layers: [-1, 0], dir:  1 },
+      'f': { axis: 'z', layers: [0, 1],  dir: -1 },
+      'b': { axis: 'z', layers: [-1, 0], dir:  1 },
+      'M': { axis: 'x', layers: [0], dir:  1 },
+      'E': { axis: 'y', layers: [0], dir:  1 },
+      'S': { axis: 'z', layers: [0], dir: -1 },
+      'x': { axis: 'x', layers: [-1, 0, 1], dir: -1 },
+      'y': { axis: 'y', layers: [-1, 0, 1], dir: -1 },
+      'z': { axis: 'z', layers: [-1, 0, 1], dir: -1 }
+    };
+
+    let appState = {
+      mainTab: 'academy', // Default to the newly added Cube Academy 77-case tab
+      selectedSlot: 'FR',
+      selectedCategory: 'ALL',
+      viewMode: 'compare', // Default to 'compare' so 4-slot cards + Large Header FR Diagram are immediately visible!
+      academyCategory: 'ALL',
+      academySearchQuery: '',
+      af2lSlot: 'FR',
+      af2lCategory: 'ALL',
+      af2lViewMode: 'single', // 'single' | 'compare'
+      maskMode: 'f2l',
+      thumbCamMode: 'slot', // Default slot-aligned thumbnails for clear 4-slot comparison
+      searchQuery: '',
+      af2lSearchQuery: '',
+      activeCaseId: 1,
+      activeAlgSlot: 'FR',
+      activeWrongSlot: null,
+      activeAlgStr: "U (R U' R')",
+      parsedMoves: [],
+      currentStep: 0,
+      isPlaying: false,
+      animSpeed: 1.2,
+      autoLoop: false
+    };
+
+    /**
+     * Expands repeated groups like `(U R U' R')*3` or `(L U L' U')*2`
+     * and preserves `( ... )` setup vs `[ ... ]` insert phase tags on each move token!
+     */
+    function expandRepeatedTriggers(str) {
+      if (!str) return '';
+      return str.replace(/\(([^)]+)\)\s*\*(\d+)/g, (_, inner, count) => {
+        const n = Math.min(6, Math.max(1, parseInt(count, 10) || 1));
+        return Array(n).fill(`(${inner.trim()})`).join(' ');
+      }).replace(/\[([^\]]+)\]\s*\*(\d+)/g, (_, inner, count) => {
+        const n = Math.min(6, Math.max(1, parseInt(count, 10) || 1));
+        return Array(n).fill(`[${inner.trim()}]`).join(' ');
+      });
+    }
+
+    function parseAlg(algStr) {
+      if (!algStr) return [];
+      const expanded = expandRepeatedTriggers(algStr);
+      const tokenRegex = /(\(|\)|\[|\])|([RLUDFBrludfbMESxyz])(2'|'|2)?/g;
+      const tokens = [];
+      let currentPhase = 'pre'; // 'pre' | 'setup' | 'insert'
+      let match;
+      while ((match = tokenRegex.exec(expanded)) !== null) {
+        const bracket = match[1];
+        if (bracket) {
+          if (bracket === '(') currentPhase = 'setup';
+          else if (bracket === ')') currentPhase = 'pre';
+          else if (bracket === '[') currentPhase = 'insert';
+          else if (bracket === ']') currentPhase = 'pre';
+          continue;
+        }
+        const face = match[2];
+        const mod = match[3] || '';
+        const base = BASE_MOVES[face];
+        if (!base) continue;
+        let quarterTurns = base.dir;
+        if (mod === "'") quarterTurns = -base.dir;
+        else if (mod === "2") quarterTurns = base.dir * 2;
+        else if (mod === "2'") quarterTurns = -base.dir * 2;
+
+        tokens.push({
+          raw: face + mod,
+          face,
+          mod,
+          axis: base.axis,
+          layers: base.layers,
+          quarters: quarterTurns,
+          phase: currentPhase
+        });
+      }
+      return tokens;
+    }
+
+    function invertMove(m) {
+      let invMod = '';
+      if (m.mod === '') invMod = "'";
+      else if (m.mod === "'") invMod = '';
+      else if (m.mod === '2') invMod = "2'";
+      else if (m.mod === "2'") invMod = '2';
+      return {
+        ...m,
+        raw: m.face + invMod,
+        mod: invMod,
+        quarters: -m.quarters
+      };
+    }
+
+    function rotateVec90(vec, axis, quarters) {
+      let [x, y, z] = vec;
+      const steps = ((quarters % 4) + 4) % 4;
+      for (let i = 0; i < steps; i++) {
+        if (axis === 'x') {
+          // Right-hand rule around +X: +Y -> +Z -> -Y -> -Z
+          const ny = -z, nz = y;
+          y = ny; z = nz;
+        } else if (axis === 'y') {
+          // Right-hand rule around +Y: +Z -> +X -> -Z -> -X
+          const nx = z, nz = -x;
+          x = nx; z = nz;
+        } else if (axis === 'z') {
+          // Right-hand rule around +Z: +X -> +Y -> -X -> -Y
+          const nx = -y, ny = x;
+          x = nx; y = ny;
+        }
+      }
+      return [Math.round(x), Math.round(y), Math.round(z)];
+    }
+
+    function createSolvedLogicalCube() {
+      const cubies = [];
+      for (let hx = -1; hx <= 1; hx++) {
+        for (let hy = -1; hy <= 1; hy++) {
+          for (let hz = -1; hz <= 1; hz++) {
+            const stickers = [];
+            if (hx === 1)  stickers.push({ homeFace: 'R', color: FACE_COLORS.R, normal: [1, 0, 0] });
+            if (hx === -1) stickers.push({ homeFace: 'L', color: FACE_COLORS.L, normal: [-1, 0, 0] });
+            if (hy === 1)  stickers.push({ homeFace: 'U', color: FACE_COLORS.U, normal: [0, 1, 0] });
+            if (hy === -1) stickers.push({ homeFace: 'D', color: FACE_COLORS.D, normal: [0, -1, 0] });
+            if (hz === 1)  stickers.push({ homeFace: 'F', color: FACE_COLORS.F, normal: [0, 0, 1] });
+            if (hz === -1) stickers.push({ homeFace: 'B', color: FACE_COLORS.B, normal: [0, 0, -1] });
+
+            cubies.push({
+              home: [hx, hy, hz],
+              pos: [hx, hy, hz],
+              stickers
+            });
+          }
+        }
+      }
+      return cubies;
+    }
+
+    function applyMoveToLogicalCube(cubies, move) {
+      const axisIdx = move.axis === 'x' ? 0 : (move.axis === 'y' ? 1 : 2);
+      for (const c of cubies) {
+        if (move.layers.includes(c.pos[axisIdx])) {
+          c.pos = rotateVec90(c.pos, move.axis, move.quarters);
+          for (const s of c.stickers) {
+            s.normal = rotateVec90(s.normal, move.axis, move.quarters);
+          }
+        }
+      }
+    }
+
+    /**
+     * Exact group-theoretic inverse setup:
+     * If an algorithm M_1 M_2 ... M_n includes whole-cube rotations (y, y', x, z),
+     * wide moves (d, r, l, u, f, b), or slice moves (M, E, S) that move the centers,
+     * then starting at S_0 (where centers are strictly White=D, Green=F, Orange=R)
+     * and executing M_1 ... M_n arrives at S_final where the whole cube has been
+     * rotated by the net center transformation of M_1 ... M_n.
+     *
+     * Therefore:
+     *   S_0 = inv(M_1) * inv(M_2) * ... * inv(M_n) * (C_net * Solved)
+     * where C_net is the rigid-body rotation of the centers produced by M_1 ... M_n.
+     * This guarantees 100% that:
+     *   1) At Step 0 (S_0), White is at Bottom (0,-1,0) and Green is at Front (0,0,1).
+     *   2) Playing M_1 ... M_n forward from S_0 solves the cube 100% accurately!
+     */
+    function getForwardCenterMoves(moves) {
+      return moves.filter(m => m.layers.includes(0)).map(m => ({
+        axis: m.axis,
+        layers: [-1, 0, 1],
+        quarters: m.quarters
+      }));
+    }
+
+    function computeCaseStartLogicalCube(algStr) {
+      const moves = parseAlg(algStr);
+      const cube = createSolvedLogicalCube();
+
+      // 1. Pre-orient the solved cube to the final center orientation of the algorithm
+      const centerMoves = getForwardCenterMoves(moves);
+      for (const cm of centerMoves) {
+        applyMoveToLogicalCube(cube, cm);
+      }
+
+      // 2. Apply exact inverse of M_n ... M_1
+      for (let i = moves.length - 1; i >= 0; i--) {
+        const inv = invertMove(moves[i]);
+        applyMoveToLogicalCube(cube, inv);
+      }
+
+      return cube;
+    }
+
+    function getStickerDisplayColor(cubie, sticker, maskMode, targetSlot = 'FR') {
+      const [hx, hy, hz] = cubie.home;
+      if (maskMode === 'full') return sticker.color;
+      if (hy === 1) return FACE_COLORS.GREY;
+      if (maskMode === 'f2l') return sticker.color;
+      if (maskMode === 'slot') {
+        const isCenter = (Math.abs(hx) + Math.abs(hy) + Math.abs(hz)) === 1;
+        const isCrossEdge = (hy === -1 && (Math.abs(hx) + Math.abs(hz) === 1));
+        if (isCenter || isCrossEdge) return sticker.color;
+
+        const [tx, tz] = SLOT_HOME_COORDS[targetSlot] || [1, 1];
+        const isTargetPair = (hx === tx && hz === tz && (hy === -1 || hy === 0));
+        return isTargetPair ? sticker.color : '#334155';
+      }
+      return sticker.color;
+    }
+
+    /*************************************************************************
+     * 3. THREE.JS 3D INTERACTIVE CUBE ENGINE (COMPACT SIZE, NO WHEEL HIJACK)
+     *************************************************************************/
+    let scene, camera, renderer, cubeRootGroup, activePivotGroup;
+    let threeCubies = [];
+    let currentTween = null;
+    let lastFrameTime = performance.now();
+    let loopTimeoutId = null;
+
+    // Pulled back radius (7.5) so the cube fits comfortably with breathing room
+    let camSpherical = { radius: 7.5, theta: 0.58, phi: 1.08 };
+    let targetSpherical = { radius: 7.5, theta: 0.58, phi: 1.08 };
+    let isDragging = false;
+    let prevPointer = { x: 0, y: 0 };
+
+    function initThreePlayer() {
+      const container = document.getElementById('three-canvas-container');
+      const w = container.clientWidth || 280;
+      const h = container.clientHeight || 210;
+
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(34, w / h, 0.1, 100);
+      updateCameraFromSpherical(true);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(w, h);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      container.innerHTML = '';
+      container.appendChild(renderer.domElement);
+
+      scene.add(new THREE.AmbientLight(0xffffff, 0.88));
+      const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
+      dirLight.position.set(6, 10, 8);
+      scene.add(dirLight);
+
+      cubeRootGroup = new THREE.Group();
+      scene.add(cubeRootGroup);
+
+      activePivotGroup = new THREE.Group();
+      cubeRootGroup.add(activePivotGroup);
+
+      buildThreeCubies();
+
+      // Pointer drag for 3D rotation ONLY (no wheel listener so page scrolls naturally!)
+      const domEl = renderer.domElement;
+      domEl.addEventListener('pointerdown', (e) => {
+        isDragging = true;
+        prevPointer = { x: e.clientX, y: e.clientY };
+        domEl.setPointerCapture(e.pointerId);
+      });
+      domEl.addEventListener('pointermove', (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - prevPointer.x;
+        const dy = e.clientY - prevPointer.y;
+        prevPointer = { x: e.clientX, y: e.clientY };
+        targetSpherical.theta -= dx * 0.0085;
+        targetSpherical.phi = Math.max(0.25, Math.min(Math.PI - 0.25, targetSpherical.phi - dy * 0.0085));
+      });
+      domEl.addEventListener('pointerup', (e) => {
+        isDragging = false;
+        try { domEl.releasePointerCapture(e.pointerId); } catch (_) {}
+      });
+
+      window.addEventListener('resize', () => {
+        if (!container || !renderer || !camera) return;
+        const nw = container.clientWidth;
+        const nh = container.clientHeight;
+        if (nw && nh) {
+          camera.aspect = nw / nh;
+          camera.updateProjectionMatrix();
+          renderer.setSize(nw, nh);
+        }
+      });
+    }
+
+    function buildThreeCubies() {
+      threeCubies = [];
+      const coreGeo = new THREE.BoxGeometry(0.94, 0.94, 0.94);
+      const coreMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.4 });
+      const stickerGeo = new THREE.PlaneGeometry(0.84, 0.84);
+
+      const faceDefs = [
+        { face: 'R', cond: (x,y,z) => x === 1,  color: FACE_COLORS.R, pos: [0.475, 0, 0],  rot: [0, Math.PI/2, 0] },
+        { face: 'L', cond: (x,y,z) => x === -1, color: FACE_COLORS.L, pos: [-0.475, 0, 0], rot: [0, -Math.PI/2, 0] },
+        { face: 'U', cond: (x,y,z) => y === 1,  color: FACE_COLORS.U, pos: [0, 0.475, 0],  rot: [-Math.PI/2, 0, 0] },
+        { face: 'D', cond: (x,y,z) => y === -1, color: FACE_COLORS.D, pos: [0, -0.475, 0], rot: [Math.PI/2, 0, 0] },
+        { face: 'F', cond: (x,y,z) => z === 1,  color: FACE_COLORS.F, pos: [0, 0, 0.475],  rot: [0, 0, 0] },
+        { face: 'B', cond: (x,y,z) => z === -1, color: FACE_COLORS.B, pos: [0, 0, -0.475], rot: [0, Math.PI, 0] }
+      ];
+
+      for (let hx = -1; hx <= 1; hx++) {
+        for (let hy = -1; hy <= 1; hy++) {
+          for (let hz = -1; hz <= 1; hz++) {
+            const group = new THREE.Group();
+            group.position.set(hx, hy, hz);
+            group.add(new THREE.Mesh(coreGeo, coreMat));
+
+            const stickerMeshes = [];
+            for (const fd of faceDefs) {
+              if (fd.cond(hx, hy, hz)) {
+                const mat = new THREE.MeshBasicMaterial({ color: fd.color });
+                const mesh = new THREE.Mesh(stickerGeo, mat);
+                mesh.position.set(...fd.pos);
+                mesh.rotation.set(...fd.rot);
+                group.add(mesh);
+                stickerMeshes.push({ face: fd.face, baseColor: fd.color, mat });
+              }
+            }
+
+            cubeRootGroup.add(group);
+            threeCubies.push({ home: [hx, hy, hz], group, stickerMeshes });
+          }
+        }
+      }
+    }
+
+    function updateCameraFromSpherical(instant = false) {
+      if (!camera) return;
+      if (instant) {
+        camSpherical.theta = targetSpherical.theta;
+        camSpherical.phi = targetSpherical.phi;
+        camSpherical.radius = targetSpherical.radius;
+      } else {
+        camSpherical.theta += (targetSpherical.theta - camSpherical.theta) * 0.15;
+        camSpherical.phi += (targetSpherical.phi - camSpherical.phi) * 0.15;
+        camSpherical.radius += (targetSpherical.radius - camSpherical.radius) * 0.15;
+      }
+      const r = camSpherical.radius;
+      const sinPhi = Math.sin(camSpherical.phi);
+      camera.position.x = r * sinPhi * Math.sin(camSpherical.theta);
+      camera.position.y = r * Math.cos(camSpherical.phi);
+      camera.position.z = r * sinPhi * Math.cos(camSpherical.theta);
+      camera.lookAt(0, 0, 0);
+    }
+
+    function setCameraPreset(preset) {
+      if (preset === 'FR') { targetSpherical.theta = 0.62; targetSpherical.phi = 1.08; }
+      else if (preset === 'BR') { targetSpherical.theta = 2.45; targetSpherical.phi = 1.08; }
+      else if (preset === 'FL') { targetSpherical.theta = -0.62; targetSpherical.phi = 1.08; }
+      else if (preset === 'BL') { targetSpherical.theta = -2.45; targetSpherical.phi = 1.08; }
+      else if (preset === 'BOTTOM') { targetSpherical.theta = 0.55; targetSpherical.phi = 2.45; }
+      else if (preset === 'RIGHT_BOTH') { targetSpherical.theta = 1.25; targetSpherical.phi = 1.06; }
+    }
+
+    function updateThreeStickerColors() {
+      for (const tc of threeCubies) {
+        const fakeCubie = { home: tc.home };
+        for (const sm of tc.stickerMeshes) {
+          const hex = getStickerDisplayColor(
+            fakeCubie,
+            { color: sm.baseColor },
+            appState.maskMode,
+            appState.activeAlgSlot
+          );
+          sm.mat.color.set(hex);
+        }
+      }
+    }
+
+    function snapThreeCubeToStep(stepIndex) {
+      if (currentTween) finishCurrentTweenInstantly();
+
+      for (const tc of threeCubies) {
+        cubeRootGroup.attach(tc.group);
+        tc.group.position.set(tc.home[0], tc.home[1], tc.home[2]);
+        tc.group.rotation.set(0, 0, 0);
+        tc.group.updateMatrix();
+      }
+
+      const moves = appState.parsedMoves;
+      // 1. Pre-orient solved cube by net center transformation of moves
+      const centerMoves = getForwardCenterMoves(moves);
+      for (const cm of centerMoves) {
+        applyInstantMoveToThree(cm);
+      }
+      // 2. Apply exact inverse moves M_n^-1 ... M_1^-1 to reach S_0 (White D, Green F)
+      for (let i = moves.length - 1; i >= 0; i--) {
+        const inv = invertMove(moves[i]);
+        applyInstantMoveToThree(inv);
+      }
+      // 3. Apply forward moves up to stepIndex
+      for (let i = 0; i < stepIndex; i++) {
+        applyInstantMoveToThree(moves[i]);
+      }
+
+      appState.currentStep = stepIndex;
+      updateTimelineUI();
+    }
+
+    function applyInstantMoveToThree(move) {
+      const axisIdx = move.axis;
+      const angle = move.quarters * (Math.PI / 2);
+
+      activePivotGroup.rotation.set(0, 0, 0);
+      activePivotGroup.position.set(0, 0, 0);
+      activePivotGroup.updateMatrixWorld();
+
+      const affected = [];
+      for (const tc of threeCubies) {
+        if (move.layers.includes(Math.round(tc.group.position[axisIdx]))) {
+          affected.push(tc.group);
+        }
+      }
+      for (const g of affected) activePivotGroup.attach(g);
+
+      activePivotGroup.rotation[axisIdx] = angle;
+      activePivotGroup.updateMatrixWorld();
+
+      for (const g of affected) {
+        cubeRootGroup.attach(g);
+        g.position.set(Math.round(g.position.x), Math.round(g.position.y), Math.round(g.position.z));
+        g.updateMatrixWorld();
+      }
+      activePivotGroup.rotation.set(0, 0, 0);
+    }
+
+    function animateSingleMove(move, onComplete) {
+      if (currentTween) finishCurrentTweenInstantly();
+
+      const axisKey = move.axis;
+      const targetAngle = move.quarters * (Math.PI / 2);
+      const isDouble = Math.abs(move.quarters) === 2;
+      const duration = (isDouble ? 340 : 230) / appState.animSpeed;
+
+      activePivotGroup.rotation.set(0, 0, 0);
+      activePivotGroup.position.set(0, 0, 0);
+      activePivotGroup.updateMatrixWorld();
+
+      const affected = [];
+      for (const tc of threeCubies) {
+        if (move.layers.includes(Math.round(tc.group.position[axisKey]))) {
+          affected.push(tc.group);
+        }
+      }
+      for (const g of affected) activePivotGroup.attach(g);
+
+      currentTween = { axisKey, affected, targetAngle, elapsed: 0, duration, onComplete };
+    }
+
+    function finishCurrentTweenInstantly() {
+      if (!currentTween) return;
+      const tw = currentTween;
+      currentTween = null;
+
+      activePivotGroup.rotation[tw.axisKey] = tw.targetAngle;
+      activePivotGroup.updateMatrixWorld();
+
+      for (const g of tw.affected) {
+        cubeRootGroup.attach(g);
+        g.position.set(Math.round(g.position.x), Math.round(g.position.y), Math.round(g.position.z));
+        g.updateMatrixWorld();
+      }
+      activePivotGroup.rotation.set(0, 0, 0);
+      if (tw.onComplete) tw.onComplete();
+    }
+
+    function easeInOutCubic(t) {
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+
+    function mainAnimationLoop(now) {
+      const dt = now - lastFrameTime;
+      lastFrameTime = now;
+      updateCameraFromSpherical();
+
+      if (currentTween) {
+        currentTween.elapsed += dt;
+        const t = Math.min(1, currentTween.elapsed / currentTween.duration);
+        activePivotGroup.rotation[currentTween.axisKey] = currentTween.targetAngle * easeInOutCubic(t);
+        if (t >= 1) finishCurrentTweenInstantly();
+      }
+      if (renderer && scene && camera) renderer.render(scene, camera);
+      requestAnimationFrame(mainAnimationLoop);
+    }
+
+    /*************************************************************************
+     * 3B. CHINESE MNEMONIC GENERATOR (口訣生成器)
+     * Exact mapping requested:
+     *   F = 壓, F' = 回, F2 = 壓壓
+     *   U = 左, U' = 右, U2 = 左左
+     *   R = 上, R' = 下, R2 = 上上
+     *   L' = 上, L = 下, L2 = 下下
+     *************************************************************************/
+    function tokenToChineseMnemonic(rawToken) {
+      const map = {
+        "F":  { word: "壓", hand: "" },
+        "F'": { word: "回", hand: "" },
+        "F2": { word: "壓兩下", hand: "" },
+        "F2'": { word: "回兩下", hand: "" },
+        "U":  { word: "右", hand: "" },
+        "U'": { word: "左", hand: "" },
+        "U2": { word: "右右", hand: "" },
+        "U2'": { word: "左左", hand: "" },
+        "R":  { word: "上", hand: "右" },
+        "R'": { word: "下", hand: "右" },
+        "R2": { word: "上上", hand: "右" },
+        "R2'": { word: "下下", hand: "右" },
+        "L'": { word: "上", hand: "左" },
+        "L":  { word: "下", hand: "左" },
+        "L2": { word: "下下", hand: "左" },
+        "L2'": { word: "上上", hand: "左" },
+        "r":  { word: "右雙上", hand: "r" },
+        "r'": { word: "右雙下", hand: "r'" },
+        "r2": { word: "右雙上上", hand: "r2" },
+        "l'": { word: "左雙上", hand: "l'" },
+        "l":  { word: "左雙下", hand: "l" },
+        "f":  { word: "雙層壓", hand: "f" },
+        "f'": { word: "雙層回", hand: "f'" },
+        "d":  { word: "底左", hand: "d" },
+        "d'": { word: "底右", hand: "d'" },
+        "u":  { word: "雙層左", hand: "u" },
+        "u'": { word: "雙層右", hand: "u'" },
+        "B":  { word: "後壓", hand: "B" },
+        "B'": { word: "後回", hand: "B'" },
+        "B2": { word: "後壓兩下", hand: "B2" },
+        "S":  { word: "中壓", hand: "S" },
+        "S'": { word: "中回", hand: "S'" },
+        "M":  { word: "中下", hand: "M" },
+        "M'": { word: "中上", hand: "M'" },
+        "y":  { word: "轉右(y)", hand: "y" },
+        "y'": { word: "轉左(y')", hand: "y'" },
+        "y2": { word: "轉半圈(y2)", hand: "y2" }
+      };
+      return map[rawToken] || { word: rawToken, hand: "" };
+    }
+
+    function generateMnemonicHTML(algStr) {
+      if (!algStr) return '';
+      const expanded = expandRepeatedTriggers(algStr);
+      // Detect if both L and R moves appear in the same formula so we can subtly tag Left-hand 上/下
+      const hasL = /[Ll]/.test(expanded);
+      const hasR = /[Rr]/.test(expanded);
+      const bothHands = hasL && hasR;
+
+      const tokenRegex = /(\(|\)|\[|\])|([RLUDFBrludfbMESxyz](?:2'|'|2)?)/g;
+      const parts = [];
+      let match;
+      while ((match = tokenRegex.exec(expanded)) !== null) {
+        if (match[1]) {
+          const b = match[1];
+          if (b === '(') parts.push('<span class="text-sky-400 font-normal">(</span>');
+          else if (b === ')') parts.push('<span class="text-sky-400 font-normal">)</span> ');
+          else if (b === '[') parts.push('<span class="text-emerald-400 font-normal">[</span>');
+          else if (b === ']') parts.push('<span class="text-emerald-400 font-normal">]</span> ');
+        } else if (match[2]) {
+          const tok = match[2];
+          const info = tokenToChineseMnemonic(tok);
+          const handPrefix = (bothHands && tok.startsWith('L'))
+            ? '<sub class="text-[9px] text-rose-300/90 font-normal mr-0.5">左</sub>'
+            : '';
+          parts.push(`<span class="inline-block mr-1">${handPrefix}${info.word}</span>`);
+        }
+      }
+      return parts.join('').trim();
+    }
+
+    function generatePlainMnemonicText(algStr) {
+      if (!algStr) return '';
+      const expanded = expandRepeatedTriggers(algStr);
+      const tokenRegex = /(\(|\)|\[|\])|([RLUDFBrludfbMESxyz](?:2'|'|2)?)/g;
+      const out = [];
+      let match;
+      while ((match = tokenRegex.exec(expanded)) !== null) {
+        if (match[1]) {
+          out.push(match[1]);
+        } else if (match[2]) {
+          out.push(tokenToChineseMnemonic(match[2]).word);
+        }
+      }
+      return out.join(' ').replace(/\(\s+/g, '(').replace(/\s+\)/g, ')').replace(/\[\s+/g, '[').replace(/\s+\]/g, ']');
+    }
+
+    function buildCustomWrongSlotAlg(targetSlot, wrongSlot, stateType) {
+      if (targetSlot === wrongSlot) {
+        return stateType === 'PAIR_FLIPPED'
+          ? "(R U' R') U' (R U R' U') (R U R')"
+          : "(R U' R' U) (R U' R')";
+      }
+      const extractMap = {
+        FR: { solved: "(R U' R')", flipped: "(R U R')", edge: "(R U' R')", corner: "(R U R')" },
+        BR: { solved: "(R' U R)",  flipped: "(R' U' R)", edge: "(R' U' R)", corner: "(R' U R)" },
+        FL: { solved: "(L' U' L)", flipped: "(L' U L)",  edge: "(L' U' L)", corner: "(L' U' L)" },
+        BL: { solved: "(L U L')",  flipped: "(L U' L')", edge: "(L U' L')", corner: "(L U L')" }
+      };
+      const insertMap = {
+        FR: "U (R U' R')",
+        BR: "U' (R' U R)",
+        FL: "U' (L' U L)",
+        BL: "U (L U' L')"
+      };
+      const ex = extractMap[wrongSlot] || extractMap.BR;
+      const ins = insertMap[targetSlot] || insertMap.FR;
+      if (stateType === 'PAIR_FLIPPED') return `${ex.flipped} U' ${ins}`;
+      if (stateType === 'EDGE_ONLY') return `U' ${ex.edge} ${ins}`;
+      if (stateType === 'CORNER_ONLY') return `${ex.corner} ${ins}`;
+      return `${ex.solved} ${ins}`;
+    }
+
+    /*************************************************************************
+     * 4. 2D ISOMETRIC CANVAS THUMBNAIL RENDERER (DYNAMIC HI-DPI SCALING)
+     *************************************************************************/
+    function renderCubeThumbnail(canvas, algStr, maskMode, targetSlot, caseId = 0, wrongSlot = null, customSize = 84) {
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const width = customSize;
+      const height = customSize;
+      if (canvas.width !== width * dpr || canvas.height !== height * dpr) {
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+      }
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, width, height);
+
+      const cubies = computeCaseStartLogicalCube(algStr);
+
+      let camYaw = 0;
+      const slotToView = wrongSlot || targetSlot;
+
+      if (wrongSlot || appState.thumbCamMode === 'slot') {
+        if (slotToView === 'FR') camYaw = 0;
+        else if (slotToView === 'BR') camYaw = 1;
+        else if (slotToView === 'BL') camYaw = 2;
+        else if (slotToView === 'FL') camYaw = 3;
+      } else {
+        camYaw = 0;
+      }
+
+      function camToWorld(cx, cy, cz) {
+        let x = cx, y = cy, z = cz;
+        for (let i = 0; i < camYaw; i++) {
+          const nx = z, nz = -x;
+          x = nx; z = nz;
+        }
+        return [x, y, z];
+      }
+
+      function getStickerAtCam(camX, camY, camZ, camNormal) {
+        const [wx, wy, wz] = camToWorld(camX, camY, camZ);
+        const [wnx, wny, wnz] = camToWorld(camNormal[0], camNormal[1], camNormal[2]);
+        const c = cubies.find(cb => cb.pos[0] === wx && cb.pos[1] === wy && cb.pos[2] === wz);
+        if (!c) return FACE_COLORS.GREY;
+        const st = c.stickers.find(s => s.normal[0] === wnx && s.normal[1] === wny && s.normal[2] === wnz);
+        if (!st) return FACE_COLORS.GREY;
+        return getStickerDisplayColor(c, st, maskMode, targetSlot);
+      }
+
+      const cx = width / 2;
+      const cy = height / 2;
+      const s = width * 0.132; // Scales crisply to fill ~82% of canvas
+      const cos30 = Math.cos(Math.PI / 6);
+      const sin30 = Math.sin(Math.PI / 6);
+
+      function project(x, y, z) {
+        return [
+          cx + (x - z) * cos30 * s,
+          cy + (x + z) * sin30 * s - y * s
+        ];
+      }
+
+      function drawQuad(p1, p2, p3, p4, fillColor) {
+        ctx.beginPath();
+        ctx.moveTo(p1[0], p1[1]);
+        ctx.lineTo(p2[0], p2[1]);
+        ctx.lineTo(p3[0], p3[1]);
+        ctx.lineTo(p4[0], p4[1]);
+        ctx.closePath();
+        ctx.fillStyle = fillColor;
+        ctx.fill();
+        ctx.lineWidth = Math.max(1.1, width * 0.015);
+        ctx.strokeStyle = '#090d16';
+        ctx.stroke();
+      }
+
+      const gap = 0.05;
+      for (let ix = -1; ix <= 1; ix++) {
+        for (let iz = -1; iz <= 1; iz++) {
+          const color = getStickerAtCam(ix, 1, iz, [0, 1, 0]);
+          const x0 = ix - 0.5 + gap, x1 = ix + 0.5 - gap;
+          const z0 = iz - 0.5 + gap, z1 = iz + 0.5 - gap;
+          drawQuad(project(x0, 1.5, z0), project(x1, 1.5, z0), project(x1, 1.5, z1), project(x0, 1.5, z1), color);
+        }
+      }
+      for (let ix = -1; ix <= 1; ix++) {
+        for (let iy = -1; iy <= 1; iy++) {
+          const color = getStickerAtCam(ix, iy, 1, [0, 0, 1]);
+          const x0 = ix - 0.5 + gap, x1 = ix + 0.5 - gap;
+          const y0 = iy - 0.5 + gap, y1 = iy + 0.5 - gap;
+          drawQuad(project(x0, y1, 1.5), project(x1, y1, 1.5), project(x1, y0, 1.5), project(x0, y0, 1.5), color);
+        }
+      }
+      for (let iz = -1; iz <= 1; iz++) {
+        for (let iy = -1; iy <= 1; iy++) {
+          const color = getStickerAtCam(1, iy, iz, [1, 0, 0]);
+          const z0 = iz - 0.5 + gap, z1 = iz + 0.5 - gap;
+          const y0 = iy - 0.5 + gap, y1 = iy + 0.5 - gap;
+          drawQuad(project(1.5, y1, z1), project(1.5, y1, z0), project(1.5, y0, z0), project(1.5, y0, z1), color);
+        }
+      }
+
+      ctx.restore();
+    }
+
+    /*************************************************************************
+     * 5. PLAYBACK & SELECTION LOGIC
+     *************************************************************************/
+    const SLOT_LABELS = {
+      FR: 'FR 綠橘',
+      BR: 'BR 橘藍',
+      FL: 'FL 綠紅',
+      BL: 'BL 藍紅'
+    };
+
+    /**
+     * Merges CubeSkills 4-Slot (#1-#41), Cube Academy Free F2L (with (setup) [insert],
+     * EO, Keyhole, and Open-slot tricks), and SpeedCubeDB Advanced F2L (#42-#95)
+     * into ONE unified master list `UNIFIED_F2L_CASES`.
+     */
+    const CA_TO_STD_MAP = {
+      201: 1, 202: 2, 203: 4, 204: 3,
+      205: 11, 206: 12, 207: 13, 208: 14, 209: 6, 210: 5, 211: 15, 212: 16, 213: 17, 214: 18,
+      215: 25, 216: 26, 217: 27, 218: 28, 219: 30, 220: 29,
+      221: 32, 222: 31, 223: 33, 224: 34, 225: 36, 226: 35,
+      227: 8, 228: 7, 229: 10, 230: 9, 231: 19, 232: 20, 233: 21, 234: 22, 235: 23, 236: 24,
+      237: 38, 238: 39, 239: 40, 240: 41, 241: 37
+    };
+
+    const CA_WRONG_TO_AF2L_MAP = {
+      242: 127, 243: 133, 244: 130, 245: 136, 246: 133, 247: 136,
+      248: 125, 249: 131, 250: 128, 251: 122, 252: 119, 253: 120,
+      254: 122, 255: 123, 256: 131, 257: 132, 258: 134, 259: 135,
+      260: 103, 261: 105, 262: 101, 263: 101, 264: 106, 265: 104,
+      266: 111, 267: 115, 268: 107, 269: 107, 270: 117, 271: 113,
+      272: 112, 273: 107, 274: 113, 275: 117, 276: 116, 277: 114
+    };
+
+    function normalizeMovesKey(algStr) {
+      return parseAlg(algStr).map(m => m.raw).join(' ');
+    }
+
+    function buildUnifiedF2LDatabase() {
+      const unified = [];
+
+      // 1. Standard Cases (#1 - #41) merged with Cube Academy solutions & tags
+      F2L_CASES.forEach(std => {
+        const entry = {
+          id: std.id,
+          displayNum: `#${std.id}`,
+          cat: std.cat,
+          title: std.title,
+          wrongRel: null,
+          tags: [],
+          slots: { FR: [], BR: [], FL: [], BL: [] }
+        };
+
+        ['FR', 'BR', 'FL', 'BL'].forEach(slotKey => {
+          (std[slotKey] || []).forEach(algStr => {
+            entry.slots[slotKey].push({ alg: algStr, badge: null });
+          });
+        });
+
+        unified.push(entry);
+      });
+
+      // Merge Cube Academy #201-#241 into Standard #1-#41
+      CUBE_ACADEMY_CASES.forEach(ca => {
+        const targetStdId = CA_TO_STD_MAP[ca.id];
+        if (!targetStdId) return;
+        const entry = unified.find(u => u.id === targetStdId);
+        if (!entry) return;
+
+        (ca.tags || []).forEach(t => {
+          if (!entry.tags.includes(t)) entry.tags.push(t);
+        });
+
+        (ca.algs || []).forEach(aItem => {
+          const list = entry.slots[aItem.slot];
+          if (!list) return;
+          const normKey = normalizeMovesKey(aItem.alg);
+          const existingIdx = list.findIndex(x => normalizeMovesKey(x.alg) === normKey);
+          if (existingIdx !== -1) {
+            // Upgrade plain notation to Cube Academy's (setup) [insert] bracketed notation & badge
+            if (aItem.alg.includes('[') && !list[existingIdx].alg.includes('[')) {
+              list[existingIdx].alg = aItem.alg;
+            }
+            if (aItem.badge && !list[existingIdx].badge) {
+              list[existingIdx].badge = aItem.badge;
+            }
+          } else {
+            list.push({ alg: aItem.alg, badge: aItem.badge || null });
+          }
+        });
+      });
+
+      // 2. Wrong-Slot / Advanced Cases (#42 - #95) merged from SpeedCubeDB AF2L + Cube Academy Wrong Slot
+      SPEEDCUBEDB_AF2L_CASES.forEach((af, idx) => {
+        const unifiedNum = 42 + idx; // #42 to #95
+        const entry = {
+          id: af.id, // 101 - 154
+          displayNum: `#${unifiedNum}`,
+          subCode: `AF2L-${af.af2lNum}`,
+          cat: af.cat,
+          title: af.title,
+          wrongRel: af.wrongRel,
+          tags: [],
+          slots: { FR: [], BR: [], FL: [], BL: [] }
+        };
+
+        ['FR', 'BR', 'FL', 'BL'].forEach(slotKey => {
+          (af[slotKey] || []).forEach(algStr => {
+            entry.slots[slotKey].push({ alg: algStr, badge: null });
+          });
+        });
+
+        unified.push(entry);
+      });
+
+      // Merge Cube Academy Wrong Slot (#242-#277) into #42-#95
+      CUBE_ACADEMY_CASES.forEach(ca => {
+        const targetAfId = CA_WRONG_TO_AF2L_MAP[ca.id];
+        if (!targetAfId) return;
+        const entry = unified.find(u => u.id === targetAfId);
+        if (!entry) return;
+
+        (ca.algs || []).forEach(aItem => {
+          const list = entry.slots[aItem.slot];
+          if (!list) return;
+          const normKey = normalizeMovesKey(aItem.alg);
+          const existingIdx = list.findIndex(x => normalizeMovesKey(x.alg) === normKey);
+          if (existingIdx !== -1) {
+            if (aItem.alg.includes('[') && !list[existingIdx].alg.includes('[')) {
+              list[existingIdx].alg = aItem.alg;
+            }
+            if (aItem.badge && !list[existingIdx].badge) {
+              list[existingIdx].badge = aItem.badge;
+            }
+          } else {
+            list.push({ alg: aItem.alg, badge: aItem.badge || 'CA 實戰' });
+          }
+        });
+      });
+
+      return unified;
+    }
+
+    const UNIFIED_F2L_CASES = buildUnifiedF2LDatabase();
+
+    function selectCaseAndAlg(caseId, slotKey, algStr, autoPlay = true, customMeta = null) {
+      pausePlayback();
+
+      const uCase = UNIFIED_F2L_CASES.find(c => c.id === caseId);
+      const wrongSlot = (customMeta && customMeta.wrongSlot) || (uCase && uCase.wrongRel) || null;
+
+      appState.activeCaseId = caseId;
+      appState.activeAlgSlot = slotKey;
+      appState.activeWrongSlot = wrongSlot;
+      appState.activeAlgStr = algStr;
+      appState.parsedMoves = parseAlg(algStr);
+      appState.currentStep = 0;
+
+      const slotBadge = document.getElementById('player-slot-badge');
+      const wrongBadge = document.getElementById('player-wrong-slot-badge');
+      const catBadge = document.getElementById('player-cat-badge');
+      const titleEl = document.getElementById('player-case-title');
+      const rawAlgEl = document.getElementById('raw-alg-display');
+      const noteBanner = document.getElementById('alg-note-banner');
+
+      slotBadge.textContent = SLOT_LABELS[slotKey] || slotKey;
+      rawAlgEl.innerHTML = formatAlgWithBracketsHTML(algStr);
+
+      if (wrongSlot) {
+        wrongBadge.classList.remove('hidden');
+        wrongBadge.textContent = `錯放: ${SLOT_LABELS[wrongSlot] || wrongSlot}`;
+      } else {
+        wrongBadge.classList.add('hidden');
+      }
+
+      if (customMeta && customMeta.title) {
+        catBadge.textContent = customMeta.code || '自訂';
+        titleEl.textContent = customMeta.title;
+      } else if (uCase) {
+        const catObj = F2L_CATEGORIES.find(cat => cat.id === uCase.cat);
+        catBadge.textContent = uCase.subCode ? `${uCase.subCode}` : (catObj ? catObj.short : uCase.cat);
+        titleEl.textContent = `${uCase.displayNum} ${uCase.title}`;
+      }
+
+      const noteText = (customMeta && customMeta.note) || (uCase && uCase.tags && uCase.tags.length ? `重點：${uCase.tags.join(' • ')}` : null);
+      if (noteText) {
+        noteBanner.textContent = noteText;
+        noteBanner.classList.remove('hidden');
+      } else {
+        noteBanner.classList.add('hidden');
+      }
+
+      // Update Chinese Mnemonic Display Box
+      const mnemonicPhraseEl = document.getElementById('mnemonic-phrase-display');
+      const mnemonicStepsEl = document.getElementById('mnemonic-steps-detail');
+      if (mnemonicPhraseEl) {
+        mnemonicPhraseEl.innerHTML = generateMnemonicHTML(algStr);
+      }
+      if (mnemonicStepsEl) {
+        mnemonicStepsEl.innerHTML = '';
+        appState.parsedMoves.forEach((m, idx) => {
+          const info = tokenToChineseMnemonic(m.raw);
+          const badge = document.createElement('button');
+          badge.className = 'px-1.5 py-0.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[10px] flex items-center gap-1 transition';
+          badge.innerHTML = `<span class="font-mono-alg text-sky-300">${m.raw}</span><span class="text-slate-200 font-bold">${info.word}</span>`;
+          badge.onclick = () => { pausePlayback(); snapThreeCubeToStep(idx + 1); };
+          mnemonicStepsEl.appendChild(badge);
+        });
+      }
+
+      // Smart camera orientation
+      if (wrongSlot === 'BR' && slotKey === 'FR') {
+        setCameraPreset('RIGHT_BOTH');
+      } else if (wrongSlot) {
+        setCameraPreset(wrongSlot);
+      } else if (slotKey === 'FL' || slotKey === 'BL') {
+        targetSpherical.theta = -0.58;
+        targetSpherical.phi = 1.08;
+      } else {
+        targetSpherical.theta = 0.58;
+        targetSpherical.phi = 1.08;
+      }
+
+      updateThreeStickerColors();
+      snapThreeCubeToStep(0);
+      highlightActiveCardInDOM();
+
+      if (autoPlay) startPlayback();
+    }
+
+    function updateTimelineUI() {
+      const container = document.getElementById('move-tokens-container');
+      const legendBar = document.getElementById('phase-legend-bar');
+      const total = appState.parsedMoves.length;
+      const stepBadge = document.getElementById('step-counter-badge');
+      if (stepBadge) stepBadge.textContent = `${appState.currentStep} / ${total}`;
+      if (!container) return;
+      container.innerHTML = '';
+
+      const hasPhases = appState.parsedMoves.some(m => m.phase === 'setup' || m.phase === 'insert');
+      if (legendBar) {
+        legendBar.classList.toggle('hidden', !hasPhases);
+      }
+
+      const initBtn = document.createElement('button');
+      initBtn.className = `move-pill px-1.5 py-0.5 rounded text-[11px] font-mono-alg border ${
+        appState.currentStep === 0
+          ? 'active-move'
+          : 'bg-slate-900 text-slate-400 border-slate-800 hover:border-slate-600'
+      }`;
+      initBtn.textContent = '起點';
+      initBtn.onclick = () => { pausePlayback(); snapThreeCubeToStep(0); };
+      container.appendChild(initBtn);
+
+      appState.parsedMoves.forEach((m, idx) => {
+        const stepNum = idx + 1;
+        const btn = document.createElement('button');
+        const isCurrent = appState.currentStep === stepNum;
+        const isDone = appState.currentStep > stepNum;
+        let phaseClass = 'bg-slate-900 text-slate-200 border-slate-800 hover:border-slate-600';
+        if (m.phase === 'setup') phaseClass = 'bg-slate-900 phase-setup hover:border-sky-400';
+        else if (m.phase === 'insert') phaseClass = 'bg-slate-900 phase-insert hover:border-emerald-400';
+
+        btn.className = `move-pill px-2 py-0.5 rounded text-[11px] font-mono-alg border ${
+          isCurrent
+            ? 'active-move'
+            : isDone
+            ? 'done-move'
+            : phaseClass
+        }`;
+        btn.textContent = m.raw;
+        btn.onclick = () => { pausePlayback(); snapThreeCubeToStep(stepNum); };
+        container.appendChild(btn);
+      });
+    }
+
+    function startPlayback() {
+      clearTimeout(loopTimeoutId);
+      if (appState.parsedMoves.length === 0) return;
+      if (appState.currentStep >= appState.parsedMoves.length) snapThreeCubeToStep(0);
+      appState.isPlaying = true;
+      updatePlayButtonUI();
+      playNextStepInSequence();
+    }
+
+    function pausePlayback() {
+      clearTimeout(loopTimeoutId);
+      appState.isPlaying = false;
+      updatePlayButtonUI();
+    }
+
+    function playNextStepInSequence() {
+      if (!appState.isPlaying) return;
+      if (appState.currentStep >= appState.parsedMoves.length) {
+        if (appState.autoLoop) {
+          loopTimeoutId = setTimeout(() => {
+            if (!appState.isPlaying) return;
+            snapThreeCubeToStep(0);
+            loopTimeoutId = setTimeout(() => {
+              if (appState.isPlaying) playNextStepInSequence();
+            }, 400);
+          }, 600);
+        } else {
+          appState.isPlaying = false;
+          updatePlayButtonUI();
+        }
+        return;
+      }
+
+      const nextMove = appState.parsedMoves[appState.currentStep];
+      appState.currentStep += 1;
+      updateTimelineUI();
+
+      animateSingleMove(nextMove, () => {
+        if (appState.isPlaying) playNextStepInSequence();
+      });
+    }
+
+    function stepForward() {
+      pausePlayback();
+      if (currentTween) finishCurrentTweenInstantly();
+      if (appState.currentStep < appState.parsedMoves.length) {
+        const move = appState.parsedMoves[appState.currentStep];
+        appState.currentStep += 1;
+        updateTimelineUI();
+        animateSingleMove(move, null);
+      }
+    }
+
+    function stepBackward() {
+      pausePlayback();
+      if (currentTween) finishCurrentTweenInstantly();
+      if (appState.currentStep > 0) {
+        const move = invertMove(appState.parsedMoves[appState.currentStep - 1]);
+        appState.currentStep -= 1;
+        updateTimelineUI();
+        animateSingleMove(move, null);
+      }
+    }
+
+    function updatePlayButtonUI() {
+      const label = document.getElementById('label-play-pause');
+      label.textContent = appState.isPlaying ? '暫停' : '播放';
+    }
+
+    /*************************************************************************
+     * 7. RENDER UNIFIED F2L LIBRARY (ALL 95 CASES IN ONE PLACE)
+     *************************************************************************/
+    function formatAlgWithBracketsHTML(algStr) {
+      return algStr
+        .replace(/\(([^)]+)\)/g, '<span class="text-sky-300">($1)</span>')
+        .replace(/\[([^\]]+)\]/g, '<span class="text-emerald-300 font-semibold">[$1]</span>');
+    }
+
+    function renderCategoryFilterBar() {
+      const bar = document.getElementById('category-filter-bar');
+      if (!bar) return;
+      bar.innerHTML = '';
+      F2L_CATEGORIES.forEach(cat => {
+        const btn = document.createElement('button');
+        const active = appState.selectedCategory === cat.id;
+        let styleClass = 'text-slate-400 hover:text-slate-200';
+        if (active) {
+          styleClass = cat.isWrongSlot
+            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+            : 'bg-sky-500/20 text-sky-300 border border-sky-500/40';
+        } else if (cat.isWrongSlot) {
+          styleClass = 'text-amber-400/80 hover:text-amber-300';
+        }
+        btn.className = `px-2 py-0.5 rounded text-[11px] font-medium transition ${styleClass}`;
+        btn.textContent = cat.short;
+        btn.onclick = () => {
+          appState.selectedCategory = cat.id;
+          renderCategoryFilterBar();
+          renderCasesList();
+        };
+        bar.appendChild(btn);
+      });
+    }
+
+    function renderCasesList() {
+      const container = document.getElementById('cases-list-container');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const q = appState.searchQuery.trim().toLowerCase();
+      const categoriesToRender = F2L_CATEGORIES.filter(
+        c => c.id !== 'ALL' && (appState.selectedCategory === 'ALL' || appState.selectedCategory === c.id)
+      );
+
+      categoriesToRender.forEach(cat => {
+        const casesInCat = UNIFIED_F2L_CASES.filter(c => {
+          if (c.cat !== cat.id) return false;
+          if (!q) return true;
+          const matchMeta =
+            c.title.toLowerCase().includes(q) ||
+            c.displayNum.toLowerCase().includes(q) ||
+            (c.subCode && c.subCode.toLowerCase().includes(q)) ||
+            (c.tags && c.tags.some(t => t.toLowerCase().includes(q)));
+          const allAlgs = ['FR', 'BR', 'FL', 'BL']
+            .flatMap(s => c.slots[s].map(x => `${x.alg} ${x.badge || ''}`))
+            .join(' ')
+            .toLowerCase();
+          return matchMeta || allAlgs.includes(q);
+        });
+
+        if (casesInCat.length === 0) return;
+
+        const section = document.createElement('section');
+        section.className = 'flex flex-col gap-2.5';
+
+        const secHeader = document.createElement('h3');
+        secHeader.className = `text-xs font-bold uppercase tracking-wider border-b border-slate-800/80 pb-1.5 ${
+          cat.isWrongSlot ? 'text-amber-400' : 'text-slate-400'
+        }`;
+        secHeader.textContent = cat.name;
+        section.appendChild(secHeader);
+
+        if (appState.viewMode === 'single') {
+          const grid = document.createElement('div');
+          grid.className = 'grid grid-cols-1 md:grid-cols-2 gap-3.5';
+
+          casesInCat.forEach(caseItem => {
+            const slotKey = appState.selectedSlot;
+            const algObjs = caseItem.slots[slotKey] || [];
+            const primaryAlg = algObjs[0] ? algObjs[0].alg : '';
+            const frPrimaryAlg = (caseItem.slots.FR && caseItem.slots.FR[0]) ? caseItem.slots.FR[0].alg : primaryAlg;
+            const isCardActive = appState.activeCaseId === caseItem.id && appState.activeAlgSlot === slotKey;
+
+            const card = document.createElement('div');
+            card.dataset.caseId = caseItem.id;
+            card.className = `case-card rounded-xl p-4 flex flex-col gap-3 ${isCardActive ? 'active-card' : ''}`;
+
+            // Top Header with Large 110x110 FR Standard Reference Diagram + Title
+            const topHeader = document.createElement('div');
+            topHeader.className = 'flex items-center justify-between gap-3 pb-2.5 border-b border-slate-800/80';
+
+            const topHeaderLeft = document.createElement('div');
+            topHeaderLeft.className = 'flex items-center gap-3 min-w-0';
+
+            const frRefBox = document.createElement('div');
+            frRefBox.className = 'relative shrink-0 rounded-xl bg-slate-950 border border-emerald-500/40 p-1 cursor-pointer hover:border-emerald-400 transition shadow-md';
+            frRefBox.title = 'FR 基準對照示意圖 (點擊直接播放 FR 解法)';
+            const frRefCanvas = document.createElement('canvas');
+            frRefCanvas.className = 'w-[110px] h-[110px] block';
+            renderCubeThumbnail(frRefCanvas, frPrimaryAlg, appState.maskMode, 'FR', caseItem.id, caseItem.wrongRel, 110);
+            const frRefBadge = document.createElement('span');
+            frRefBadge.className = 'absolute bottom-1 right-1 px-1.5 py-0.2 rounded bg-emerald-500/90 text-slate-950 font-extrabold text-[9px]';
+            frRefBadge.textContent = 'FR 基準圖';
+            frRefBox.appendChild(frRefCanvas);
+            frRefBox.appendChild(frRefBadge);
+            frRefBox.onclick = () => selectCaseAndAlg(caseItem.id, 'FR', frPrimaryAlg, true);
+
+            const titleCol = document.createElement('div');
+            titleCol.className = 'flex flex-col gap-1 min-w-0';
+
+            const tagsHtml = (caseItem.tags || []).map(t =>
+              `<span class="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">${t}</span>`
+            ).join('');
+
+            const wrongBadgeHtml = caseItem.wrongRel
+              ? `<span class="px-1.5 py-0.2 rounded text-[10px] font-mono-alg bg-amber-500/15 text-amber-300">錯槽:${caseItem.wrongRel}</span>`
+              : '';
+
+            titleCol.innerHTML = `
+              <div class="flex flex-wrap items-center gap-1.5">
+                <span class="text-sm font-bold text-white">${caseItem.displayNum} ${caseItem.title}</span>
+                ${wrongBadgeHtml}
+                ${tagsHtml}
+              </div>
+              <div class="text-[11px] text-slate-400">
+                FR 基準: <code class="text-emerald-300 font-mono-alg">${frPrimaryAlg}</code>
+              </div>
+              <div class="text-[11px] text-amber-300/95 font-semibold">
+                口訣: ${generatePlainMnemonicText(frPrimaryAlg)}
+              </div>
+            `;
+
+            topHeaderLeft.appendChild(frRefBox);
+            topHeaderLeft.appendChild(titleCol);
+            topHeader.appendChild(topHeaderLeft);
+            card.appendChild(topHeader);
+
+            // Bottom Body: Current Slot 88x88 Thumbnail + Algorithms
+            const bottomBody = document.createElement('div');
+            bottomBody.className = 'flex gap-3 items-start';
+
+            const canvas = document.createElement('canvas');
+            canvas.className = 'w-[88px] h-[88px] rounded-xl bg-slate-950 border border-slate-800 shrink-0 cursor-pointer hover:border-sky-500/60 transition shadow-inner';
+            const thumbAlg = (isCardActive && appState.activeAlgStr) ? appState.activeAlgStr : primaryAlg;
+            renderCubeThumbnail(canvas, thumbAlg, appState.maskMode, slotKey, caseItem.id, caseItem.wrongRel, 88);
+            canvas.onclick = () => selectCaseAndAlg(caseItem.id, slotKey, primaryAlg, true);
+
+            const infoCol = document.createElement('div');
+            infoCol.className = 'flex-1 min-w-0 flex flex-col gap-1.5';
+
+            const slotSubHeader = document.createElement('div');
+            slotSubHeader.className = 'flex items-center justify-between text-[11px] text-slate-400';
+            slotSubHeader.innerHTML = `<span class="font-semibold text-sky-300">當前檢視槽位: ${SLOT_LABELS[slotKey]}</span>`;
+            infoCol.appendChild(slotSubHeader);
+
+            const algsList = document.createElement('div');
+            algsList.className = 'flex flex-col gap-1.5';
+
+            algObjs.forEach((algItem) => {
+              const btn = document.createElement('button');
+              const isSelected = isCardActive && appState.activeAlgStr === algItem.alg;
+              btn.className = `alg-btn w-full text-left px-2.5 py-1.5 rounded-lg border text-xs font-mono-alg flex flex-col gap-1 ${
+                isSelected ? 'selected-alg' : 'bg-slate-950 border-slate-800/90 text-slate-300'
+              }`;
+
+              const badgeHtml = algItem.badge
+                ? `<span class="shrink-0 px-1.5 py-0.2 rounded text-[10px] font-sans font-semibold bg-amber-500/20 text-amber-300">${algItem.badge}</span>`
+                : '';
+
+              const mnemonicLine = `<div class="text-[11px] font-sans ${isSelected ? 'font-bold text-amber-300' : 'text-slate-400'} border-t border-slate-800/80 pt-1 flex items-center gap-1">
+                     <span class="text-[10px] px-1 rounded bg-amber-500/15 text-amber-300 shrink-0">口訣</span>
+                     <span class="truncate">${generatePlainMnemonicText(algItem.alg)}</span>
+                   </div>`;
+
+              btn.innerHTML = `
+                <div class="w-full flex items-center justify-between gap-1.5">
+                  <span class="truncate">${formatAlgWithBracketsHTML(algItem.alg)}</span>
+                  ${badgeHtml}
+                </div>
+                ${mnemonicLine}
+              `;
+
+              btn.onclick = () => {
+                renderCubeThumbnail(canvas, algItem.alg, appState.maskMode, slotKey, caseItem.id, caseItem.wrongRel, 88);
+                selectCaseAndAlg(caseItem.id, slotKey, algItem.alg, true, algItem.badge ? { note: `技巧提示：${algItem.badge}` } : null);
+                renderCasesList();
+              };
+              algsList.appendChild(btn);
+            });
+
+            infoCol.appendChild(algsList);
+            bottomBody.appendChild(canvas);
+            bottomBody.appendChild(infoCol);
+            card.appendChild(bottomBody);
+            grid.appendChild(card);
+          });
+
+          section.appendChild(grid);
+        } else {
+          // 4-Slot Compare View with Large 112x112 FR Reference Diagram in the Title Header + 84x84 Slot Thumbnails
+          const list = document.createElement('div');
+          list.className = 'flex flex-col gap-4';
+
+          casesInCat.forEach(caseItem => {
+            const rowCard = document.createElement('div');
+            rowCard.dataset.caseId = caseItem.id;
+            rowCard.className = `case-card rounded-xl p-4 flex flex-col gap-3.5 ${appState.activeCaseId === caseItem.id ? 'active-card' : ''}`;
+
+            // Header with Prominent 112x112 FR Standard Reference Diagram
+            const frPrimaryAlg = (caseItem.slots.FR && caseItem.slots.FR[0]) ? caseItem.slots.FR[0].alg : '';
+            const header = document.createElement('div');
+            header.className = 'flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800/80';
+
+            const headerLeft = document.createElement('div');
+            headerLeft.className = 'flex items-center gap-3.5 min-w-0';
+
+            // Large 112x112 FR Reference Canvas in Header
+            const frHeaderBox = document.createElement('div');
+            frHeaderBox.className = 'relative shrink-0 rounded-xl bg-slate-950 border border-emerald-500/40 p-1 cursor-pointer hover:border-emerald-400 transition shadow-md';
+            frHeaderBox.title = '標準 FR (綠橘) Pair 狀態對照圖 — 點擊直接播放 FR 解法';
+            const frHeaderCanvas = document.createElement('canvas');
+            frHeaderCanvas.className = 'w-[112px] h-[112px] block';
+            renderCubeThumbnail(frHeaderCanvas, frPrimaryAlg, appState.maskMode, 'FR', caseItem.id, caseItem.wrongRel, 112);
+            const frHeaderTag = document.createElement('span');
+            frHeaderTag.className = 'absolute bottom-1 right-1 px-1.5 py-0.2 rounded bg-emerald-500/90 text-slate-950 font-extrabold text-[9px]';
+            frHeaderTag.textContent = 'FR 基準圖';
+            frHeaderBox.appendChild(frHeaderCanvas);
+            frHeaderBox.appendChild(frHeaderTag);
+            frHeaderBox.onclick = () => selectCaseAndAlg(caseItem.id, 'FR', frPrimaryAlg, true);
+
+            const headerTitleCol = document.createElement('div');
+            headerTitleCol.className = 'flex flex-col gap-1 min-w-0';
+            const tagsHtml = (caseItem.tags || []).map(t =>
+              `<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">${t}</span>`
+            ).join('');
+
+            headerTitleCol.innerHTML = `
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="text-sm sm:text-base font-bold text-white">${caseItem.displayNum} ${caseItem.title}</span>
+                ${caseItem.wrongRel ? `<span class="px-2 py-0.5 rounded text-xs font-mono-alg bg-amber-500/15 text-amber-300 border border-amber-500/30">錯槽: ${caseItem.wrongRel}</span>` : ''}
+                ${tagsHtml}
+              </div>
+              <div class="text-xs text-slate-400 flex flex-wrap items-center gap-2">
+                <span>FR 基準公式: <code class="text-emerald-300 font-mono-alg">${frPrimaryAlg}</code></span>
+                <span class="text-amber-300/90 font-medium">口訣: ${generatePlainMnemonicText(frPrimaryAlg)}</span>
+              </div>
+            `;
+
+            headerLeft.appendChild(frHeaderBox);
+            headerLeft.appendChild(headerTitleCol);
+            header.appendChild(headerLeft);
+            rowCard.appendChild(header);
+
+            const fourCols = document.createElement('div');
+            fourCols.className = 'grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3';
+
+            ['FR', 'BR', 'FL', 'BL'].forEach(slotKey => {
+              const slotAlgObjs = caseItem.slots[slotKey] || [];
+              const primaryAlg = slotAlgObjs[0] ? slotAlgObjs[0].alg : '';
+
+              const slotBox = document.createElement('div');
+              slotBox.className = 'bg-slate-950 border border-slate-800/80 rounded-xl p-2.5 flex items-start gap-2.5';
+
+              const miniCanvas = document.createElement('canvas');
+              miniCanvas.className = 'w-[84px] h-[84px] rounded-lg bg-slate-900 border border-slate-800/80 shrink-0 cursor-pointer hover:border-sky-500/60 transition';
+              renderCubeThumbnail(miniCanvas, primaryAlg, appState.maskMode, slotKey, caseItem.id, caseItem.wrongRel, 84);
+              miniCanvas.onclick = () => selectCaseAndAlg(caseItem.id, slotKey, primaryAlg, true);
+
+              const slotMeta = document.createElement('div');
+              slotMeta.className = 'flex flex-col gap-1.5 min-w-0 flex-1';
+              slotMeta.innerHTML = `<span class="text-xs font-bold text-slate-300">${slotKey}</span>`;
+
+              slotAlgObjs.forEach(algItem => {
+                const algBtn = document.createElement('button');
+                const isSelected = appState.activeCaseId === caseItem.id && appState.activeAlgSlot === slotKey && appState.activeAlgStr === algItem.alg;
+                algBtn.className = `alg-btn text-left px-2 py-1 rounded-lg border text-[11px] font-mono-alg flex flex-col gap-0.5 ${
+                  isSelected ? 'selected-alg' : 'bg-slate-900 border-slate-800 text-slate-300'
+                }`;
+                const mnemonicSub = isSelected
+                  ? `<span class="text-[10px] font-sans font-bold text-amber-300 truncate">口訣: ${generatePlainMnemonicText(algItem.alg)}</span>`
+                  : '';
+                algBtn.innerHTML = `
+                  <span class="truncate">${formatAlgWithBracketsHTML(algItem.alg)}</span>
+                  ${mnemonicSub}
+                `;
+                algBtn.onclick = () => {
+                  renderCubeThumbnail(miniCanvas, algItem.alg, appState.maskMode, slotKey, caseItem.id, caseItem.wrongRel, 84);
+                  selectCaseAndAlg(caseItem.id, slotKey, algItem.alg, true);
+                  renderCasesList();
+                };
+                slotMeta.appendChild(algBtn);
+              });
+
+              slotBox.appendChild(miniCanvas);
+              slotBox.appendChild(slotMeta);
+              fourCols.appendChild(slotBox);
+            });
+
+            rowCard.appendChild(fourCols);
+            list.appendChild(rowCard);
+          });
+
+          section.appendChild(list);
+        }
+
+        container.appendChild(section);
+      });
+    }
+
+    function highlightActiveCardInDOM() {
+      document.querySelectorAll('.case-card').forEach(card => {
+        const cid = Number(card.dataset.caseId);
+        card.classList.toggle('active-card', cid === appState.activeCaseId);
+      });
+    }
+
+    /*************************************************************************
+     * 8. INITIALIZATION & EVENTS
+     *************************************************************************/
+    window.addEventListener('DOMContentLoaded', () => {
+      initThreePlayer();
+      renderCategoryFilterBar();
+      renderCasesList();
+
+      // Load Case #1 by default
+      const firstCase = UNIFIED_F2L_CASES[0];
+      selectCaseAndAlg(firstCase.id, 'FR', firstCase.slots.FR[0].alg, false);
+      requestAnimationFrame(mainAnimationLoop);
+
+      // Custom Wrong-Slot Generator
+      document.getElementById('btn-generate-wrong-slot').addEventListener('click', () => {
+        const t = document.getElementById('ws-gen-target').value;
+        const w = document.getElementById('ws-gen-wrong').value;
+        const selType = document.getElementById('ws-gen-type');
+        const st = selType.value;
+        const alg = buildCustomWrongSlotAlg(t, w, st);
+        const typeLabel = selType.options[selType.selectedIndex].text;
+        selectCaseAndAlg(999, t, alg, true, {
+          wrongSlot: w,
+          code: '自訂',
+          title: `${SLOT_LABELS[t]} 卡在 ${SLOT_LABELS[w]} (${typeLabel})`,
+          note: `從 ${w} 槽提出目標塊後對齊入 ${t} 槽`
+        });
+      });
+
+      // Slot Filter Tabs
+      document.querySelectorAll('.slot-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const slot = btn.dataset.slot;
+          appState.selectedSlot = slot;
+          appState.viewMode = 'single';
+          document.getElementById('view-mode-toggle').textContent = '切換：四面對照總覽';
+          document.querySelectorAll('.slot-tab-btn').forEach(b => {
+            b.className = b.dataset.slot === slot
+              ? 'slot-tab-btn px-2.5 py-1 rounded-lg text-xs font-semibold bg-sky-500 text-slate-950 transition'
+              : 'slot-tab-btn px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-300 hover:bg-slate-800 transition';
+          });
+          const currentCase = UNIFIED_F2L_CASES.find(c => c.id === appState.activeCaseId) || UNIFIED_F2L_CASES[0];
+          const firstAlg = currentCase.slots[slot][0] ? currentCase.slots[slot][0].alg : '';
+          selectCaseAndAlg(currentCase.id, slot, firstAlg, false);
+          renderCasesList();
+        });
+      });
+
+      // Single vs 4-Slot Compare Toggle
+      const viewToggleBtn = document.getElementById('view-mode-toggle');
+      viewToggleBtn.addEventListener('click', () => {
+        appState.viewMode = appState.viewMode === 'single' ? 'compare' : 'single';
+        viewToggleBtn.textContent = appState.viewMode === 'single' ? '切換：四面對照總覽' : '切換：單槽列表';
+        renderCasesList();
+      });
+
+      // Mask Mode Buttons
+      document.querySelectorAll('.mask-mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const mode = btn.dataset.mask;
+          appState.maskMode = mode;
+          document.querySelectorAll('.mask-mode-btn').forEach(b => {
+            b.className = b.dataset.mask === mode
+              ? 'mask-mode-btn px-2 py-1 rounded-md font-medium bg-sky-500/20 text-sky-300 transition'
+              : 'mask-mode-btn px-2 py-1 rounded-md font-medium text-slate-400 hover:text-slate-200 transition';
+          });
+          updateThreeStickerColors();
+          renderCasesList();
+        });
+      });
+
+      // Thumbnail Cam Buttons
+      document.querySelectorAll('.thumb-cam-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const mode = btn.dataset.thumbcam;
+          appState.thumbCamMode = mode;
+          document.querySelectorAll('.thumb-cam-btn').forEach(b => {
+            b.className = b.dataset.thumbcam === mode
+              ? 'thumb-cam-btn px-2 py-1 rounded-md font-medium bg-slate-800 text-slate-200 transition'
+              : 'thumb-cam-btn px-2 py-1 rounded-md font-medium text-slate-400 hover:text-slate-200 transition';
+          });
+          renderCasesList();
+        });
+      });
+
+      // Search
+      document.getElementById('search-input').addEventListener('input', (e) => {
+        appState.searchQuery = e.target.value;
+        renderCasesList();
+      });
+
+      // Playback Buttons
+      document.getElementById('btn-play-pause').addEventListener('click', () => {
+        if (appState.isPlaying) pausePlayback();
+        else startPlayback();
+      });
+      document.getElementById('btn-step-next').addEventListener('click', stepForward);
+      document.getElementById('btn-step-prev').addEventListener('click', stepBackward);
+      document.getElementById('btn-to-start').addEventListener('click', () => {
+        pausePlayback();
+        snapThreeCubeToStep(0);
+      });
+      document.getElementById('btn-to-end').addEventListener('click', () => {
+        pausePlayback();
+        snapThreeCubeToStep(appState.parsedMoves.length);
+      });
+
+      // Speed & Loop
+      const speedSlider = document.getElementById('speed-slider');
+      const speedLabel = document.getElementById('speed-label');
+      speedSlider.addEventListener('input', (e) => {
+        appState.animSpeed = parseFloat(e.target.value);
+        speedLabel.textContent = appState.animSpeed.toFixed(1) + 'x';
+      });
+      document.getElementById('loop-checkbox').addEventListener('change', (e) => {
+        appState.autoLoop = e.target.checked;
+      });
+
+      // Camera Presets
+      document.querySelectorAll('.cam-preset-btn').forEach(btn => {
+        btn.addEventListener('click', () => setCameraPreset(btn.dataset.cam));
+      });
+    });
+  </script>
+</body>
+</html>
