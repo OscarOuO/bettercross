@@ -1,1888 +1,1426 @@
 <!DOCTYPE html>
-<html lang="zh-TW" class="dark">
+<html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CubeFlow Pro | 魔方速解 Cross & X-Cross / Free Pair 智慧分析器</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
-          },
-          colors: {
-            slate: {
-              850: '#151e2e',
-              925: '#0b111e',
-            }
-          }
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>CubeFlow Pro — 3x3 Cross & X-Cross 最佳解分析器</title>
+  <style>
+    :root {
+      --bg: #0b101e;
+      --card: #131b2e;
+      --card-border: #22304f;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --gold: #f59e0b;
+      --green: #10b981;
+      --danger: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 12px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 16px;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      margin-bottom: 14px;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.15rem; }
+    .badge {
+      font-size: 0.72rem;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(59, 130, 246, 0.18);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.35);
+      font-weight: 700;
+    }
+    .tabs { display: flex; gap: 6px; background: #090d16; padding: 4px; border-radius: 10px; border: 1px solid var(--card-border); }
+    .tab-btn {
+      background: transparent;
+      color: var(--muted);
+      border: none;
+      padding: 7px 12px;
+      border-radius: 7px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .tab-btn.active { background: var(--accent); color: #fff; }
+    .grid-main {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+    @media (min-width: 900px) {
+      .grid-main { grid-template-columns: 1.05fr 0.95fr; }
+    }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+    .panel-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #cbd5e1;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .scramble-box {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .scramble-input {
+      flex: 1;
+      min-width: 200px;
+      background: #090d16;
+      border: 1px solid var(--card-border);
+      color: #fff;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.95rem;
+    }
+    .btn {
+      background: #1e293b;
+      color: #e2e8f0;
+      border: 1px solid #334155;
+      padding: 8px 13px;
+      border-radius: 9px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.15s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+    .btn:hover { background: #334155; }
+    .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-gold { background: var(--gold); border-color: var(--gold); color: #090d16; font-weight: 700; }
+    .btn-sm { padding: 5px 10px; font-size: 0.78rem; border-radius: 7px; }
+    .btn-group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+
+    /* 2D Unfolded Net */
+    .painter-wrap {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+    @media (min-width: 680px) {
+      .painter-wrap { grid-template-columns: auto 240px; align-items: start; }
+    }
+    .net-container {
+      background: #080c17;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 12px;
+      overflow-x: auto;
+      display: flex;
+      justify-content: center;
+    }
+    .cube-net {
+      display: grid;
+      grid-template-columns: repeat(12, 24px);
+      grid-template-rows: repeat(9, 24px);
+      gap: 3px;
+    }
+    @media (min-width: 480px) {
+      .cube-net {
+        grid-template-columns: repeat(12, 28px);
+        grid-template-rows: repeat(9, 28px);
+        gap: 4px;
       }
     }
-  </script>
-  <style>
-    body {
-      background-color: #0b111e;
-      color: #f1f5f9;
-      overflow-x: hidden;
+    .net-cell {
+      width: 100%;
+      height: 100%;
+      border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.18);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: #0f172a;
+      user-select: none;
     }
-    /* 自訂捲軸 */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
+    .net-cell.center-lock {
+      cursor: not-allowed;
+      border: 2px solid rgba(0,0,0,0.65);
     }
-    ::-webkit-scrollbar-track {
+    .palette-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .swatch-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: #090d16;
+      border: 2px solid var(--card-border);
+      color: #fff;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .swatch-btn.active { border-color: #3b82f6; background: rgba(59,130,246,0.15); }
+    .swatch-dot { width: 16px; height: 16px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.3); }
+
+    /* Pure CSS 3D Cube Viewport (Compact & Zero External Dependencies) */
+    .viewport-box {
+      position: relative;
+      height: 235px;
+      background: radial-gradient(circle at center, #16223b 0%, #090d16 100%);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: none;
+      user-select: none;
+      cursor: grab;
+    }
+    .viewport-box:active { cursor: grabbing; }
+    .scene3d {
+      width: 108px;
+      height: 108px;
+      perspective: 650px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .cube3d {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.08s linear;
+    }
+    .cubie {
+      position: absolute;
+      width: 34px;
+      height: 34px;
+      left: 37px;
+      top: 37px;
+      transform-style: preserve-3d;
+      transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .cubie-face {
+      position: absolute;
+      width: 34px;
+      height: 34px;
       background: #0f172a;
+      border: 2px solid #090d16;
+      border-radius: 5px;
+      backface-visibility: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 900;
+      color: rgba(15, 23, 42, 0.85);
     }
-    ::-webkit-scrollbar-thumb {
-      background: #334155;
-      border-radius: 3px;
+    .face-U { transform: rotateX(90deg) translateZ(17px); }
+    .face-D { transform: rotateX(-90deg) translateZ(17px); }
+    .face-F { transform: translateZ(17px); }
+    .face-B { transform: rotateY(180deg) translateZ(17px); }
+    .face-R { transform: rotateY(90deg) translateZ(17px); }
+    .face-L { transform: rotateY(-90deg) translateZ(17px); }
+
+    .cam-bar {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      right: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      justify-content: space-between;
+      pointer-events: none;
     }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #475569;
+    .cam-bar .btn { pointer-events: auto; background: rgba(15, 23, 42, 0.82); backdrop-filter: blur(4px); }
+    .step-banner {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      right: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(9, 13, 22, 0.85);
+      border: 1px solid var(--card-border);
+      padding: 5px 10px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      pointer-events: none;
     }
-    .glass-panel {
-      background: rgba(15, 23, 42, 0.82);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(51, 65, 85, 0.65);
+
+    /* Playback Moves */
+    .moves-track {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 10px;
+      background: #090d16;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      margin: 10px 0;
+      min-height: 44px;
+      align-items: center;
     }
-    .move-chip {
-      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    .move-pill {
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: #1e293b;
+      color: #cbd5e1;
+      font-family: ui-monospace, monospace;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      border: 1px solid transparent;
     }
-    .move-chip:hover {
-      transform: translateY(-1px);
+    .move-pill.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: #93c5fd;
+      transform: scale(1.06);
     }
-    .move-chip.active {
-      background: linear-gradient(135deg, #3b82f6, #2563eb);
-      color: #ffffff;
-      box-shadow: 0 0 12px rgba(59, 130, 246, 0.55);
-      border-color: #60a5fa;
+    .move-pill.rot-pill {
+      background: rgba(245, 158, 11, 0.18);
+      color: #fbbf24;
+      border-color: rgba(245, 158, 11, 0.4);
     }
-    .facelet-cell {
-      transition: transform 0.1s ease, box-shadow 0.1s ease;
+
+    /* Solutions List */
+    .sol-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 480px;
+      overflow-y: auto;
     }
-    .facelet-cell:hover {
-      transform: scale(1.08);
-      z-index: 10;
-      box-shadow: 0 0 8px rgba(255,255,255,0.4);
+    .sol-card {
+      background: #090d16;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: 0.15s;
     }
+    .sol-card:hover { border-color: #475569; }
+    .sol-card.selected {
+      border-color: var(--accent);
+      background: rgba(59, 130, 246, 0.1);
+    }
+    .sol-top { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 5px; flex-wrap: wrap; }
+    .tag {
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 5px;
+    }
+    .tag-xcross { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.45); }
+    .tag-pair { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.45); }
+    .tag-split { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.45); }
+    .tag-cross { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; }
+    .sol-alg { font-family: ui-monospace, monospace; font-size: 0.98rem; font-weight: 700; color: #fff; }
+    .sol-meta { font-size: 0.76rem; color: var(--muted); margin-top: 4px; }
+    .hidden { display: none !important; }
   </style>
 </head>
-<body class="min-h-screen flex flex-col selection:bg-blue-500 selection:text-white">
+<body>
 
-  <!-- 頂部導覽列 -->
-  <header class="border-b border-slate-800/80 bg-slate-900/90 backdrop-blur-md sticky top-0 z-30">
-    <div class="max-w-[1600px] mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 via-indigo-500 to-emerald-500 p-0.5 shadow-lg shadow-blue-500/20">
-          <div class="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-            <svg class="w-6 h-6 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-              <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-              <line x1="12" y1="22.08" x2="12" y2="12"/>
-            </svg>
-          </div>
-        </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <h1 class="text-lg sm:text-xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-blue-400 bg-clip-text text-transparent">
-              CubeFlow Pro
-            </h1>
-            <span class="text-[11px] font-mono uppercase px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/30 font-semibold">
-              ≤ 8步 Cross & X-Cross 引擎
-            </span>
-          </div>
-          <p class="text-xs text-slate-400 hidden sm:block">CFOP 速解十字最佳化 · X-Cross 自動探測 · Free Pair 保留分析</p>
-        </div>
-      </div>
+<header>
+  <div class="brand">
+    <span>🧊 CubeFlow Pro</span>
+    <span class="badge">≤ 8步 CROSS & X-CROSS / PAIR 引擎</span>
+  </div>
+  <div class="tabs">
+    <button type="button" class="tab-btn active" id="tabBtnScramble">公式打亂輸入</button>
+    <button type="button" class="tab-btn" id="tabBtnPainter">2D 手動塗色輸入</button>
+    <button type="button" class="tab-btn" id="btnTimerToggle">⏱️ 15秒預判: <span id="timerText">待機</span></button>
+  </div>
+</header>
 
-      <!-- 模式切換與 15秒預判工具 -->
-      <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
-        <!-- 15秒預判計時器 -->
-        <div id="inspectionBox" class="flex items-center gap-2 bg-slate-800/90 border border-slate-700/80 rounded-xl px-3 py-1.5">
-          <button id="btnInspectionToggle" onclick="toggleInspectionMode()" class="flex items-center gap-1.5 text-xs font-semibold text-amber-400 hover:text-amber-300 transition">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-            </svg>
-            <span id="inspectionBtnText">15秒預判練習</span>
-          </button>
-          <span id="inspectionTimerDisplay" class="font-mono text-sm font-bold text-slate-300 hidden pl-2 border-l border-slate-700">15.0s</span>
-        </div>
+<!-- Mode 1: Scramble Input -->
+<section class="panel" id="panelScramble">
+  <div class="panel-title">
+    <span>WCA 打亂公式輸入（預設白頂 U、綠前 F）</span>
+    <span id="scrambleStepCount" style="color:var(--muted);font-size:0.8rem;">0 步</span>
+  </div>
+  <div class="scramble-box">
+    <input type="text" id="scrambleInput" class="scramble-input" value="D' R2 U' F2 D B2 U2 R2 D' F' L D' R U' B' L2" placeholder="輸入打亂公式，例如: R U R' U' ..." />
+    <button type="button" class="btn btn-primary" id="btnAnalyzeScramble">⚡ 立即分析最佳解</button>
+    <button type="button" class="btn" id="btnRandomScramble">🎲 隨機打亂</button>
+    <button type="button" class="btn btn-gold" id="btnDemoXCross">★ 範例：X-Cross 與連塊 Pair</button>
+  </div>
+  <div class="btn-group">
+    <span style="font-size:0.82rem;color:var(--muted);">目標十字底色：</span>
+    <button type="button" class="btn btn-sm btn-primary cross-color-btn" data-color="W">⚪ 白底 (White)</button>
+    <button type="button" class="btn btn-sm cross-color-btn" data-color="Y">🟡 黃底 (Yellow)</button>
+    <button type="button" class="btn btn-sm cross-color-btn" data-color="DUAL">⚪🟡 白黃雙色 (Dual)</button>
+  </div>
+</section>
 
-        <!-- 輸入模式切換 -->
-        <div class="inline-flex rounded-xl bg-slate-800/90 p-1 border border-slate-700/80">
-          <button id="tabScrambleMode" onclick="switchInputMode('scramble')" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition bg-blue-600 text-white shadow">
-            公式打亂輸入
-          </button>
-          <button id="tabPaintMode" onclick="switchInputMode('paint')" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition text-slate-300 hover:text-white">
-            2D 手動塗色輸入
-          </button>
-        </div>
+<!-- Mode 2: 2D Manual Painter -->
+<section class="panel hidden" id="panelPainter">
+  <div class="panel-title">
+    <span>2D 展開圖手動塗色（點擊格子即時同步下方 3D 魔方）</span>
+    <div class="btn-group">
+      <button type="button" class="btn btn-sm" id="btnSyncFromScramble">載入目前打亂至塗色盤</button>
+      <button type="button" class="btn btn-sm" id="btnResetSolved">重設為已還原</button>
+    </div>
+  </div>
+  <div class="painter-wrap">
+    <div class="net-container">
+      <div class="cube-net" id="cubeNetGrid"></div>
+    </div>
+    <div>
+      <div style="font-size:0.8rem;color:var(--muted);margin-bottom:6px;">選擇畫筆顏色（中心塊固定鎖定）：</div>
+      <div class="palette-grid" id="paletteGrid"></div>
+      <div id="painterStatus" style="font-size:0.8rem;padding:8px;border-radius:8px;background:#090d16;border:1px solid var(--card-border);margin-bottom:10px;"></div>
+      <button type="button" class="btn btn-gold" style="width:100%;" id="btnApplyPainted">套用塗色狀態並分析最佳十字</button>
+    </div>
+  </div>
+</section>
+
+<!-- Main Interactive Workspace -->
+<div class="grid-main">
+  <!-- Left: Compact 3D Cube & Step Playback -->
+  <div class="panel" style="margin-bottom:0;">
+    <div class="panel-title">
+      <span>3D 魔方同步檢視（單指/滑鼠拖曳旋轉）</span>
+      <div class="btn-group">
+        <button type="button" class="btn btn-sm btn-primary mask-btn" data-mask="full">完整魔方</button>
+        <button type="button" class="btn btn-sm mask-btn" data-mask="highlight">十字 + Pair 高亮</button>
+        <button type="button" class="btn btn-sm mask-btn" data-mask="cross">僅顯示十字</button>
       </div>
     </div>
-  </header>
 
-  <!-- 主內容區 -->
-  <main class="flex-1 max-w-[1600px] w-full mx-auto px-4 sm:px-6 py-5 grid grid-cols-1 lg:grid-cols-12 gap-5">
-
-    <!-- 左側欄位：打亂輸入、3D 魔方視窗與動畫控制 (佔 7 欄) -->
-    <div class="lg:col-span-7 flex flex-col gap-5">
-
-      <!-- 面板 1A：公式打亂輸入區 -->
-      <section id="panelScrambleInput" class="glass-panel rounded-2xl p-4 sm:p-5 shadow-xl">
-        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-          <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-blue-400"></span>
-            <h2 class="text-sm font-bold text-slate-200 uppercase tracking-wider">打亂狀態與底色設定 (Scramble & Base)</h2>
-          </div>
-          <div class="flex items-center gap-2">
-            <button onclick="loadPresetScramble('xcross')" class="text-xs px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 transition font-medium">
-              範例：精彩 X-Cross
-            </button>
-            <button onclick="loadPresetScramble('freepair')" class="text-xs px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition font-medium">
-              範例：順手保留 Pair
-            </button>
-            <button onclick="generateRandomScramble()" class="text-xs px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-sm shadow-blue-500/30 transition flex items-center gap-1">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                <polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/>
-                <polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/>
-                <line x1="4" y1="4" x2="9" y2="9"/>
-              </svg>
-              隨機 WCA 打亂
-            </button>
-          </div>
+    <div class="viewport-box" id="viewport3d">
+      <div class="cam-bar">
+        <div class="btn-group">
+          <button type="button" class="btn btn-sm" id="camStandard">看白頂綠前 (U/F/R)</button>
+          <button type="button" class="btn btn-sm" id="camFaceD">正視 D 面 (對照展開圖 D)</button>
+          <button type="button" class="btn btn-sm" id="camFaceF">正視 F 面</button>
         </div>
-
-        <!-- 打亂公式輸入框 -->
-        <div class="flex flex-col sm:flex-row gap-2.5">
-          <div class="relative flex-1">
-            <input
-              id="scrambleInput"
-              type="text"
-              value="D' R2 U' F2 D B2 U' L2 U R' B' D' F R2 U' L' D'"
-              placeholder="輸入標準打亂公式，例如：R U R' U' F2 D' L2..."
-              oninput="onScrambleInputChange()"
-              class="w-full bg-slate-950/90 border border-slate-700/80 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl px-4 py-2.5 font-mono text-sm text-white placeholder-slate-500 outline-none transition"
-            />
-            <button onclick="clearScramble()" title="重設為已還原狀態" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 px-1.5 py-0.5 text-xs rounded bg-slate-800/80">
-              清空
-            </button>
-          </div>
-          <button onclick="runFullAnalysis()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-sm shadow-lg shadow-blue-600/25 transition flex items-center justify-center gap-2 shrink-0">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-            </svg>
-            立即分析最佳解
-          </button>
-        </div>
-        <p id="scrambleValidationMsg" class="text-xs text-slate-400 mt-2 flex items-center justify-between">
-          <span>打亂預設以 <strong class="text-slate-200">白頂綠前 (WCA 標準 U=白, F=綠)</strong> 執行，分析時自動翻轉至您選擇的底色。</span>
-          <span id="scrambleLengthBadge" class="font-mono text-blue-400">17 步</span>
-        </p>
-
-        <!-- 底色選擇與搜尋偏好 -->
-        <div class="mt-4 pt-3.5 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3">
-          <div class="flex items-center gap-2 flex-wrap">
-            <span class="text-xs font-semibold text-slate-400">目標十字底色：</span>
-            <div id="crossColorSelector" class="flex items-center gap-1.5 flex-wrap">
-              <button onclick="setTargetCrossColor('D')" data-color="D" class="cross-color-btn active px-2.5 py-1 rounded-lg text-xs font-bold border transition flex items-center gap-1.5 bg-white text-slate-900 border-white shadow">
-                <span class="w-2.5 h-2.5 rounded-full bg-white border border-slate-400"></span>白底 (預設)
-              </button>
-              <button onclick="setTargetCrossColor('U')" data-color="U" class="cross-color-btn px-2.5 py-1 rounded-lg text-xs font-bold border transition flex items-center gap-1.5 bg-slate-800/90 text-slate-300 border-slate-700 hover:border-yellow-400">
-                <span class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span>黃底
-              </button>
-              <button onclick="setTargetCrossColor('DU')" data-color="DU" class="cross-color-btn px-2.5 py-1 rounded-lg text-xs font-bold border transition flex items-center gap-1.5 bg-slate-800/90 text-slate-300 border-slate-700 hover:border-blue-400">
-                <span class="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-white to-yellow-400"></span>白黃雙色 (Dual)
-              </button>
-              <button onclick="setTargetCrossColor('ALL')" data-color="ALL" class="cross-color-btn px-2.5 py-1 rounded-lg text-xs font-bold border transition flex items-center gap-1.5 bg-slate-800/90 text-slate-300 border-slate-700 hover:border-emerald-400">
-                <span class="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-red-500 via-green-500 to-blue-500"></span>六色全色 (CN)
-              </button>
-            </div>
-          </div>
-
-          <div class="flex items-center gap-2">
-            <label class="text-xs text-slate-400 flex items-center gap-1.5 cursor-pointer select-none">
-              <input id="chkAllowPreRotation" type="checkbox" checked onchange="runFullAnalysis()" class="rounded bg-slate-800 border-slate-600 text-blue-500 focus:ring-0">
-              <span>自動推薦最佳預判擺放面 (y / y' / y2)</span>
-            </label>
-          </div>
-        </div>
-      </section>
-
-      <!-- 面板 1B：2D 手動塗色展開圖輸入區 (預設隱藏，切換顯示) -->
-      <section id="panelPaintInput" class="glass-panel rounded-2xl p-4 sm:p-5 shadow-xl hidden">
-        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-          <div>
-            <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-              2D 魔方展開圖手動塗色 (Manual State Painter)
-            </h2>
-            <p class="text-xs text-slate-400 mt-0.5">點選下方調色盤顏色，再點擊展開圖貼紙即可自訂手邊魔方的實況狀態（中心塊固定以確保方向基準）。</p>
-          </div>
-          <div class="flex items-center gap-2">
-            <button onclick="syncNetFromCurrentCube()" class="text-xs px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
-              載入目前打亂至展開圖
-            </button>
-            <button onclick="resetPaintNetToSolved()" class="text-xs px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
-              重設為還原態
-            </button>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-          <!-- 2D 展開圖網格 -->
-          <div class="md:col-span-8 flex justify-center bg-slate-950/80 rounded-xl p-4 border border-slate-800/80 overflow-x-auto">
-            <div id="netGridContainer" class="grid grid-cols-12 gap-1 w-max select-none">
-              <!-- 由 JS 動態渲染 54 個貼紙格 -->
-            </div>
-          </div>
-
-          <!-- 調色盤與驗證狀態 -->
-          <div class="md:col-span-4 flex flex-col gap-3">
-            <div class="bg-slate-900/90 rounded-xl p-3 border border-slate-800">
-              <span class="text-xs font-semibold text-slate-400 block mb-2">選擇畫筆顏色：</span>
-              <div id="paletteContainer" class="grid grid-cols-3 gap-2">
-                <!-- 由 JS 渲染 6 色按鈕 -->
-              </div>
-            </div>
-
-            <div id="paintValidationBox" class="bg-slate-900/90 rounded-xl p-3 border border-slate-800 text-xs space-y-1.5">
-              <div class="font-semibold text-slate-300">貼紙數量與奇偶校驗：</div>
-              <div id="paintCountStatus" class="text-emerald-400 font-mono">✓ 6 色貼紙各 9 張，狀態合法</div>
-            </div>
-
-            <button onclick="applyPaintedCubeAndSolve()" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-extrabold text-sm shadow-lg shadow-amber-500/20 transition">
-              套用塗色狀態並分析最佳十字
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <!-- 面板 2：互動 3D 魔術方塊視窗與遮罩/步進控制器 -->
-      <section class="glass-panel rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col relative overflow-hidden">
-        <!-- 視窗頂部工具列：遮罩切換與資訊標籤 -->
-        <div class="flex flex-wrap items-center justify-between gap-2 mb-3 z-10">
-          <div class="flex items-center gap-2 flex-wrap">
-            <span class="text-xs font-semibold text-slate-400">3D 視角遮罩：</span>
-            <div class="inline-flex rounded-xl bg-slate-900/95 p-1 border border-slate-800">
-              <button onclick="setMaskMode('full')" id="maskBtn_full" class="mask-btn px-2.5 py-1 rounded-lg text-xs font-semibold transition text-slate-300 hover:text-white">
-                完整魔方
-              </button>
-              <button onclick="setMaskMode('cross_pair')" id="maskBtn_cross_pair" class="mask-btn px-2.5 py-1 rounded-lg text-xs font-semibold transition bg-blue-600 text-white shadow">
-                十字 + 目標 Pair 高亮
-              </button>
-              <button onclick="setMaskMode('cross')" id="maskBtn_cross" class="mask-btn px-2.5 py-1 rounded-lg text-xs font-semibold transition text-slate-300 hover:text-white">
-                僅顯示十字
-              </button>
-            </div>
-          </div>
-
-          <div class="flex items-center gap-2">
-            <span id="currentOrientationBadge" class="text-xs font-mono px-2.5 py-1 rounded-lg bg-slate-900/90 border border-slate-700/80 text-slate-300">
-              擺放：白底 (D=白, U=黃, F=綠)
-            </span>
-            <button onclick="resetCameraView()" title="重設 3D 視角" class="p-1.5 rounded-lg bg-slate-800/90 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <!-- Three.js 3D Canvas 容器 (高度與魔方比例已縮小，方便一覽無遺) -->
-        <div class="relative w-full h-[230px] sm:h-[260px] rounded-xl bg-gradient-to-b from-slate-900/70 to-slate-950/95 border border-slate-800/80 overflow-hidden">
-          <div id="threeCanvasContainer" class="w-full h-full cursor-grab active:cursor-grabbing"></div>
-
-          <!-- 左上角：快速視角切換按鈕 (方便直接與 2D 展開圖對照 U/F/R 或 D 面) -->
-          <div class="absolute top-2.5 left-2.5 flex flex-wrap items-center gap-1.5 z-10">
-            <button onclick="setQuickCameraAngle('UFR')" class="px-2 py-1 rounded-lg bg-slate-900/90 hover:bg-blue-600 text-[11px] font-semibold text-slate-200 hover:text-white border border-slate-700/80 transition">
-              看白頂綠前 (U/F/R)
-            </button>
-            <button onclick="setQuickCameraAngle('DFR')" class="px-2 py-1 rounded-lg bg-slate-900/90 hover:bg-blue-600 text-[11px] font-semibold text-slate-200 hover:text-white border border-slate-700/80 transition">
-              看黃底綠前 (D/F/R)
-            </button>
-            <button onclick="setQuickCameraAngle('D_FACE')" class="px-2 py-1 rounded-lg bg-slate-900/90 hover:bg-blue-600 text-[11px] font-semibold text-slate-200 hover:text-white border border-slate-700/80 transition">
-              正視 D 面 (對照展開圖 D)
-            </button>
-          </div>
-
-          <!-- 左下角方位指示與操作提示 -->
-          <div class="absolute bottom-2.5 left-2.5 pointer-events-none flex flex-col gap-1">
-            <div class="flex items-center gap-1.5 text-[11px] bg-slate-950/80 backdrop-blur px-2.5 py-1 rounded-lg border border-slate-800 text-slate-300">
-              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-              <span>起點 (Step 0) 永遠與上方 2D 展開圖方向 100% 同步 (U=白, F=綠, D=黃)</span>
-            </div>
-          </div>
-
-          <!-- 右上角目前選中解法的浮動摘要 -->
-          <div id="activeSolutionOverlay" class="absolute top-2.5 right-2.5 bg-slate-950/85 backdrop-blur-md border border-slate-800 rounded-xl px-3 py-1.5 text-right pointer-events-none">
-            <div id="overlayBadge" class="text-[11px] font-bold text-emerald-400">等待選擇解法</div>
-            <div id="overlaySlotInfo" class="text-xs text-slate-300 font-mono mt-0.5">--</div>
-          </div>
-        </div>
-  <!-- 應用程式核心邏輯 (100% 統一 3D 幾何座標引擎：54貼紙展開圖、WCA打亂、3D魔方與IDA*求解器完全同源) -->
-  <script>
-    /*************************************************************************
-     * 1. 100% 統一的 3D 空間幾何貼紙座標引擎 (Single Source of Truth)
-     * -----------------------------------------------------------------------
-     * 為何先前的版本會發生 2D 展開圖與 3D 魔方或 WCA 打亂對不上的問題？
-     * 因為手寫置換表容易在面方向或預旋轉 (z2 / y) 時產生座標軸鏡射或提前旋轉。
-     *
-     * 現在我們直接用「三維空間整數座標 (x, y, z) 與法向量 (nx, ny, nz)」作為唯一基準：
-     * - x 軸: L = -1 (左/橘), R = +1 (右/紅)
-     * - y 軸: D = -1 (下/黃), U = +1 (上/白)
-     * - z 軸: B = -1 (後/藍), F = +1 (前/綠)
-     *
-     * 54 張貼紙 (0..53) 的索引定義 (與 2D 展開圖每一格 1:1 嚴格對應)：
-     * - 0..8   (U 面, ny = +1): row 0..2 對應 z = -1, 0, +1 ; col 0..2 對應 x = -1, 0, +1
-     * - 9..17  (R 面, nx = +1): row 0..2 對應 y = +1, 0, -1 ; col 0..2 對應 z = +1, 0, -1
-     * - 18..26 (F 面, nz = +1): row 0..2 對應 y = +1, 0, -1 ; col 0..2 對應 x = -1, 0, +1
-     * - 27..35 (D 面, ny = -1): row 0..2 對應 z = +1, 0, -1 ; col 0..2 對應 x = -1, 0, +1
-     * - 36..44 (L 面, nx = -1): row 0..2 對應 y = +1, 0, -1 ; col 0..2 對應 z = -1, 0, +1
-     * - 45..53 (B 面, nz = -1): row 0..2 對應 y = +1, 0, -1 ; col 0..2 對應 x = +1, 0, -1
-     *************************************************************************/
-
-    const STICKER_COORDS = []; // 長度 54，儲存 { idx, face, row, col, x, y, z, nx, ny, nz }
-    const COORD_TO_STICKER_IDX = new Map();
-
-    function coordKey(x, y, z, nx, ny, nz) {
-      return `${x},${y},${z}|${nx},${ny},${nz}`;
-    }
-
-    function initUnified3DStickerGeometry() {
-      const faces = ['U', 'R', 'F', 'D', 'L', 'B'];
-      for (let f = 0; f < 6; f++) {
-        const face = faces[f];
-        for (let r = 0; r < 3; r++) {
-          for (let c = 0; c < 3; c++) {
-            const idx = f * 9 + r * 3 + c;
-            let x = 0, y = 0, z = 0, nx = 0, ny = 0, nz = 0;
-            if (face === 'U') {
-              x = c - 1; y = 1; z = r - 1;
-              nx = 0; ny = 1; nz = 0;
-            } else if (face === 'R') {
-              x = 1; y = 1 - r; z = 1 - c;
-              nx = 1; ny = 0; nz = 0;
-            } else if (face === 'F') {
-              x = c - 1; y = 1 - r; z = 1;
-              nx = 0; ny = 0; nz = 1;
-            } else if (face === 'D') {
-              x = c - 1; y = -1; z = 1 - r;
-              nx = 0; ny = -1; nz = 0;
-            } else if (face === 'L') {
-              x = -1; y = 1 - r; z = c - 1;
-              nx = -1; ny = 0; nz = 0;
-            } else if (face === 'B') {
-              x = 1 - c; y = 1 - r; z = -1;
-              nx = 0; ny = 0; nz = -1;
-            }
-            const info = { idx, face, row: r, col: c, x, y, z, nx, ny, nz };
-            STICKER_COORDS.push(info);
-            COORD_TO_STICKER_IDX.set(coordKey(x, y, z, nx, ny, nz), idx);
-          }
-        }
-      }
-    }
-    initUnified3DStickerGeometry();
-
-    // WCA 標準 90度順時針旋轉在 3D 空間中的精確座標轉換 (看著該面順時針轉 90 度)
-    // 回傳某顆原本在 (x, y, z) 的貼紙旋轉後會到達的新座標 (x', y', z')
-    function rotate3DPointCW(x, y, z, axisFace) {
-      switch (axisFace) {
-        case 'U': // 從 +Y 往原點看順時針: 前(z=+1) -> 左(x=-1) -> 後(z=-1) -> 右(x=+1)
-        case 'y':
-          return [-z, y, x];
-        case 'D': // 從 -Y 往原點看順時針: 前(z=+1) -> 右(x=+1) -> 後(z=-1) -> 左(x=-1)
-          return [z, y, -x];
-        case 'R': // 從 +X 往原點看順時針: 前(z=+1) -> 上(y=+1) -> 後(z=-1) -> 下(y=-1)
-        case 'x':
-          return [x, z, -y];
-        case 'L': // 從 -X 往原點看順時針: 上(y=+1) -> 前(z=+1) -> 下(y=-1) -> 後(z=-1)
-          return [x, -z, y];
-        case 'F': // 從 +Z 往原點看順時針: 上(y=+1) -> 右(x=+1) -> 下(y=-1) -> 左(x=-1)
-        case 'z':
-          return [y, -x, z];
-        case 'B': // 從 -Z 往原點看順時針: 上(y=+1) -> 左(x=-1) -> 下(y=-1) -> 右(x=+1)
-          return [-y, x, z];
-        default:
-          return [x, y, z];
-      }
-    }
-
-    // 判斷某個 (x, y, z) 是否在指定單層轉動的影響範圍內
-    function isPointInMoveLayer(x, y, z, moveType) {
-      if (moveType === 'U') return y === 1;
-      if (moveType === 'D') return y === -1;
-      if (moveType === 'R') return x === 1;
-      if (moveType === 'L') return x === -1;
-      if (moveType === 'F') return z === 1;
-      if (moveType === 'B') return z === -1;
-      // 整顆旋轉 x, y, z 影響所有層
-      return true;
-    }
-
-    // 產生單次 90 度順時針轉動的 54 貼紙置換陣列：newFacelets[destIdx] = oldFacelets[srcIdx]
-    // 我們儲存 destOfSrc[srcIdx] = destIdx，或 srcOfDest[destIdx] = srcIdx
-    function build54StickerPermCW(moveType) {
-      const srcOfDest = new Uint8Array(54);
-      for (let srcIdx = 0; srcIdx < 54; srcIdx++) {
-        const s = STICKER_COORDS[srcIdx];
-        if (!isPointInMoveLayer(s.x, s.y, s.z, moveType)) {
-          srcOfDest[srcIdx] = srcIdx;
-        } else {
-          const [nxPos, nyPos, nzPos] = rotate3DPointCW(s.x, s.y, s.z, moveType);
-          const [nnx, nny, nnz] = rotate3DPointCW(s.nx, s.ny, s.nz, moveType);
-          const destIdx = COORD_TO_STICKER_IDX.get(coordKey(nxPos, nyPos, nzPos, nnx, nny, nnz));
-          srcOfDest[destIdx] = srcIdx;
-        }
-      }
-      return srcOfDest;
-    }
-
-    function apply54Perm(facelets, srcOfDest) {
-      const next = new Array(54);
-      for (let i = 0; i < 54; i++) {
-        next[i] = facelets[srcOfDest[i]];
-      }
-      return next;
-    }
-
-    /*************************************************************************
-     * 2. 由 3D 貼紙幾何自動推導 8 角塊與 12 邊塊 (Cubie State & Move Tables)
-     * -----------------------------------------------------------------------
-     * 8 個角塊 (Corners):
-     * 0:URF, 1:UFL, 2:ULB, 3:UBR, 4:DFR, 5:DLF, 6:DBL, 7:DRB
-     * 12 個邊塊 (Edges):
-     * 0:UR, 1:UF, 2:UL, 3:UB, 4:DR, 5:DF, 6:DL, 7:DB, 8:FR, 9:FL, 10:BL, 11:BR
-     *
-     * 所有 Cubie 轉動表 (MOVES_TABLE 與 CUBE_ROTATIONS) 皆直接由上面的 3D 幾何生成，
-     * 保證求解器、WCA 打亂、2D 展開圖與 3D 魔方 100% 同源零誤差！
-     *************************************************************************/
-    const MOVE_NAMES = [
-      "U", "U2", "U'",
-      "R", "R2", "R'",
-      "F", "F2", "F'",
-      "D", "D2", "D'",
-      "L", "L2", "L'",
-      "B", "B2", "B'"
-    ];
-
-    const CORNER_COLORS = [
-      ['U', 'R', 'F'], // 0: URF
-      ['U', 'F', 'L'], // 1: UFL
-      ['U', 'L', 'B'], // 2: ULB
-      ['U', 'B', 'R'], // 3: UBR
-      ['D', 'F', 'R'], // 4: DFR
-      ['D', 'L', 'F'], // 5: DLF
-      ['D', 'B', 'L'], // 6: DBL
-      ['D', 'R', 'B']  // 7: DRB
-    ];
-
-    const EDGE_COLORS = [
-      ['U', 'R'], ['U', 'F'], ['U', 'L'], ['U', 'B'],
-      ['D', 'R'], ['D', 'F'], ['D', 'L'], ['D', 'B'],
-      ['F', 'R'], ['F', 'L'], ['B', 'L'], ['B', 'R']
-    ];
-
-    // 自動根據面名稱與 3D 法向量找出每個角塊/邊塊對應的 54 貼紙索引！
-    function findCornerFaceletIndices(f0, f1, f2) {
-      const mapDir = { U: [0, 1, 0], D: [0, -1, 0], R: [1, 0, 0], L: [-1, 0, 0], F: [0, 0, 1], B: [0, 0, -1] };
-      const d0 = mapDir[f0], d1 = mapDir[f1], d2 = mapDir[f2];
-      const cx = d0[0] + d1[0] + d2[0];
-      const cy = d0[1] + d1[1] + d2[1];
-      const cz = d0[2] + d1[2] + d2[2];
-      return [
-        COORD_TO_STICKER_IDX.get(coordKey(cx, cy, cz, d0[0], d0[1], d0[2])),
-        COORD_TO_STICKER_IDX.get(coordKey(cx, cy, cz, d1[0], d1[1], d1[2])),
-        COORD_TO_STICKER_IDX.get(coordKey(cx, cy, cz, d2[0], d2[1], d2[2]))
-      ];
-    }
-
-    function findEdgeFaceletIndices(f0, f1) {
-      const mapDir = { U: [0, 1, 0], D: [0, -1, 0], R: [1, 0, 0], L: [-1, 0, 0], F: [0, 0, 1], B: [0, 0, -1] };
-      const d0 = mapDir[f0], d1 = mapDir[f1];
-      const ex = d0[0] + d1[0];
-      const ey = d0[1] + d1[1];
-      const ez = d0[2] + d1[2];
-      return [
-        COORD_TO_STICKER_IDX.get(coordKey(ex, ey, ez, d0[0], d0[1], d0[2])),
-        COORD_TO_STICKER_IDX.get(coordKey(ex, ey, ez, d1[0], d1[1], d1[2]))
-      ];
-    }
-
-    const CORNER_FACELETS = CORNER_COLORS.map(([a, b, c]) => findCornerFaceletIndices(a, b, c));
-    const EDGE_FACELETS = EDGE_COLORS.map(([a, b]) => findEdgeFaceletIndices(a, b));
-
-    function createSolvedCubieState() {
-      return {
-        cp: new Uint8Array([0, 1, 2, 3, 4, 5, 6, 7]),
-        co: new Uint8Array(8),
-        ep: new Uint8Array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]),
-        eo: new Uint8Array(12)
-      };
-    }
-
-    function cloneCubieState(s) {
-      return {
-        cp: new Uint8Array(s.cp),
-        co: new Uint8Array(s.co),
-        ep: new Uint8Array(s.ep),
-        eo: new Uint8Array(s.eo)
-      };
-    }
-
-    function multiplyCubeState(stateA, moveB) {
-      const cp = new Uint8Array(8);
-      const co = new Uint8Array(8);
-      const ep = new Uint8Array(12);
-      const eo = new Uint8Array(12);
-
-      for (let i = 0; i < 8; i++) {
-        cp[i] = stateA.cp[moveB.cp[i]];
-        co[i] = (stateA.co[moveB.cp[i]] + moveB.co[i]) % 3;
-      }
-      for (let i = 0; i < 12; i++) {
-        ep[i] = stateA.ep[moveB.ep[i]];
-        eo[i] = (stateA.eo[moveB.ep[i]] + moveB.eo[i]) % 2;
-      }
-      return { cp, co, ep, eo };
-    }
-
-    function cubieStateToFacelets(state) {
-      const facelets = new Array(54);
-      const faceKeys = ['U', 'R', 'F', 'D', 'L', 'B'];
-      for (let f = 0; f < 6; f++) {
-        for (let i = 0; i < 9; i++) facelets[f * 9 + i] = faceKeys[f];
-      }
-      for (let i = 0; i < 8; i++) {
-        const piece = state.cp[i];
-        const ori = state.co[i];
-        for (let k = 0; k < 3; k++) {
-          facelets[CORNER_FACELETS[i][(k + ori) % 3]] = CORNER_COLORS[piece][k];
-        }
-      }
-      for (let i = 0; i < 12; i++) {
-        const piece = state.ep[i];
-        const ori = state.eo[i];
-        for (let k = 0; k < 2; k++) {
-          facelets[EDGE_FACELETS[i][(k + ori) % 2]] = EDGE_COLORS[piece][k];
-        }
-      }
-      return facelets;
-    }
-
-    function faceletsToCubieState(facelets) {
-      const state = createSolvedCubieState();
-      const usedCorners = new Set();
-      const usedEdges = new Set();
-
-      // 解析 8 個角塊
-      for (let i = 0; i < 8; i++) {
-        const f0 = facelets[CORNER_FACELETS[i][0]];
-        const f1 = facelets[CORNER_FACELETS[i][1]];
-        const f2 = facelets[CORNER_FACELETS[i][2]];
-        let foundPiece = -1, foundOri = 0;
-
-        for (let p = 0; p < 8; p++) {
-          const [c0, c1, c2] = CORNER_COLORS[p];
-          if (f0 === c0 && f1 === c1 && f2 === c2) { foundPiece = p; foundOri = 0; break; }
-          if (f1 === c0 && f2 === c1 && f0 === c2) { foundPiece = p; foundOri = 1; break; }
-          if (f2 === c0 && f0 === c1 && f1 === c2) { foundPiece = p; foundOri = 2; break; }
-        }
-        if (foundPiece === -1 || usedCorners.has(foundPiece)) {
-          return { valid: false, error: `角塊位置 #${i + 1} 顏色組合無效或重複` };
-        }
-        usedCorners.add(foundPiece);
-        state.cp[i] = foundPiece;
-        state.co[i] = foundOri;
-      }
-
-      // 解析 12 個邊塊
-      for (let i = 0; i < 12; i++) {
-        const f0 = facelets[EDGE_FACELETS[i][0]];
-        const f1 = facelets[EDGE_FACELETS[i][1]];
-        let foundPiece = -1, foundOri = 0;
-
-        for (let p = 0; p < 12; p++) {
-          const [e0, e1] = EDGE_COLORS[p];
-          if (f0 === e0 && f1 === e1) { foundPiece = p; foundOri = 0; break; }
-          if (f1 === e0 && f0 === e1) { foundPiece = p; foundOri = 1; break; }
-        }
-        if (foundPiece === -1 || usedEdges.has(foundPiece)) {
-          return { valid: false, error: `邊塊位置 #${i + 1} 顏色組合無效或重複` };
-        }
-        usedEdges.add(foundPiece);
-        state.ep[i] = foundPiece;
-        state.eo[i] = foundOri;
-      }
-
-      const coSum = state.co.reduce((a, b) => a + b, 0);
-      if (coSum % 3 !== 0) {
-        return { valid: false, error: '角塊方向總和異常（存在單顆角塊扭轉，實物不可解）' };
-      }
-      const eoSum = state.eo.reduce((a, b) => a + b, 0);
-      if (eoSum % 2 !== 0) {
-        return { valid: false, error: '邊塊翻轉總和異常（存在單顆邊塊翻轉，實物不可解）' };
-      }
-
-      return { valid: true, state };
-    }
-
-    // 由 3D 幾何置換自動生成 BASIC_MOVES 與 CUBE_ROTATIONS，確保 100% 零人工誤差！
-    const BASIC_MOVES = {};
-    const CUBE_ROTATIONS = {};
-    const MOVES_TABLE = [];
-
-    function deriveCubieMoveFrom3D(moveKey) {
-      const perm54 = build54StickerPermCW(moveKey);
-      const solvedFacelets = cubieStateToFacelets(createSolvedCubieState());
-      const movedFacelets = apply54Perm(solvedFacelets, perm54);
-      // 對於整顆旋轉 (x, y, z)，中心塊顏色也會移動，我們先把 movedFacelets 的顏色映射回原始 6 個中心塊代表色
-      // 因為 CubieState 是相對於當前 U,R,F,D,L,B 軸向定義的
-      return faceletsToCubieState(movedFacelets).state;
-    }
-
-    function initMovesTableFrom3D() {
-      const faces = ['U', 'R', 'F', 'D', 'L', 'B'];
-      for (const f of faces) {
-        BASIC_MOVES[f] = deriveCubieMoveFrom3D(f);
-        let cur = createSolvedCubieState();
-        for (let pow = 1; pow <= 3; pow++) {
-          cur = multiplyCubeState(cur, BASIC_MOVES[f]);
-          MOVES_TABLE.push(cur);
-        }
-      }
-      for (const rot of ['x', 'y', 'z']) {
-        CUBE_ROTATIONS[rot] = deriveCubieMoveFrom3D(rot);
-      }
-    }
-    initMovesTableFrom3D();
-
-    // 執行整體旋轉序列 (例如 "z2", "z2 y", "x'")
-    function applyWholeRotationToken(state, token) {
-      const baseAxis = token[0];
-      const mod = token.slice(1);
-      const rotMove = CUBE_ROTATIONS[baseAxis];
-      if (!rotMove) return state;
-      const times = mod === '2' ? 2 : (mod === "'" ? 3 : 1);
-      let cur = state;
-      for (let i = 0; i < times; i++) {
-        cur = multiplyCubeState(cur, rotMove);
-      }
-      return cur;
-    }
-
-    function applyRotationString(state, rotStr) {
-      if (!rotStr || !rotStr.trim()) return cloneCubieState(state);
-      const tokens = rotStr.trim().split(/\s+/);
-      let cur = cloneCubieState(state);
-      for (const t of tokens) {
-        cur = applyWholeRotationToken(cur, t);
-      }
-      return cur;
-    }
-
-    /*************************************************************************
-     * 6. 2D 展開圖 (54 Facelets) 顏色配置表
-     *************************************************************************/
-    const FACE_COLORS = {
-      U: { key: 'U', name: '白 (U)', hex: '#ffffff', twBg: 'bg-white' },
-      R: { key: 'R', name: '紅 (R)', hex: '#ef4444', twBg: 'bg-red-500' },
-      F: { key: 'F', name: '綠 (F)', hex: '#22c55e', twBg: 'bg-green-500' },
-      D: { key: 'D', name: '黃 (D)', hex: '#facc15', twBg: 'bg-yellow-400' },
-      L: { key: 'L', name: '橘 (L)', hex: '#f97316', twBg: 'bg-orange-500' },
-      B: { key: 'B', name: '藍 (B)', hex: '#3b82f6', twBg: 'bg-blue-500' }
-    };
-
-    // 將在某個預旋轉視角 (例如 z2 y) 下的單步動作 (如 R, U, F) 轉換回 WCA 絕對座標 (白頂綠前) 的動作名稱！
-    // 這樣 3D 魔方就可以全程保持在與 2D 展開圖 100% 同步的方位 (U=白、D=黃、F=綠)，使用者對照時絕不會混淆！
-    function mapMoveFromOrientedToWCA(moveName, rotStr) {
-      if (!rotStr || !rotStr.trim()) return moveName;
-      const face = moveName[0];
-      const suffix = moveName.slice(1);
-      // getFaceColorMapAfterRotation 回傳在 rotStr 旋轉後，現在位於 U,R,F,D,L,B 位置的是原本 WCA 的哪個面
-      // WCA 初始代碼: W->U, R->R, G->F, Y->D, O->L, B->B
-      const colorToWcaFace = { W: 'U', R: 'R', G: 'F', Y: 'D', O: 'L', B: 'B' };
-      const faceColorMap = getFaceColorMapAfterRotation(rotStr);
-      const wcaFace = colorToWcaFace[faceColorMap[face]] || face;
-      return wcaFace + suffix;
-    }
-
-    /*************************************************************************
-     * 7. Three.js 3D 互動式魔術方塊渲染器 (支援視角遮罩與平滑轉動動畫)
-     *************************************************************************/
-    let scene, camera, renderer, cubeGroup;
-    let cubies3D = [];
-    let isDragging = false;
-    let prevMouse = { x: 0, y: 0 };
-    let cameraSpherical = { radius: 9.8, theta: Math.PI / 5, phi: Math.PI / 2.65 };
-
-    // 動畫狀態與播放序列
-    let currentMaskMode = 'cross_pair'; // 'full' | 'cross_pair' | 'cross'
-    let activeSolution = null;
-    let currentStepIndex = 0;
-    let isPlaying = false;
-    let playTimer = null;
-    let animDurationMs = 260;
-    let isAnimatingMove = false;
-    let activeInputSource = 'scramble'; // 'scramble' | 'paint'
-    let isLivePaintingPreview = false;
-
-    // 貼紙顏色對應表 (在選定的求解視角下渲染真實貼紙顏色)
-    const STICKER_HEX_MAP = {
-      W: 0xffffff,
-      Y: 0xfacc15,
-      G: 0x22c55e,
-      B: 0x3b82f6,
-      R: 0xef4444,
-      O: 0xf97316,
-      MASKED: 0x1e293b
-    };
-
-    function initThreeJS() {
-      const container = document.getElementById('threeCanvasContainer');
-      const w = container.clientWidth || 600;
-      const h = container.clientHeight || 250;
-
-      scene = new THREE.Scene();
-
-      camera = new THREE.PerspectiveCamera(34, w / h, 0.1, 100);
-      updateCameraPosition();
-
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-      renderer.setSize(w, h);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      container.innerHTML = '';
-      container.appendChild(renderer.domElement);
-
-      // 燈光設定
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
-      scene.add(ambientLight);
-
-      const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.55);
-      dirLight1.position.set(8, 12, 10);
-      scene.add(dirLight1);
-
-      const dirLight2 = new THREE.DirectionalLight(0x94a3b8, 0.35);
-      dirLight2.position.set(-8, -10, -8);
-      scene.add(dirLight2);
-
-      cubeGroup = new THREE.Group();
-      // 縮小 3D 魔方整體模型比例，讓視覺更精緻不擁擠
-      cubeGroup.scale.set(0.76, 0.76, 0.76);
-      scene.add(cubeGroup);
-
-      build3DCubies();
-
-      // 滑鼠與觸控旋轉視角事件
-      const dom = renderer.domElement;
-      dom.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        prevMouse = { x: e.clientX, y: e.clientY };
-      });
-      window.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
-        const dx = e.clientX - prevMouse.x;
-        const dy = e.clientY - prevMouse.y;
-        prevMouse = { x: e.clientX, y: e.clientY };
-        cameraSpherical.theta -= dx * 0.0085;
-        cameraSpherical.phi = Math.max(0.2, Math.min(Math.PI - 0.2, cameraSpherical.phi - dy * 0.0085));
-        updateCameraPosition();
-      });
-      window.addEventListener('mouseup', () => { isDragging = false; });
-
-      dom.addEventListener('touchstart', (e) => {
-        if (e.touches.length === 1) {
-          isDragging = true;
-          prevMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        }
-      }, { passive: true });
-      dom.addEventListener('touchmove', (e) => {
-        if (!isDragging || e.touches.length !== 1) return;
-        const dx = e.touches[0].clientX - prevMouse.x;
-        const dy = e.touches[0].clientY - prevMouse.y;
-        prevMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        cameraSpherical.theta -= dx * 0.0085;
-        cameraSpherical.phi = Math.max(0.2, Math.min(Math.PI - 0.2, cameraSpherical.phi - dy * 0.0085));
-        updateCameraPosition();
-      }, { passive: true });
-      dom.addEventListener('touchend', () => { isDragging = false; });
-
-      window.addEventListener('resize', () => {
-        if (!container) return;
-        const nw = container.clientWidth;
-        const nh = container.clientHeight;
-        camera.aspect = nw / nh;
-        camera.updateProjectionMatrix();
-        renderer.setSize(nw, nh);
-      });
-
-      function animateLoop() {
-        requestAnimationFrame(animateLoop);
-        renderer.render(scene, camera);
-      }
-      animateLoop();
-    }
-
-    function updateCameraPosition() {
-      if (!camera) return;
-      const { radius, theta, phi } = cameraSpherical;
-      camera.position.x = radius * Math.sin(phi) * Math.sin(theta);
-      camera.position.y = radius * Math.cos(phi);
-      camera.position.z = radius * Math.sin(phi) * Math.cos(theta);
-      camera.lookAt(0, 0, 0);
-    }
-
-    function resetCameraView() {
-      // 預設看向 U(白頂)、F(綠前)、R(紅右)，與上方 2D 展開圖完全直覺對應！
-      cameraSpherical = { radius: 9.6, theta: Math.PI / 5.2, phi: Math.PI / 2.85 };
-      updateCameraPosition();
-    }
-
-    function setQuickCameraAngle(preset) {
-      if (preset === 'UFR') {
-        // 看白頂、綠前、紅右 (對照 2D 展開圖 U, F, R)
-        cameraSpherical = { radius: 9.6, theta: Math.PI / 5.2, phi: Math.PI / 2.85 };
-      } else if (preset === 'DFR') {
-        // 從斜下方看黃底、綠前、紅右 (觀察底部十字 D 與前右槽)
-        cameraSpherical = { radius: 9.6, theta: Math.PI / 5.2, phi: Math.PI - Math.PI / 2.85 };
-      } else if (preset === 'D_FACE') {
-        // 正對底面 D (上方為 F 綠、下方為 B 藍、左為 L 橘、右為 R 紅，與 2D 展開圖 D 面 100% 一致)
-        cameraSpherical = { radius: 9.6, theta: 0, phi: Math.PI - 0.01 };
-      }
-      updateCameraPosition();
-    }
-
-    // 建立帶有中心塊字母 (U, D, F, B, L, R) 的 Canvas Texture，讓使用者在 3D 魔方上一眼看清哪一面是 U/D/F/B/L/R
-    const centerLabelTextures = {};
-    function getCenterStickerTexture(faceLetter, hexColor) {
-      const cacheKey = `${faceLetter}_${hexColor}`;
-      if (centerLabelTextures[cacheKey]) return centerLabelTextures[cacheKey];
-
-      const canvas = document.createElement('canvas');
-      canvas.width = 128;
-      canvas.height = 128;
-      const ctx = canvas.getContext('2d');
-
-      ctx.fillStyle = '#' + hexColor.toString(16).padStart(6, '0');
-      ctx.fillRect(0, 0, 128, 128);
-
-      ctx.fillStyle = '#0f172a';
-      ctx.font = 'bold 68px "JetBrains Mono", monospace';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(faceLetter, 64, 68);
-
-      const tex = new THREE.CanvasTexture(canvas);
-      centerLabelTextures[cacheKey] = tex;
-      return tex;
-    }
-
-    function build3DCubies() {
-      while (cubeGroup.children.length > 0) {
-        cubeGroup.remove(cubeGroup.children[0]);
-      }
-      cubies3D = [];
-
-      const coreGeo = new THREE.BoxGeometry(0.95, 0.95, 0.95);
-      const coreMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.4, metalness: 0.1 });
-      const stickerGeo = new THREE.PlaneGeometry(0.84, 0.84);
-
-      for (let x = -1; x <= 1; x++) {
-        for (let y = -1; y <= 1; y++) {
-          for (let z = -1; z <= 1; z++) {
-            const cubie = new THREE.Group();
-            cubie.position.set(x, y, z);
-            cubie.userData = { gx: x, gy: y, gz: z, stickers: {} };
-
-            const coreMesh = new THREE.Mesh(coreGeo, coreMat);
-            cubie.add(coreMesh);
-
-            // 根據外表面貼上貼紙 (U:+y, D:-y, R:+x, L:-x, F:+z, B:-z)
-            const dirs = [
-              { key: 'U', cond: y === 1, isCenter: x === 0 && z === 0, pos: [0, 0.485, 0], rot: [-Math.PI / 2, 0, 0] },
-              { key: 'D', cond: y === -1, isCenter: x === 0 && z === 0, pos: [0, -0.485, 0], rot: [Math.PI / 2, 0, 0] },
-              { key: 'R', cond: x === 1, isCenter: y === 0 && z === 0, pos: [0.485, 0, 0], rot: [0, Math.PI / 2, 0] },
-              { key: 'L', cond: x === -1, isCenter: y === 0 && z === 0, pos: [-0.485, 0, 0], rot: [0, -Math.PI / 2, 0] },
-              { key: 'F', cond: z === 1, isCenter: x === 0 && y === 0, pos: [0, 0, 0.485], rot: [0, 0, 0] },
-              { key: 'B', cond: z === -1, isCenter: x === 0 && y === 0, pos: [0, 0, -0.485], rot: [0, Math.PI, 0] }
-            ];
-
-            for (const d of dirs) {
-              if (d.cond) {
-                const sMat = new THREE.MeshStandardMaterial({
-                  color: 0xffffff,
-                  roughness: 0.25,
-                  metalness: 0.05
-                });
-                const sMesh = new THREE.Mesh(stickerGeo, sMat);
-                sMesh.position.set(...d.pos);
-                sMesh.rotation.set(...d.rot);
-                sMesh.userData = { isCenter: d.isCenter, faceKey: d.key };
-                cubie.add(sMesh);
-                cubie.userData.stickers[d.key] = sMesh;
-              }
-            }
-
-            cubeGroup.add(cubie);
-            cubies3D.push(cubie);
-          }
-        }
-      }
-    }
-    // 將指定 CubieState (在 WCA 絕對座標下: U=白, F=綠, D=黃, R=紅, L=橘, B=藍) 與視角遮罩繪製到 3D 魔方上
-    // 如此一來，3D 魔方的 6 個面永遠與上方 2D 展開圖 100% 同步對應！
-    function sync3DCubeToState(wcaState, baseRotStr, highlightSlotIdx) {
-      // 重設所有小方塊的空間座標與旋轉
-      for (const cubie of cubies3D) {
-        const { gx, gy, gz } = cubie.userData;
-        cubie.position.set(gx, gy, gz);
-        cubie.rotation.set(0, 0, 0);
-      }
-
-      const wcaColorMap = { U: 'W', R: 'R', F: 'G', D: 'Y', L: 'O', B: 'B' };
-      const rawFacelets = cubieStateToFacelets(wcaState);
-
-      // 計算哪些貼紙需要高亮顯示 (利用 solved 狀態經過逆旋轉找出目標底色十字邊塊與目標 F2L 邊角塊在 WCA 下的編號)
-      const isFaceletVisible = new Array(54).fill(true);
-      if (currentMaskMode !== 'full') {
-        isFaceletVisible.fill(false);
-        // 6 個中心塊永遠可見 (索引 4, 13, 22, 31, 40, 49)
-        [4, 13, 22, 31, 40, 49].forEach(idx => isFaceletVisible[idx] = true);
-
-        // 在 oriented 狀態下，十字邊塊位於 orientado 的 4,5,6,7 號 piece
-        // 我們直接對 wcaState 套用 baseRotStr 取得 orientedState，看 orientedState 中各目標塊對應到哪個位置，再轉回 WCA 貼紙
-        const orientedState = applyRotationString(wcaState, baseRotStr || 'z2');
-        const targetCornerPiece = highlightSlotIdx !== undefined && highlightSlotIdx !== null
-          ? F2L_SLOTS[highlightSlotIdx].cornerId
-          : 4;
-        const targetEdgePiece = highlightSlotIdx !== undefined && highlightSlotIdx !== null
-          ? F2L_SLOTS[highlightSlotIdx].edgeId
-          : 8;
-
-        // 建立一個標記陣列：在 orientedState 下哪些貼紙可見，再轉回 WCA
-        const orientedVisible = new Array(54).fill(false);
-        [4, 13, 22, 31, 40, 49].forEach(idx => orientedVisible[idx] = true);
-        for (let i = 0; i < 12; i++) {
-          const piece = orientedState.ep[i];
-          if (piece === 4 || piece === 5 || piece === 6 || piece === 7) {
-            orientedVisible[EDGE_FACELETS[i][0]] = true;
-            orientedVisible[EDGE_FACELETS[i][1]] = true;
-          }
-          if (currentMaskMode === 'cross_pair' && piece === targetEdgePiece) {
-            orientedVisible[EDGE_FACELETS[i][0]] = true;
-            orientedVisible[EDGE_FACELETS[i][1]] = true;
-          }
-        }
-        if (currentMaskMode === 'cross_pair') {
-          for (let i = 0; i < 8; i++) {
-            if (orientedState.cp[i] === targetCornerPiece) {
-              orientedVisible[CORNER_FACELETS[i][0]] = true;
-              orientedVisible[CORNER_FACELETS[i][1]] = true;
-              orientedVisible[CORNER_FACELETS[i][2]] = true;
-            }
-          }
-        }
-
-        // 將 wca 的 0..53 貼紙編號經過 baseRotStr 映射，即可得知該貼紙在 orientedVisible 中是否可見
-        let idxMap = Array.from({ length: 54 }, (_, i) => i);
-        if (baseRotStr && baseRotStr.trim()) {
-          for (const tok of baseRotStr.trim().split(/\s+/)) {
-            const axis = tok[0];
-            const mod = tok.slice(1);
-            const times = mod === '2' ? 2 : (mod === "'" ? 3 : 1);
-            const perm = build54StickerPermCW(axis);
-            for (let t = 0; t < times; t++) {
-              idxMap = apply54Perm(idxMap, perm);
-            }
-          }
-        }
-        for (let oIdx = 0; oIdx < 54; oIdx++) {
-          if (orientedVisible[oIdx]) {
-            isFaceletVisible[idxMap[oIdx]] = true;
-          }
-        }
-      }
-
-      // 直接透過 STICKER_COORDS 將 54 張貼紙繪製到完全相同的 (x, y, z) 3D 小方塊上！
-      for (let fIdx = 0; fIdx < 54; fIdx++) {
-        const sc = STICKER_COORDS[fIdx];
-        const cubie = cubies3D.find(
-          c => c.userData.gx === sc.x && c.userData.gy === sc.y && c.userData.gz === sc.z
-        );
-        if (!cubie || !cubie.userData.stickers[sc.face]) continue;
-        const mesh = cubie.userData.stickers[sc.face];
-        const relFace = rawFacelets[fIdx]; // 'U'|'R'|'F'|'D'|'L'|'B'
-        const actualColorCode = wcaColorMap[relFace];
-        const hexVal = STICKER_HEX_MAP[actualColorCode];
-
-        if (mesh.userData.isCenter) {
-          mesh.material.color.setHex(0xffffff);
-          mesh.material.map = getCenterStickerTexture(sc.face, hexVal);
-          mesh.material.needsUpdate = true;
-        } else if (!isFaceletVisible[fIdx]) {
-          mesh.material.map = null;
-          mesh.material.color.setHex(STICKER_HEX_MAP.MASKED);
-          mesh.material.needsUpdate = true;
-        } else {
-          mesh.material.map = null;
-          mesh.material.color.setHex(hexVal);
-          mesh.material.needsUpdate = true;
-        }
-      }
-    }
-
-    // 直接將 2D 塗色盤的 54 張貼紙即時同步至 3D 魔方 (即使塗色尚未完成也能即時預覽)
-    function sync3DCubeDirectFromFacelets(facelets54) {
-      for (const cubie of cubies3D) {
-        const { gx, gy, gz } = cubie.userData;
-        cubie.position.set(gx, gy, gz);
-        cubie.rotation.set(0, 0, 0);
-      }
-
-      const wcaColorMap = { U: 'W', R: 'R', F: 'G', D: 'Y', L: 'O', B: 'B' };
-
-      for (let fIdx = 0; fIdx < 54; fIdx++) {
-        const sc = STICKER_COORDS[fIdx];
-        const cubie = cubies3D.find(
-          c => c.userData.gx === sc.x && c.userData.gy === sc.y && c.userData.gz === sc.z
-        );
-        if (!cubie || !cubie.userData.stickers[sc.face]) continue;
-        const mesh = cubie.userData.stickers[sc.face];
-        const relFace = facelets54[fIdx] || 'U';
-        const colorCode = wcaColorMap[relFace] || 'W';
-        const hexVal = STICKER_HEX_MAP[colorCode];
-
-        if (mesh.userData.isCenter) {
-          mesh.material.color.setHex(0xffffff);
-          mesh.material.map = getCenterStickerTexture(sc.face, hexVal);
-          mesh.material.needsUpdate = true;
-        } else {
-          mesh.material.map = null;
-          mesh.material.color.setHex(hexVal);
-          mesh.material.needsUpdate = true;
-        }
-      }
-    }
-
-    // 直接將 2D 塗色盤的 54 張貼紙即時同步至 3D 魔方 (即使塗色尚未完成也能即時預覽)
-    function sync3DCubeDirectFromFacelets(facelets54) {
-      for (const cubie of cubies3D) {
-        const { gx, gy, gz } = cubie.userData;
-        cubie.position.set(gx, gy, gz);
-        cubie.rotation.set(0, 0, 0);
-      }
-
-      const wcaColorMap = { U: 'W', R: 'R', F: 'G', D: 'Y', L: 'O', B: 'B' };
-
-      function setDirectSticker(gx, gy, gz, dirKey, fIdx) {
-        const cubie = cubies3D.find(c => c.userData.gx === gx && c.userData.gy === gy && c.userData.gz === gz);
-        if (!cubie || !cubie.userData.stickers[dirKey]) return;
-        const mesh = cubie.userData.stickers[dirKey];
-        const relFace = facelets54[fIdx] || 'U';
-        const colorCode = wcaColorMap[relFace] || 'W';
-        mesh.material.color.setHex(STICKER_HEX_MAP[colorCode]);
-      }
-
-      for (let r = 0; r < 3; r++) {
-        for (let c = 0; c < 3; c++) {
-          setDirectSticker(c - 1, 1, r - 1, 'U', r * 3 + c);
-          setDirectSticker(1, 1 - r, 1 - c, 'R', 9 + r * 3 + c);
-          setDirectSticker(c - 1, 1 - r, 1, 'F', 18 + r * 3 + c);
-          setDirectSticker(c - 1, -1, 1 - r, 'D', 27 + r * 3 + c);
-          setDirectSticker(-1, 1 - r, c - 1, 'L', 36 + r * 3 + c);
-          setDirectSticker(1 - c, 1 - r, -1, 'B', 45 + r * 3 + c);
-        }
-      }
-    }
-
-    // 執行單步 3D 旋轉動畫
-    function animateSingleMove3D(moveName, onComplete) {
-      if (!moveName || isAnimatingMove) {
-        if (onComplete) onComplete();
-        return;
-      }
-      isAnimatingMove = true;
-      const face = moveName[0];
-      const mod = moveName.slice(1);
-      const baseAngle = Math.PI / 2;
-      const mult = mod === '2' ? 2 : (mod === "'" ? -1 : 1);
-
-      let axis = new THREE.Vector3(0, 1, 0);
-      let filterFn = () => false;
-      let dirSign = -1;
-
-      if (face === 'U') { axis.set(0, 1, 0); filterFn = c => Math.round(c.position.y) === 1; dirSign = -1; }
-      else if (face === 'D') { axis.set(0, 1, 0); filterFn = c => Math.round(c.position.y) === -1; dirSign = 1; }
-      else if (face === 'R') { axis.set(1, 0, 0); filterFn = c => Math.round(c.position.x) === 1; dirSign = -1; }
-      else if (face === 'L') { axis.set(1, 0, 0); filterFn = c => Math.round(c.position.x) === -1; dirSign = 1; }
-      else if (face === 'F') { axis.set(0, 0, 1); filterFn = c => Math.round(c.position.z) === 1; dirSign = -1; }
-      else if (face === 'B') { axis.set(0, 0, 1); filterFn = c => Math.round(c.position.z) === -1; dirSign = 1; }
-
-      const targetAngle = dirSign * mult * baseAngle;
-      const activeCubies = cubies3D.filter(filterFn);
-
-      const pivot = new THREE.Group();
-      cubeGroup.add(pivot);
-      for (const c of activeCubies) {
-        pivot.attach(c);
-      }
-
-      const startTime = performance.now();
-      function stepAnim(now) {
-        const t = Math.min(1, (now - startTime) / animDurationMs);
-        // Smooth easeOutCubic
-        const eased = 1 - Math.pow(1 - t, 3);
-        pivot.setRotationFromAxisAngle(axis, targetAngle * eased);
-
-        if (t < 1) {
-          requestAnimationFrame(stepAnim);
-        } else {
-          pivot.setRotationFromAxisAngle(axis, targetAngle);
-          pivot.updateMatrixWorld();
-          for (const c of activeCubies) {
-            cubeGroup.attach(c);
-            c.position.set(
-              Math.round(c.position.x),
-              Math.round(c.position.y),
-              Math.round(c.position.z)
-            );
-          }
-          cubeGroup.remove(pivot);
-          isAnimatingMove = false;
-          if (onComplete) onComplete();
-        }
-      }
-      requestAnimationFrame(stepAnim);
-    }
-
-    /*************************************************************************
-     * 8. UI 互動控制、打亂解析、2D 塗色盤與 15 秒預判計時器
-     *************************************************************************/
-    let currentWcaScrambledState = createSolvedCubieState();
-    let currentTargetColorMode = 'D'; // 'D'(白) | 'U'(黃) | 'DU'(雙色) | 'ALL'(全色)
-    let currentSolutionFilter = 'ALL';
-    let lastAnalysisResult = null;
-    let selectedSolutionIdx = 0;
-
-    // 预设精彩範例打亂
-    const PRESET_SCRAMBLES = {
-      xcross: "D' R2 U' F2 D B2 U' L2 U R' B' D' F R2 U' L' D'",
-      freepair: "F2 U2 R2 D L2 D' F2 U' R2 B' U' L D2 F' R U2 L'"
-    };
-
-    function parseMoveString(str) {
-      if (!str || !str.trim()) return { valid: true, moves: [] };
-      const tokens = str.trim().split(/\s+/);
-      const validMoves = [];
-      for (const tok of tokens) {
-        if (MOVE_NAMES.includes(tok)) {
-          validMoves.push(tok);
-        } else {
-          return { valid: false, invalidToken: tok, moves: validMoves };
-        }
-      }
-      return { valid: true, moves: validMoves };
-    }
-
-    function applyMovesToSolvedWca(moves) {
-      let st = createSolvedCubieState();
-      for (const mName of moves) {
-        const idx = MOVE_NAMES.indexOf(mName);
-        if (idx !== -1) {
-          st = multiplyCubeState(st, MOVES_TABLE[idx]);
-        }
-      }
-      return st;
-    }
-
-    function generateRandomScramble() {
-      const faces = ['U', 'R', 'F', 'D', 'L', 'B'];
-      const mods = ['', "'", '2'];
-      const len = 20;
-      const scramble = [];
-      let lastFace = -1;
-      let secondLastFace = -1;
-
-      for (let i = 0; i < len; i++) {
-        let f;
-        do {
-          f = Math.floor(Math.random() * 6);
-        } while (
-          f === lastFace ||
-          (f % 3 === lastFace % 3 && f === secondLastFace)
-        );
-        secondLastFace = lastFace;
-        lastFace = f;
-        const mod = mods[Math.floor(Math.random() * 3)];
-        scramble.push(faces[f] + mod);
-      }
-
-      activeInputSource = 'scramble';
-      isLivePaintingPreview = false;
-      document.getElementById('scrambleInput').value = scramble.join(' ');
-      onScrambleInputChange();
-      runFullAnalysis();
-    }
-
-    function loadPresetScramble(type) {
-      if (PRESET_SCRAMBLES[type]) {
-        activeInputSource = 'scramble';
-        isLivePaintingPreview = false;
-        document.getElementById('scrambleInput').value = PRESET_SCRAMBLES[type];
-        onScrambleInputChange();
-        runFullAnalysis();
-      }
-    }
-
-    function clearScramble() {
-      activeInputSource = 'scramble';
-      isLivePaintingPreview = false;
-      document.getElementById('scrambleInput').value = '';
-      onScrambleInputChange();
-      runFullAnalysis();
-    }
-
-    function onScrambleInputChange() {
-      activeInputSource = 'scramble';
-      isLivePaintingPreview = false;
-      const val = document.getElementById('scrambleInput').value;
-      const parsed = parseMoveString(val);
-      const msgEl = document.getElementById('scrambleValidationMsg');
-
-      if (!parsed.valid) {
-        msgEl.innerHTML = `<span class="text-rose-400 font-semibold">⚠ 偵測到無效符號「${parsed.invalidToken}」，請使用標準 U, R, F, D, L, B 與 ' 或 2</span>`;
-      } else {
-        msgEl.innerHTML = `<span>打亂預設以 <strong class="text-slate-200">白頂綠前 (WCA 標準 U=白, F=綠)</strong> 執行，分析時自動翻轉至您選擇的底色。</span><span id="scrambleLengthBadge" class="font-mono text-blue-400">${parsed.moves.length} 步</span>`;
-      }
-    }
-
-    function setTargetCrossColor(colorMode) {
-      currentTargetColorMode = colorMode;
-      document.querySelectorAll('.cross-color-btn').forEach(btn => {
-        if (btn.dataset.color === colorMode) {
-          btn.className = 'cross-color-btn active px-2.5 py-1 rounded-lg text-xs font-bold border transition flex items-center gap-1.5 bg-blue-600 text-white border-blue-400 shadow';
-        } else {
-          btn.className = 'cross-color-btn px-2.5 py-1 rounded-lg text-xs font-bold border transition flex items-center gap-1.5 bg-slate-800/90 text-slate-300 border-slate-700 hover:border-slate-500';
-        }
-      });
-      // 若目前是從 2D 塗色輸入的狀態，切換底色時保留塗色狀態直接分析
-      if (activeInputSource === 'paint') {
-        runFullAnalysis(currentWcaScrambledState);
-      } else {
-        runFullAnalysis();
-      }
-    }
-
-    function setMaskMode(mode) {
-      currentMaskMode = mode;
-      isLivePaintingPreview = false;
-      ['full', 'cross_pair', 'cross'].forEach(m => {
-        const btn = document.getElementById('maskBtn_' + m);
-        if (m === mode) {
-          btn.className = 'mask-btn px-2.5 py-1 rounded-lg text-xs font-semibold transition bg-blue-600 text-white shadow';
-        } else {
-          btn.className = 'mask-btn px-2.5 py-1 rounded-lg text-xs font-semibold transition text-slate-300 hover:text-white';
-        }
-      });
-      refreshCubeAtCurrentStep();
-    }
-
-    function setSolutionFilter(filterKey) {
-      currentSolutionFilter = filterKey;
-      document.querySelectorAll('.sol-filter-btn').forEach(btn => {
-        if (btn.dataset.filter === filterKey) {
-          btn.classList.add('bg-blue-600', 'text-white');
-          btn.classList.remove('bg-slate-800/90');
-        } else {
-          btn.classList.remove('bg-blue-600', 'text-white');
-          btn.classList.add('bg-slate-800/90');
-        }
-      });
-      renderSolutionsList();
-    }
-
-    // 執行完整分析並更新 UI
-    function runFullAnalysis(customState = null) {
-      stopPlayAnimation();
-      isLivePaintingPreview = false;
-
-      if (customState) {
-        currentWcaScrambledState = cloneCubieState(customState);
-      } else if (activeInputSource === 'paint') {
-        // 保持使用目前已套用的 2D 手動塗色狀態
-      } else {
-        const val = document.getElementById('scrambleInput').value;
-        const parsed = parseMoveString(val);
-        if (!parsed.valid) return;
-        currentWcaScrambledState = applyMovesToSolvedWca(parsed.moves);
-      }
-
-      const allowPreRot = document.getElementById('chkAllowPreRotation').checked;
-      lastAnalysisResult = solveCrossAndPairsForState(
-        currentWcaScrambledState,
-        currentTargetColorMode,
-        allowPreRot
-      );
-
-      // 更新統計小卡
-      document.getElementById('solverTimeBadge').textContent = `計算耗時 ${lastAnalysisResult.elapsedMs} ms`;
-      document.getElementById('statMinCrossMoves').textContent = `${lastAnalysisResult.minCrossMoves} 步`;
-      document.getElementById('statTotalEvaluated').textContent = `${lastAnalysisResult.totalPathsEvaluated} 條`;
-
-      const topSol = lastAnalysisResult.solutions[0];
-      const bestTierEl = document.getElementById('statBestTierFound');
-      if (!topSol) {
-        bestTierEl.textContent = '已完成';
-        bestTierEl.className = 'text-sm font-extrabold text-slate-300 mt-1 truncate';
-      } else if (topSol.f2lEval.best.type === 'XCROSS') {
-        bestTierEl.textContent = `🏆 發現 ${topSol.moveCount} 步 X-Cross!`;
-        bestTierEl.className = 'text-sm font-extrabold text-emerald-400 mt-1 truncate';
-      } else if (topSol.f2lEval.best.type === 'CONNECTED_PAIR') {
-        bestTierEl.textContent = `⭐ 發現保留連塊 Pair`;
-        bestTierEl.className = 'text-sm font-extrabold text-amber-400 mt-1 truncate';
-      } else if (topSol.f2lEval.best.type === 'SPLIT_PAIR') {
-        bestTierEl.textContent = `⚡ 發現三步分離 Pair`;
-        bestTierEl.className = 'text-sm font-extrabold text-purple-400 mt-1 truncate';
-      } else {
-        bestTierEl.textContent = `🎯 ${topSol.moveCount} 步純十字最佳解`;
-        bestTierEl.className = 'text-sm font-extrabold text-sky-400 mt-1 truncate';
-      }
-
-      selectedSolutionIdx = 0;
-      renderSolutionsList();
-      if (lastAnalysisResult.solutions.length > 0) {
-        selectSolution(0);
-      }
-    }
-
-    function renderSolutionsList() {
-      const container = document.getElementById('solutionsListContainer');
-      if (!lastAnalysisResult || lastAnalysisResult.solutions.length === 0) {
-        container.innerHTML = `<div class="text-center py-8 text-xs text-slate-400">目前狀態十字已完成，請輸入新的打亂公式。</div>`;
-        return;
-      }
-
-      const filtered = lastAnalysisResult.solutions
-        .map((sol, idx) => ({ sol, originalIdx: idx }))
-        .filter(({ sol }) => {
-          const t = sol.f2lEval.best.type;
-          if (currentSolutionFilter === 'XCROSS') return t === 'XCROSS';
-          if (currentSolutionFilter === 'FREEPAIR') return t === 'CONNECTED_PAIR' || t === 'SPLIT_PAIR';
-          if (currentSolutionFilter === 'PURE') return sol.moveCount === lastAnalysisResult.minCrossMoves;
-          return true;
+        <button type="button" class="btn btn-sm" id="btnToggleZ2View">視角：標準 WCA (U=白)</button>
+      </div>
+
+      <div class="scene3d">
+        <div class="cube3d" id="cube3dRoot"></div>
+      </div>
+
+      <div class="step-banner">
+        <span id="stepStatusLabel">Step 0：原始打亂起點（與 2D 展開圖 100% 同步）</span>
+        <span id="activeSlotLabel" style="color:#fbbf24;font-weight:700;"></span>
+      </div>
+    </div>
+
+    <div class="moves-track" id="movesTrack"></div>
+
+    <div class="btn-group" style="justify-content:space-between;">
+      <div class="btn-group">
+        <button type="button" class="btn btn-sm" id="btnStepStart">⏮ 起點 (Step 0)</button>
+        <button type="button" class="btn btn-sm" id="btnStepPrev">◀ 上一步</button>
+        <button type="button" class="btn btn-sm btn-primary" id="btnStepPlay">▶ 自動播放</button>
+        <button type="button" class="btn btn-sm" id="btnStepNext">下一步 ▶</button>
+        <button type="button" class="btn btn-sm" id="btnStepEnd">⏭ 完成態</button>
+      </div>
+      <span id="stepCounterText" style="font-size:0.82rem;color:var(--muted);font-family:monospace;">0 / 0</span>
+    </div>
+  </div>
+
+  <!-- Right: Ranked Optimal Cross / X-Cross / Free Pair Solutions -->
+  <div class="panel" style="margin-bottom:0;">
+    <div class="panel-title">
+      <span>最佳十字 & X-Cross / 保留 Pair 推薦路線（≤ 8 步）</span>
+      <span id="solverPerfText" style="font-size:0.76rem;color:var(--green);">準備就緒</span>
+    </div>
+    <div class="sol-list" id="solutionsList"></div>
+  </div>
+</div>
+
+<script>
+(function() {
+  "use strict";
+
+  // =========================================================================
+  // 1. UNIFIED 3D COORDINATE GEOMETRY ENGINE (Single Source of Truth)
+  // Coordinates:
+  //   x in {-1 (L), 0, +1 (R)}
+  //   y in {-1 (D), 0, +1 (U)}
+  //   z in {-1 (B), 0, +1 (F)}
+  // Standard WCA Orientation:
+  //   U (+y) = White (W), D (-y) = Yellow (Y)
+  //   F (+z) = Green (G), B (-z) = Blue (B)
+  //   L (-x) = Orange (O), R (+x) = Red (R)
+  // =========================================================================
+  const FACE_INFO = {
+    U: { color: 'W', hex: '#f8fafc', name: '白 (U)', normal: [0, 1, 0] },
+    D: { color: 'Y', hex: '#facc15', name: '黃 (D)', normal: [0, -1, 0] },
+    F: { color: 'G', hex: '#22c55e', name: '綠 (F)', normal: [0, 0, 1] },
+    B: { color: 'B', hex: '#3b82f6', name: '藍 (B)', normal: [0, 0, -1] },
+    L: { color: 'O', hex: '#f97316', name: '橘 (L)', normal: [-1, 0, 0] },
+    R: { color: 'R', hex: '#ef4444', name: '紅 (R)', normal: [1, 0, 0] }
+  };
+
+  const COLOR_HEX = {
+    W: '#f8fafc', Y: '#facc15', G: '#22c55e',
+    B: '#3b82f6', O: '#f97316', R: '#ef4444'
+  };
+
+  // Build canonical 54 stickers in 2D Unfolded Net order:
+  // Faces order: U (0..8), L (9..17), F (18..26), R (27..35), B (36..44), D (45..53)
+  const STICKER_DEFS = [];
+  function buildStickerDefs() {
+    // U face: row 0..2 (z = -1, 0, 1), col 0..2 (x = -1, 0, 1), normal = (0, 1, 0)
+    for (let r = 0; r < 3; r++) {
+      for (let c = 0; c < 3; c++) {
+        STICKER_DEFS.push({
+          id: STICKER_DEFS.length, face: 'U', r, c,
+          netRow: r, netCol: 3 + c,
+          pos: [c - 1, 1, r - 1], normal: [0, 1, 0], defaultColor: 'W'
         });
-
-      if (filtered.length === 0) {
-        container.innerHTML = `
-          <div class="text-center py-8 px-4 bg-slate-900/60 rounded-xl border border-slate-800 text-xs text-slate-400">
-            此篩選分類下無符合路線，建議切換至「全部智慧排序」或開啟「自動推薦最佳預判擺放面」。
-          </div>`;
-        return;
       }
+    }
+    // L face: row 0..2 (y = 1, 0, -1), col 0..2 (z = -1, 0, 1), normal = (-1, 0, 0)
+    for (let r = 0; r < 3; r++) {
+      for (let c = 0; c < 3; c++) {
+        STICKER_DEFS.push({
+          id: STICKER_DEFS.length, face: 'L', r, c,
+          netRow: 3 + r, netCol: c,
+          pos: [-1, 1 - r, c - 1], normal: [-1, 0, 0], defaultColor: 'O'
+        });
+      }
+    }
+    // F face: row 0..2 (y = 1, 0, -1), col 0..2 (x = -1, 0, 1), normal = (0, 0, 1)
+    for (let r = 0; r < 3; r++) {
+      for (let c = 0; c < 3; c++) {
+        STICKER_DEFS.push({
+          id: STICKER_DEFS.length, face: 'F', r, c,
+          netRow: 3 + r, netCol: 3 + c,
+          pos: [c - 1, 1 - r, 1], normal: [0, 0, 1], defaultColor: 'G'
+        });
+      }
+    }
+    // R face: row 0..2 (y = 1, 0, -1), col 0..2 (z = 1, 0, -1), normal = (1, 0, 0)
+    for (let r = 0; r < 3; r++) {
+      for (let c = 0; c < 3; c++) {
+        STICKER_DEFS.push({
+          id: STICKER_DEFS.length, face: 'R', r, c,
+          netRow: 3 + r, netCol: 6 + c,
+          pos: [1, 1 - r, 1 - c], normal: [1, 0, 0], defaultColor: 'R'
+        });
+      }
+    }
+    // B face: row 0..2 (y = 1, 0, -1), col 0..2 (x = 1, 0, -1), normal = (0, 0, -1)
+    for (let r = 0; r < 3; r++) {
+      for (let c = 0; c < 3; c++) {
+        STICKER_DEFS.push({
+          id: STICKER_DEFS.length, face: 'B', r, c,
+          netRow: 3 + r, netCol: 9 + c,
+          pos: [1 - c, 1 - r, -1], normal: [0, 0, -1], defaultColor: 'B'
+        });
+      }
+    }
+    // D face: row 0..2 (z = 1, 0, -1), col 0..2 (x = -1, 0, 1), normal = (0, -1, 0)
+    for (let r = 0; r < 3; r++) {
+      for (let c = 0; c < 3; c++) {
+        STICKER_DEFS.push({
+          id: STICKER_DEFS.length, face: 'D', r, c,
+          netRow: 6 + r, netCol: 3 + c,
+          pos: [c - 1, -1, 1 - r], normal: [0, -1, 0], defaultColor: 'Y'
+        });
+      }
+    }
+  }
+  buildStickerDefs();
 
-      container.innerHTML = filtered.map(({ sol, originalIdx }, rankIdx) => {
-        const isSelected = originalIdx === selectedSolutionIdx;
-        const bestF2L = sol.f2lEval.best;
+  // Map (x,y,z,nx,ny,nz) -> sticker index 0..53
+  const COORD_TO_STICKER = new Map();
+  STICKER_DEFS.forEach(s => {
+    const key = `${s.pos[0]},${s.pos[1]},${s.pos[2]}|${s.normal[0]},${s.normal[1]},${s.normal[2]}`;
+    COORD_TO_STICKER.set(key, s.id);
+  });
 
-        let badgeStyle = 'bg-sky-500/15 text-sky-300 border-sky-500/30';
-        if (bestF2L.type === 'XCROSS') {
-          badgeStyle = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
-        } else if (bestF2L.type === 'CONNECTED_PAIR') {
-          badgeStyle = 'bg-amber-500/20 text-amber-300 border-amber-500/40';
-        } else if (bestF2L.type === 'SPLIT_PAIR') {
-          badgeStyle = 'bg-purple-500/20 text-purple-300 border-purple-500/40';
+  // Rotate a 3D vector [x, y, z] 90 degrees around an axis ('x', 'y', 'z')
+  // dir = +1 means 90 deg counter-clockwise looking down positive axis
+  function rotVec90([x, y, z], axis, dir) {
+    if (axis === 'y') return dir === 1 ? [z, y, -x] : [-z, y, x];
+    if (axis === 'x') return dir === 1 ? [x, -z, y] : [x, z, -y];
+    if (axis === 'z') return dir === 1 ? [-y, x, z] : [y, -x, z];
+    return [x, y, z];
+  }
+
+  // Precompute exact 54-sticker permutation table for every WCA move and whole-cube rotation
+  const MOVE_PERMS = {};
+  const BASE_MOVES_SPEC = {
+    'U': { axis: 'y', layer: [1], dir: -1 },
+    'D': { axis: 'y', layer: [-1], dir: 1 },
+    'R': { axis: 'x', layer: [1], dir: -1 },
+    'L': { axis: 'x', layer: [-1], dir: 1 },
+    'F': { axis: 'z', layer: [1], dir: -1 },
+    'B': { axis: 'z', layer: [-1], dir: 1 },
+    'y': { axis: 'y', layer: [-1, 0, 1], dir: -1 },
+    'x': { axis: 'x', layer: [-1, 0, 1], dir: -1 },
+    'z': { axis: 'z', layer: [-1, 0, 1], dir: -1 }
+  };
+
+  function composePerm(p1, p2) {
+    const out = new Uint8Array(54);
+    for (let i = 0; i < 54; i++) out[i] = p1[p2[i]];
+    return out;
+  }
+
+  Object.keys(BASE_MOVES_SPEC).forEach(m => {
+    const spec = BASE_MOVES_SPEC[m];
+    const axisIdx = spec.axis === 'x' ? 0 : (spec.axis === 'y' ? 1 : 2);
+    // perm[dest] = src (meaning after move, sticker at dest gets color from src)
+    const perm1 = new Uint8Array(54);
+    for (let i = 0; i < 54; i++) {
+      const s = STICKER_DEFS[i];
+      if (spec.layer.includes(s.pos[axisIdx])) {
+        const newPos = rotVec90(s.pos, spec.axis, spec.dir);
+        const newNorm = rotVec90(s.normal, spec.axis, spec.dir);
+        const destKey = `${newPos[0]},${newPos[1]},${newPos[2]}|${newNorm[0]},${newNorm[1]},${newNorm[2]}`;
+        const destIdx = COORD_TO_STICKER.get(destKey);
+        perm1[destIdx] = i;
+      } else {
+        perm1[i] = i;
+      }
+    }
+    const perm2 = composePerm(perm1, perm1);
+    const perm3 = composePerm(perm2, perm1);
+    MOVE_PERMS[m] = perm1;
+    MOVE_PERMS[m + '2'] = perm2;
+    MOVE_PERMS[m + "'"] = perm3;
+  });
+
+  function createSolvedStickers() {
+    return STICKER_DEFS.map(s => s.defaultColor);
+  }
+
+  function applyMoveToStickers(stickers, moveStr) {
+    const perm = MOVE_PERMS[moveStr];
+    if (!perm) return stickers.slice();
+    const next = new Array(54);
+    for (let i = 0; i < 54; i++) next[i] = stickers[perm[i]];
+    return next;
+  }
+
+  function parseAlg(str) {
+    if (!str || !str.trim()) return [];
+    return str.trim().replace(/[\[\]()]/g, ' ').split(/\s+/).filter(t => MOVE_PERMS[t]);
+  }
+
+  function applyAlgToStickers(stickers, algStrOrArr) {
+    const tokens = Array.isArray(algStrOrArr) ? algStrOrArr : parseAlg(algStrOrArr);
+    let cur = stickers.slice();
+    for (const m of tokens) cur = applyMoveToStickers(cur, m);
+    return cur;
+  }
+
+  // =========================================================================
+  // 2. PURE CSS 3D CUBE RENDERER (Zero External Dependencies, Mobile Safe)
+  // =========================================================================
+  const cube3dRoot = document.getElementById('cube3dRoot');
+  const STICKER_DOM_MAP = new Array(54);
+
+  function initCSS3DCube() {
+    cube3dRoot.innerHTML = '';
+    const spacing = 35; // px between cubie centers
+    for (let x = -1; x <= 1; x++) {
+      for (let y = -1; y <= 1; y++) {
+        for (let z = -1; z <= 1; z++) {
+          const cubie = document.createElement('div');
+          cubie.className = 'cubie';
+          // In CSS 3D: +X is right, +Y is DOWN (so we invert y to -y for 3D up), +Z is front
+          cubie.style.transform = `translate3d(${x * spacing}px, ${-y * spacing}px, ${z * spacing}px)`;
+
+          const faces = [
+            { cls: 'face-U', norm: [0, 1, 0] },
+            { cls: 'face-D', norm: [0, -1, 0] },
+            { cls: 'face-F', norm: [0, 0, 1] },
+            { cls: 'face-B', norm: [0, 0, -1] },
+            { cls: 'face-R', norm: [1, 0, 0] },
+            { cls: 'face-L', norm: [-1, 0, 0] }
+          ];
+
+          faces.forEach(f => {
+            const fDiv = document.createElement('div');
+            fDiv.className = `cubie-face ${f.cls}`;
+            const key = `${x},${y},${z}|${f.norm[0]},${f.norm[1]},${f.norm[2]}`;
+            if (COORD_TO_STICKER.has(key)) {
+              const sIdx = COORD_TO_STICKER.get(key);
+              const sDef = STICKER_DEFS[sIdx];
+              if (sDef.r === 1 && sDef.c === 1) {
+                fDiv.textContent = sDef.face;
+              }
+              STICKER_DOM_MAP[sIdx] = { el: fDiv, cubiePos: [x, y, z], def: sDef };
+            }
+            cubie.appendChild(fDiv);
+          });
+
+          cube3dRoot.appendChild(cubie);
         }
-
-        const followUpHtml = bestF2L.followUpAlg
-          ? `<div class="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px]">
-               <span class="text-slate-400">順手第 1 組 F2L 銜接：</span>
-               <span class="font-mono font-bold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/25">${bestF2L.followUpAlg}</span>
-             </div>`
-          : '';
-
-        return `
-          <div onclick="selectSolution(${originalIdx})"
-               class="cursor-pointer rounded-xl p-3.5 transition border ${
-                 isSelected
-                   ? 'bg-blue-950/40 border-blue-500 shadow-lg shadow-blue-500/10'
-                   : 'bg-slate-900/85 hover:bg-slate-800/90 border-slate-800'
-               }">
-            <div class="flex items-center justify-between gap-2 mb-2">
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-300">#${rankIdx + 1}</span>
-                <span class="text-xs font-bold px-2.5 py-0.5 rounded-full border ${badgeStyle}">
-                  ${bestF2L.label}
-                </span>
-                <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-800/90 text-slate-300 border border-slate-700">
-                  ${sol.oriCfg.desc}
-                </span>
-              </div>
-              <div class="flex items-center gap-1.5 shrink-0">
-                <span class="text-xs font-mono font-extrabold px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                  ${sol.moveCount} 步
-                </span>
-                <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-800 text-emerald-400" title="手指順手度評分">
-                  順手 ${sol.ergoScore}分
-                </span>
-              </div>
-            </div>
-
-            <!-- 主十字公式 -->
-            <div class="flex items-center justify-between gap-2 bg-slate-950/90 rounded-lg px-3 py-2 border border-slate-800/90">
-              <div class="font-mono text-sm font-bold text-white tracking-wide">
-                <span class="text-slate-500 mr-1.5">${sol.oriCfg.baseRot ? `[${sol.oriCfg.baseRot}]` : ''}</span>${sol.moveStr}
-              </div>
-              <button onclick="event.stopPropagation(); playSolutionDirectly(${originalIdx})"
-                      class="text-xs px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold transition shrink-0">
-                3D 演示
-              </button>
-            </div>
-
-            <div class="mt-2 text-xs text-slate-400 flex items-center justify-between">
-              <span>${bestF2L.detail}</span>
-            </div>
-            ${followUpHtml}
-          </div>
-        `;
-      }).join('');
-    }
-
-    function selectSolution(idx) {
-      stopPlayAnimation();
-      selectedSolutionIdx = idx;
-      activeSolution = lastAnalysisResult.solutions[idx];
-      currentStepIndex = 0;
-
-      renderSolutionsList();
-      renderMoveScrubber();
-
-      // 更新 3D 視窗右上角與擺放標籤
-      document.getElementById('currentOrientationBadge').textContent = `擺放：${activeSolution.oriCfg.desc}`;
-      document.getElementById('overlayBadge').textContent = activeSolution.f2lEval.best.label;
-      document.getElementById('overlaySlotInfo').textContent =
-        `${activeSolution.oriCfg.baseRot ? `[${activeSolution.oriCfg.baseRot}] ` : ''}${activeSolution.moveStr} (${activeSolution.moveCount}步)`;
-
-      refreshCubeAtCurrentStep();
-    }
-
-    function playSolutionDirectly(idx) {
-      selectSolution(idx);
-      togglePlayAnimation();
-    }
-
-    function renderMoveScrubber() {
-      const container = document.getElementById('moveScrubberContainer');
-      const counter = document.getElementById('stepProgressCounter');
-      if (!activeSolution) {
-        container.innerHTML = '<span class="text-xs text-slate-500">尚未載入解法</span>';
-        counter.textContent = 'Step 0 / 0';
-        return;
       }
+    }
+  }
+  initCSS3DCube();
 
-      const moves = activeSolution.moveNames;
-      counter.textContent = `Step ${currentStepIndex} / ${moves.length}`;
+  // Camera Orbit Control
+  let camRotX = -24;
+  let camRotY = -34;
+  let viewZ2Mode = false; // If true, flips whole cube z2 for bottom-down inspection
 
-      let html = `
-        <button onclick="jumpToStep(0)"
-                class="move-chip px-2.5 py-1 rounded-lg text-xs font-mono font-semibold border ${
-                  currentStepIndex === 0
-                    ? 'active'
-                    : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
-                }">
-          打亂起點
-        </button>
-      `;
+  function updateCameraTransform() {
+    const z2Flip = viewZ2Mode ? 'rotateZ(180deg)' : '';
+    cube3dRoot.style.transform = `rotateX(${camRotX}deg) rotateY(${camRotY}deg) ${z2Flip}`;
+  }
+  updateCameraTransform();
 
-      moves.forEach((m, i) => {
-        const stepNum = i + 1;
-        const isActive = currentStepIndex === stepNum;
-        html += `
-          <button onclick="jumpToStep(${stepNum})"
-                  class="move-chip px-3 py-1 rounded-lg text-xs font-mono font-bold border ${
-                    isActive
-                      ? 'active'
-                      : 'bg-slate-900 text-slate-200 border-slate-700/80 hover:border-blue-400'
-                  }">
-            ${m}
-    // 根據 currentStepIndex 即時計算並同步 3D 魔方狀態 (全程維持 WCA 標準中心方向，與 2D 展開圖 100% 一致)
-    function refreshCubeAtCurrentStep() {
-      if (isLivePaintingPreview) {
-        sync3DCubeDirectFromFacelets(paintedFacelets);
-        return;
+  (function setupOrbitDrag() {
+    const vp = document.getElementById('viewport3d');
+    let dragging = false, lastX = 0, lastY = 0;
+    vp.addEventListener('pointerdown', e => {
+      if (e.target.closest('button')) return;
+      dragging = true;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      vp.setPointerCapture(e.pointerId);
+    });
+    vp.addEventListener('pointermove', e => {
+      if (!dragging) return;
+      const dx = e.clientX - lastX;
+      const dy = e.clientY - lastY;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      camRotY += dx * 0.55;
+      camRotX = Math.max(-88, Math.min(88, camRotX - dy * 0.55));
+      updateCameraTransform();
+    });
+    vp.addEventListener('pointerup', () => { dragging = false; });
+    vp.addEventListener('pointercancel', () => { dragging = false; });
+  })();
+
+  // =========================================================================
+  // 3. CUBIE-LEVEL SOLVER & F2L PAIR ANALYZER (IDA* <= 8 Moves)
+  // Evaluates Cross on D face + all 4 F2L slots (FR, FL, BL, BR)
+  // =========================================================================
+  // To guarantee 100% consistency with the 54-sticker array, we evaluate
+  // Cross and F2L slots directly on the 54-sticker state using fast Uint8Array moves!
+  const SOLVER_MOVES = [
+    'U', "U'", 'U2',
+    'D', "D'", 'D2',
+    'R', "R'", 'R2',
+    'L', "L'", 'L2',
+    'F', "F'", 'F2',
+    'B', "B'", 'B2'
+  ];
+  const SOLVER_MOVE_FACE = SOLVER_MOVES.map(m => m[0]);
+  const SOLVER_MOVE_AXIS = SOLVER_MOVES.map(m => {
+    const f = m[0];
+    if (f === 'U' || f === 'D') return 0;
+    if (f === 'R' || f === 'L') return 1;
+    return 2;
+  });
+
+  // Sticker indices for D-Cross edges:
+  // DF: D(46) & F(25), DR: D(50) & R(34), DB: D(52) & B(43), DL: D(48) & L(16)
+  const CROSS_EDGE_STICKERS = [
+    [46, 25], // DF (D center=49, F center=22)
+    [50, 34], // DR (D center=49, R center=31)
+    [52, 43], // DB (D center=49, B center=40)
+    [48, 16]  // DL (D center=49, L center=13)
+  ];
+  const SIDE_CENTERS = [22, 31, 40, 13]; // F, R, B, L centers
+
+  // 4 F2L Slots in D-layer + middle layer:
+  // Each slot has Corner [D-sticker, Side1-sticker, Side2-sticker] and Edge [Side1-sticker, Side2-sticker]
+  const F2L_SLOTS = [
+    { name: 'FR', corner: [47, 26, 33], edge: [23, 30], cCenters: [49, 22, 31], eCenters: [22, 31] },
+    { name: 'FL', corner: [45, 24, 17], edge: [21, 14], cCenters: [49, 22, 13], eCenters: [22, 13] },
+    { name: 'BR', corner: [53, 42, 35], edge: [39, 32], cCenters: [49, 40, 31], eCenters: [40, 31] },
+    { name: 'BL', corner: [51, 44, 15], edge: [41, 12], cCenters: [49, 40, 13], eCenters: [40, 13] }
+  ];
+
+  // Fast heuristic: count how many of the 4 cross edges are NOT solved on D
+  function countMisplacedCrossEdges(state) {
+    const dCol = state[49];
+    let bad = 0;
+    for (let i = 0; i < 4; i++) {
+      const [dIdx, sIdx] = CROSS_EDGE_STICKERS[i];
+      if (state[dIdx] !== dCol || state[sIdx] !== state[SIDE_CENTERS[i]]) bad++;
+    }
+    return bad;
+  }
+
+  // Check if a specific F2L slot (0..3) is solved in `state`
+  function isSlotSolved(state, slotIdx) {
+    const sl = F2L_SLOTS[slotIdx];
+    for (let i = 0; i < 3; i++) {
+      if (state[sl.corner[i]] !== state[sl.cCenters[i]]) return false;
+    }
+    for (let i = 0; i < 2; i++) {
+      if (state[sl.edge[i]] !== state[sl.eCenters[i]]) return false;
+    }
+    return true;
+  }
+
+  // Test if after Cross is solved, any F2L slot has a 3-move insertable Connected Pair (e.g. U* R U R' or U* L' U' L)
+  // or a 3-move Split Pair (e.g. U* R U' R')
+  const PAIR_INSERT_TRIGGERS = [
+    { slot: 0, type: 'connected', trig: ['R', 'U', "R'"], label: "R U R'" },
+    { slot: 0, type: 'connected', trig: ["F'", "U'", 'F'], label: "F' U' F" },
+    { slot: 0, type: 'split',     trig: ['R', "U'", "R'"], label: "R U' R'" },
+    { slot: 0, type: 'split',     trig: ["F'", 'U', 'F'], label: "F' U F" },
+
+    { slot: 1, type: 'connected', trig: ["L'", "U'", 'L'], label: "L' U' L" },
+    { slot: 1, type: 'connected', trig: ['F', 'U', "F'"], label: "F U F'" },
+    { slot: 1, type: 'split',     trig: ["L'", 'U', 'L'], label: "L' U L" },
+    { slot: 1, type: 'split',     trig: ['F', "U'", "F'"], label: "F U' F'" },
+
+    { slot: 2, type: 'connected', trig: ["R'", "U'", 'R'], label: "R' U' R" },
+    { slot: 2, type: 'split',     trig: ["R'", 'U', 'R'], label: "R' U R" },
+
+    { slot: 3, type: 'connected', trig: ['L', 'U', "L'"], label: "L U L'" },
+    { slot: 3, type: 'split',     trig: ['L', "U'", "L'"], label: "L U' L'" }
+  ];
+
+  const AUF_LIST = [
+    { moves: [], str: '' },
+    { moves: ['U'], str: 'U ' },
+    { moves: ["U'"], str: "U' " },
+    { moves: ['U2'], str: 'U2 ' }
+  ];
+
+  function evaluatePostCrossPairs(state) {
+    // 1. Check direct X-Cross (any slot already solved!)
+    for (let s = 0; s < 4; s++) {
+      if (isSlotSolved(state, s)) {
+        return {
+          tier: 3,
+          badge: '🏆 X-Cross 完成',
+          tagClass: 'tag-xcross',
+          slotName: F2L_SLOTS[s].name,
+          slotIdx: s,
+          continuation: '已直接完成十字 + ' + F2L_SLOTS[s].name + ' 槽位！'
+        };
       }
-      if (!activeSolution) return;
-      let wcaSt = cloneCubieState(currentWcaScrambledState);
-      for (let i = 0; i < currentStepIndex; i++) {
-        const orientedMoveName = activeSolution.moveNames[i];
-        const wcaMoveName = mapMoveFromOrientedToWCA(orientedMoveName, activeSolution.oriCfg.baseRot);
-        const mIdx = MOVE_NAMES.indexOf(wcaMoveName);
-        if (mIdx !== -1) {
-          wcaSt = multiplyCubeState(wcaSt, MOVES_TABLE[mIdx]);
+    }
+
+    // 2. Check Connected Free Pair or 3-Move Split Pair via AUF + 3-move trigger
+    let bestSplit = null;
+    for (const auf of AUF_LIST) {
+      let sAuf = state;
+      for (const m of auf.moves) sAuf = applyMoveToStickers(sAuf, m);
+
+      for (const item of PAIR_INSERT_TRIGGERS) {
+        let sTest = sAuf;
+        for (const m of item.trig) sTest = applyMoveToStickers(sTest, m);
+
+        if (countMisplacedCrossEdges(sTest) === 0 && isSlotSolved(sTest, item.slot)) {
+          const contAlg = (auf.str + item.label).trim();
+          if (item.type === 'connected') {
+            return {
+              tier: 2,
+              badge: '⭐ 保留連塊 Pair',
+              tagClass: 'tag-pair',
+              slotName: F2L_SLOTS[item.slot].name,
+              slotIdx: item.slot,
+              continuation: `接 [${contAlg}] 秒入 ${F2L_SLOTS[item.slot].name} 槽`
+            };
+          } else if (!bestSplit) {
+            bestSplit = {
+              tier: 1,
+              badge: '⚡ 保留分離 Pair',
+              tagClass: 'tag-split',
+              slotName: F2L_SLOTS[item.slot].name,
+              slotIdx: item.slot,
+              continuation: `接 [${contAlg}] 三步入 ${F2L_SLOTS[item.slot].name} 槽`
+            };
+          }
         }
       }
-      const highlightSlotIdx = activeSolution.f2lEval.best.slotIdx;
-      sync3DCubeToState(wcaSt, activeSolution.oriCfg.baseRot, highlightSlotIdx);
-      renderMoveScrubber();
+    }
+    if (bestSplit) return bestSplit;
+
+    return {
+      tier: 0,
+      badge: '純十字最佳解',
+      tagClass: 'tag-cross',
+      slotName: '',
+      slotIdx: -1,
+      continuation: '標準最佳步數十字'
+    };
+  }
+
+  function scoreErgonomics(moves) {
+    let score = 100;
+    for (const m of moves) {
+      const f = m[0];
+      if (f === 'B') score -= 9;
+      else if (f === 'L' || f === 'F') score -= 3;
+      else score -= 1;
+      if (m.endsWith('2')) score -= 2;
+    }
+    return Math.max(40, score);
+  }
+
+  // Main IDA* Search for optimal Cross + X-Cross/Free Pair within <= 8 moves
+  function findBestSolutions(baseStickers, targetMode) {
+    const t0 = performance.now();
+    const orientations = [];
+
+    if (targetMode === 'W' || targetMode === 'DUAL') {
+      orientations.push({ rotAlg: ['z2'], label: '白底 [z2]', colorName: '白底' });
+      orientations.push({ rotAlg: ['z2', 'y'], label: '白底 [z2 y]', colorName: '白底' });
+      orientations.push({ rotAlg: ['z2', "y'"], label: "白底 [z2 y']", colorName: '白底' });
+      orientations.push({ rotAlg: ['z2', 'y2'], label: '白底 [z2 y2]', colorName: '白底' });
+    }
+    if (targetMode === 'Y' || targetMode === 'DUAL') {
+      orientations.push({ rotAlg: [], label: '黃底 [不翻轉]', colorName: '黃底' });
+      orientations.push({ rotAlg: ['y'], label: '黃底 [y]', colorName: '黃底' });
+      orientations.push({ rotAlg: ["y'"], label: "黃底 [y']", colorName: '黃底' });
+      orientations.push({ rotAlg: ['y2'], label: '黃底 [y2]', colorName: '黃底' });
     }
 
-    function jumpToStep(stepIdx) {
-      stopPlayAnimation();
-      if (!activeSolution) return;
-      currentStepIndex = Math.max(0, Math.min(activeSolution.moveNames.length, stepIdx));
-      refreshCubeAtCurrentStep();
-    }
+    const candidates = [];
+    const path = [];
 
-    function stepToStart() {
-      jumpToStep(0);
-    }
+    for (const ori of orientations) {
+      const startState = applyAlgToStickers(baseStickers, ori.rotAlg);
+      let minDepthFound = -1;
+      let solutionsForOri = 0;
 
-    function stepToEnd() {
-      if (!activeSolution) return;
-      jumpToStep(activeSolution.moveNames.length);
-    }
-
-    function stepForward() {
-      if (!activeSolution || isAnimatingMove) return;
-      if (currentStepIndex >= activeSolution.moveNames.length) return;
-      const orientedMoveName = activeSolution.moveNames[currentStepIndex];
-      const wcaMoveName = mapMoveFromOrientedToWCA(orientedMoveName, activeSolution.oriCfg.baseRot);
-      currentStepIndex++;
-      renderMoveScrubber();
-      animateSingleMove3D(wcaMoveName, () => {
-        refreshCubeAtCurrentStep();
-      });
-    }
-
-    function stepBackward() {
-      if (!activeSolution || isAnimatingMove) return;
-      if (currentStepIndex <= 0) return;
-      const orientedMoveName = activeSolution.moveNames[currentStepIndex - 1];
-      const wcaMoveName = mapMoveFromOrientedToWCA(orientedMoveName, activeSolution.oriCfg.baseRot);
-      const invMove = invertMoveName(wcaMoveName);
-      currentStepIndex--;
-      renderMoveScrubber();
-      animateSingleMove3D(invMove, () => {
-        refreshCubeAtCurrentStep();
-      });
-    }
-
-    function togglePlayAnimation() {
-      if (isPlaying) {
-        stopPlayAnimation();
-        return;
-      }
-      if (!activeSolution || activeSolution.moveNames.length === 0) return;
-
-      if (currentStepIndex >= activeSolution.moveNames.length) {
-        currentStepIndex = 0;
-        refreshCubeAtCurrentStep();
-      }
-
-      isPlaying = true;
-      document.getElementById('playBtnLabel').textContent = '暫停演示';
-
-      function playNext() {
-        if (!isPlaying || !activeSolution) return;
-        if (currentStepIndex >= activeSolution.moveNames.length) {
-          stopPlayAnimation();
+      function dfs(state, depth, maxDepth, lastFace, lastAxis) {
+        if (solutionsForOri >= 18) return;
+        const bad = countMisplacedCrossEdges(state);
+        if (bad === 0) {
+          if (minDepthFound === -1) minDepthFound = depth;
+          solutionsForOri++;
+          const pairInfo = evaluatePostCrossPairs(state);
+          const movesCopy = path.slice();
+          const ergo = scoreErgonomics(movesCopy);
+          candidates.push({
+            oriLabel: ori.label,
+            rotAlg: ori.rotAlg,
+            moves: movesCopy,
+            stepCount: movesCopy.length,
+            ergo,
+            pairInfo,
+            totalRankScore: pairInfo.tier * 250 - movesCopy.length * 25 + ergo
+          });
           return;
         }
-        const orientedMoveName = activeSolution.moveNames[currentStepIndex];
-        const wcaMoveName = mapMoveFromOrientedToWCA(orientedMoveName, activeSolution.oriCfg.baseRot);
-        currentStepIndex++;
-        renderMoveScrubber();
-        animateSingleMove3D(wcaMoveName, () => {
-          refreshCubeAtCurrentStep();
-          if (isPlaying) {
-            playTimer = setTimeout(playNext, 90);
+
+        const rem = maxDepth - depth;
+        // Pruning: 1 move can fix at most 2 cross edges (or 4 only if D move aligns all 4)
+        if (rem <= 0) return;
+        if (rem === 1 && bad > 4) return;
+
+        for (let mIdx = 0; mIdx < 18; mIdx++) {
+          const face = SOLVER_MOVE_FACE[mIdx];
+          const axis = SOLVER_MOVE_AXIS[mIdx];
+          if (face === lastFace) continue;
+          // Canonical order for opposite faces (e.g. U before D, R before L, F before B)
+          if (axis === lastAxis && (face === 'D' || face === 'L' || face === 'B')) continue;
+
+          const mv = SOLVER_MOVES[mIdx];
+          path.push(mv);
+          dfs(applyMoveToStickers(state, mv), depth + 1, maxDepth, face, axis);
+          path.pop();
+          if (solutionsForOri >= 18) return;
+        }
+      }
+
+      for (let d = 0; d <= 8; d++) {
+        dfs(startState, 0, d, '', -1);
+        // Once we found shortest Cross at depth d, also search d+1 to catch X-Cross or Free Pairs!
+        if (minDepthFound !== -1 && d >= Math.min(8, minDepthFound + 1)) {
+          break;
+        }
+      }
+    }
+
+    // Deduplicate identical visual paths and sort by X-Cross > Free Pair > Shortest Steps > Ergonomics
+    candidates.sort((a, b) => b.totalRankScore - a.totalRankScore);
+    const unique = [];
+    const seen = new Set();
+    for (const c of candidates) {
+      const key = c.oriLabel + ':' + c.moves.join(' ');
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push(c);
+        if (unique.length >= 12) break;
+      }
+    }
+
+    const dt = (performance.now() - t0).toFixed(1);
+    document.getElementById('solverPerfText').textContent = `搜尋完成 (${dt} ms · 保證 ≤ 8 步)`;
+    return unique;
+  }
+
+  // =========================================================================
+  // 4. APPLICATION STATE & SYNCHRONIZATION (2D Net <-> 3D Cube <-> Playback)
+  // =========================================================================
+  let currentBaseStickers = createSolvedStickers(); // Always stored in standard WCA orientation (U=White, F=Green, D=Yellow)
+  let paintedStickers = createSolvedStickers();
+  let activeBrushColor = 'W';
+  let targetCrossMode = 'W';
+  let maskMode = 'full'; // 'full' | 'highlight' | 'cross'
+
+  let currentSolutions = [];
+  let selectedSolution = null;
+  let playbackTimeline = []; // Array of { label, move, state (in standard WCA coords) }
+  let currentStepIdx = 0;
+  let playInterval = null;
+
+  // Render 3D Cube from any 54-sticker array (in standard WCA coordinates)
+  function render3DStickers(stickers54, highlightSlotIdx = -1, targetDColor = 'W') {
+    // Identify which cubies belong to Target Cross and Target F2L Pair so masking works accurately
+    for (let i = 0; i < 54; i++) {
+      const dom = STICKER_DOM_MAP[i];
+      if (!dom) continue;
+      const colCode = stickers54[i];
+      const hex = COLOR_HEX[colCode] || '#334155';
+
+      let dim = false;
+      if (maskMode !== 'full') {
+        const isCenter = (dom.def.r === 1 && dom.def.c === 1);
+        const [x, y, z] = dom.cubiePos;
+        const isEdge = (Math.abs(x) + Math.abs(y) + Math.abs(z) === 2);
+        // Find all sticker colors on this cubie to see if it's a target cross edge
+        let cubieHasTargetCrossColor = false;
+        if (isEdge) {
+          // Check all stickers sharing this cubiePos
+          for (let k = 0; k < 54; k++) {
+            const d2 = STICKER_DOM_MAP[k];
+            if (d2 && d2.cubiePos[0] === x && d2.cubiePos[1] === y && d2.cubiePos[2] === z) {
+              if (stickers54[k] === targetDColor) cubieHasTargetCrossColor = true;
+            }
           }
+        }
+        if (maskMode === 'cross') {
+          if (!isCenter && !cubieHasTargetCrossColor) dim = true;
+        } else if (maskMode === 'highlight') {
+          // Highlight centers, target cross edges, and any cubie that has targetDColor
+          let hasTargetColor = false;
+          for (let k = 0; k < 54; k++) {
+            const d2 = STICKER_DOM_MAP[k];
+            if (d2 && d2.cubiePos[0] === x && d2.cubiePos[1] === y && d2.cubiePos[2] === z) {
+              if (stickers54[k] === targetDColor) hasTargetColor = true;
+            }
+          }
+          if (!isCenter && !hasTargetColor) dim = true;
+        }
+      }
+
+      dom.el.style.background = dim ? '#1e293b' : hex;
+      dom.el.style.opacity = dim ? '0.35' : '1';
+    }
+  }
+
+  // Build 2D Unfolded Net DOM
+  const cubeNetGrid = document.getElementById('cubeNetGrid');
+  const NET_DOM_CELLS = new Array(54);
+
+  function init2DNetDOM() {
+    cubeNetGrid.innerHTML = '';
+    const gridMap = new Map();
+    STICKER_DEFS.forEach(s => {
+      gridMap.set(`${s.netRow},${s.netCol}`, s);
+    });
+
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 12; c++) {
+        const key = `${r},${c}`;
+        if (!gridMap.has(key)) {
+          const empty = document.createElement('div');
+          cubeNetGrid.appendChild(empty);
+          continue;
+        }
+        const sDef = gridMap.get(key);
+        const cell = document.createElement('div');
+        cell.className = 'net-cell';
+        const isCenter = (sDef.r === 1 && sDef.c === 1);
+        if (isCenter) {
+          cell.classList.add('center-lock');
+          cell.textContent = sDef.face;
+        }
+        cell.addEventListener('click', () => {
+          if (isCenter) return;
+          paintedStickers[sDef.id] = activeBrushColor;
+          currentBaseStickers = paintedStickers.slice();
+          update2DNetUI();
+          // Immediately sync 3D cube in real-time!
+          render3DStickers(currentBaseStickers);
+          document.getElementById('stepStatusLabel').textContent = '即時預覽：2D 手動塗色狀態（與展開圖 100% 同步）';
         });
+        NET_DOM_CELLS[sDef.id] = cell;
+        cubeNetGrid.appendChild(cell);
       }
-      playNext();
     }
+  }
+  init2DNetDOM();
 
-    function stopPlayAnimation() {
-      isPlaying = false;
-      if (playTimer) {
-        clearTimeout(playTimer);
-        playTimer = null;
+  function initPaletteDOM() {
+    const pal = document.getElementById('paletteGrid');
+    pal.innerHTML = '';
+    Object.keys(FACE_INFO).forEach(fKey => {
+      const info = FACE_INFO[fKey];
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'swatch-btn' + (info.color === activeBrushColor ? ' active' : '');
+      btn.innerHTML = `<span class="swatch-dot" style="background:${info.hex}"></span><span>${info.name}</span>`;
+      btn.addEventListener('click', () => {
+        activeBrushColor = info.color;
+        initPaletteDOM();
+      });
+      pal.appendChild(btn);
+    });
+  }
+  initPaletteDOM();
+
+  function update2DNetUI() {
+    const counts = { W: 0, Y: 0, G: 0, B: 0, O: 0, R: 0 };
+    for (let i = 0; i < 54; i++) {
+      const col = paintedStickers[i];
+      counts[col] = (counts[col] || 0) + 1;
+      if (NET_DOM_CELLS[i]) {
+        NET_DOM_CELLS[i].style.background = COLOR_HEX[col];
       }
-      const lbl = document.getElementById('playBtnLabel');
-      if (lbl) lbl.textContent = '自動播放演示';
+    }
+    const statusEl = document.getElementById('painterStatus');
+    const allNine = Object.keys(counts).every(k => counts[k] === 9);
+    if (allNine) {
+      statusEl.innerHTML = `<span style="color:var(--green);font-weight:700;">✔ 54 張貼紙數量正確（6 色各 9 張），已同步至下方 3D 魔方！</span>`;
+    } else {
+      const summary = Object.entries(counts).map(([k, v]) => `${k}:${v}`).join(' · ');
+      statusEl.innerHTML = `<span style="color:var(--gold);">目前貼紙統計 (${summary}) — 請確保每色各 9 張後點擊分析</span>`;
+    }
+  }
+
+  // Build playback timeline for a selected solution
+  // CRITICAL: Step 0 is ALWAYS `currentBaseStickers` in standard WCA orientation (matching the 2D net 100%!)
+  // Subsequent steps apply the solution's moves mapped back to the standard WCA cube so the cube never mysteriously jumps at Step 0!
+  function selectSolution(solIdx) {
+    stopAutoPlay();
+    selectedSolution = currentSolutions[solIdx];
+    document.querySelectorAll('.sol-card').forEach((el, i) => {
+      el.classList.toggle('selected', i === solIdx);
+    });
+
+    if (!selectedSolution) return;
+
+    // Build timeline where Step 0 = exact scrambled state
+    playbackTimeline = [];
+    let curState = currentBaseStickers.slice();
+    playbackTimeline.push({
+      label: '起點',
+      isRot: false,
+      state: curState.slice(),
+      desc: 'Step 0：原始打亂起點（與 2D 展開圖 100% 同步）'
+    });
+
+    // If solution has pre-inspection rotation (e.g. z2, y), include it as Step 1 so user sees how the cube flips!
+    if (selectedSolution.rotAlg.length > 0) {
+      const rotStr = '[' + selectedSolution.rotAlg.join(' ') + ']';
+      curState = applyAlgToStickers(curState, selectedSolution.rotAlg);
+      playbackTimeline.push({
+        label: rotStr,
+        isRot: true,
+        state: curState.slice(),
+        desc: `預判翻轉 ${rotStr}（將目標十字底面轉至 D 面）`
+      });
     }
 
-    function updateAnimSpeed() {
-      animDurationMs = parseInt(document.getElementById('animSpeedSelect').value, 10) || 260;
+    selectedSolution.moves.forEach((mv, idx) => {
+      curState = applyMoveToStickers(curState, mv);
+      playbackTimeline.push({
+        label: mv,
+        isRot: false,
+        state: curState.slice(),
+        desc: `第 ${idx + 1} 步：執行 ${mv}`
+      });
+    });
+
+    document.getElementById('activeSlotLabel').textContent = selectedSolution.pairInfo.badge +
+      (selectedSolution.pairInfo.slotName ? ` (${selectedSolution.pairInfo.slotName})` : '');
+
+    // Render move pills
+    const track = document.getElementById('movesTrack');
+    track.innerHTML = '';
+    playbackTimeline.forEach((step, idx) => {
+      const pill = document.createElement('span');
+      pill.className = 'move-pill' + (step.isRot ? ' rot-pill' : '');
+      pill.textContent = step.label;
+      pill.addEventListener('click', () => goToStep(idx));
+      track.appendChild(pill);
+    });
+
+    // Default to Step 0 so user can immediately verify 3D cube == 2D Net / WCA Scramble!
+    goToStep(0);
+  }
+
+  function goToStep(idx) {
+    if (!playbackTimeline.length) return;
+    currentStepIdx = Math.max(0, Math.min(playbackTimeline.length - 1, idx));
+    const step = playbackTimeline[currentStepIdx];
+    const targetCol = (selectedSolution && selectedSolution.oriLabel.startsWith('黃')) ? 'Y' : 'W';
+    render3DStickers(step.state, selectedSolution ? selectedSolution.pairInfo.slotIdx : -1, targetCol);
+
+    document.getElementById('stepStatusLabel').textContent = step.desc;
+    document.getElementById('stepCounterText').textContent = `${currentStepIdx} / ${playbackTimeline.length - 1}`;
+
+    const pills = document.querySelectorAll('#movesTrack .move-pill');
+    pills.forEach((p, i) => p.classList.toggle('active', i === currentStepIdx));
+  }
+
+  function stopAutoPlay() {
+    if (playInterval) {
+      clearInterval(playInterval);
+      playInterval = null;
+      document.getElementById('btnStepPlay').textContent = '▶ 自動播放';
+    }
+  }
+
+  function renderSolutionsList() {
+    const listEl = document.getElementById('solutionsList');
+    listEl.innerHTML = '';
+    if (!currentSolutions.length) {
+      listEl.innerHTML = `<div style="color:var(--muted);padding:12px;">找不到解法，請檢查魔方貼紙狀態是否正確。</div>`;
+      return;
     }
 
-    /*************************************************************************
-     * 9. 2D 展開圖手動塗色輸入器 (54 Facelet Interactive Painter)
-     *************************************************************************/
-    let currentPaintColor = 'U';
-    let paintedFacelets = cubieStateToFacelets(createSolvedCubieState());
+    currentSolutions.forEach((sol, idx) => {
+      const card = document.createElement('div');
+      card.className = 'sol-card' + (idx === 0 ? ' selected' : '');
+      const rotPrefix = sol.rotAlg.length ? `<span style="color:#fbbf24;">[${sol.rotAlg.join(' ')}]</span> ` : '';
+      const movesStr = sol.moves.length ? sol.moves.join(' ') : '(已還原)';
+      card.innerHTML = `
+        <div class="sol-top">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span class="tag ${sol.pairInfo.tagClass}">${sol.pairInfo.badge}</span>
+            <span style="font-size:0.78rem;color:var(--muted);font-weight:700;">${sol.oriLabel}</span>
+          </div>
+          <span style="font-size:0.78rem;font-weight:700;color:#93c5fd;">${sol.stepCount} 步 · 順手度 ${sol.ergo}</span>
+        </div>
+        <div class="sol-alg">${rotPrefix}${movesStr}</div>
+        <div class="sol-meta">${sol.pairInfo.continuation}</div>
+      `;
+      card.addEventListener('click', () => selectSolution(idx));
+      listEl.appendChild(card);
+    });
 
-    function switchInputMode(mode) {
-      const tabScramble = document.getElementById('tabScrambleMode');
-      const tabPaint = document.getElementById('tabPaintMode');
-      const panelScramble = document.getElementById('panelScrambleInput');
-      const panelPaint = document.getElementById('panelPaintInput');
+    selectSolution(0);
+  }
 
-      if (mode === 'scramble') {
-        tabScramble.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold transition bg-blue-600 text-white shadow';
-        tabPaint.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold transition text-slate-300 hover:text-white';
-        panelScramble.classList.remove('hidden');
-        panelPaint.classList.add('hidden');
+  function runScrambleAnalysis() {
+    const raw = document.getElementById('scrambleInput').value;
+    const tokens = parseAlg(raw);
+    document.getElementById('scrambleStepCount').textContent = `${tokens.length} 步`;
+    currentBaseStickers = applyAlgToStickers(createSolvedStickers(), tokens);
+    paintedStickers = currentBaseStickers.slice();
+    update2DNetUI();
+    currentSolutions = findBestSolutions(currentBaseStickers, targetCrossMode);
+    renderSolutionsList();
+  }
+
+  // =========================================================================
+  // 5. EVENT LISTENERS (All Verified & Isolated)
+  // =========================================================================
+  document.getElementById('tabBtnScramble').addEventListener('click', () => {
+    document.getElementById('tabBtnScramble').classList.add('active');
+    document.getElementById('tabBtnPainter').classList.remove('active');
+    document.getElementById('panelScramble').classList.remove('hidden');
+    document.getElementById('panelPainter').classList.add('hidden');
+  });
+
+  document.getElementById('tabBtnPainter').addEventListener('click', () => {
+    document.getElementById('tabBtnPainter').classList.add('active');
+    document.getElementById('tabBtnScramble').classList.remove('active');
+    document.getElementById('panelPainter').classList.remove('hidden');
+    document.getElementById('panelScramble').classList.add('hidden');
+    update2DNetUI();
+    goToStep(0);
+  });
+
+  document.getElementById('btnAnalyzeScramble').addEventListener('click', runScrambleAnalysis);
+
+  document.getElementById('btnRandomScramble').addEventListener('click', () => {
+    const faces = ['U', 'D', 'R', 'L', 'F', 'B'];
+    const mods = ['', "'", '2'];
+    const out = [];
+    let last = '';
+    for (let i = 0; i < 18; i++) {
+      let f = faces[Math.floor(Math.random() * faces.length)];
+      while (f === last) f = faces[Math.floor(Math.random() * faces.length)];
+      last = f;
+      out.push(f + mods[Math.floor(Math.random() * mods.length)]);
+    }
+    document.getElementById('scrambleInput').value = out.join(' ');
+    runScrambleAnalysis();
+  });
+
+  document.getElementById('btnDemoXCross').addEventListener('click', () => {
+    // Setup a clean scramble where White Cross + FR pair can be solved as an X-Cross in 5 moves!
+    document.getElementById('scrambleInput').value = "z2 R U' R' D' F' R' D2 z2";
+    runScrambleAnalysis();
+  });
+
+  document.querySelectorAll('.cross-color-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.cross-color-btn').forEach(b => b.classList.remove('btn-primary'));
+      btn.classList.add('btn-primary');
+      targetCrossMode = btn.getAttribute('data-color');
+      currentSolutions = findBestSolutions(currentBaseStickers, targetCrossMode);
+      renderSolutionsList();
+    });
+  });
+
+  document.querySelectorAll('.mask-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.mask-btn').forEach(b => b.classList.remove('btn-primary'));
+      btn.classList.add('btn-primary');
+      maskMode = btn.getAttribute('data-mask');
+      goToStep(currentStepIdx);
+    });
+  });
+
+  // Painter buttons
+  document.getElementById('btnSyncFromScramble').addEventListener('click', () => {
+    const tokens = parseAlg(document.getElementById('scrambleInput').value);
+    paintedStickers = applyAlgToStickers(createSolvedStickers(), tokens);
+    currentBaseStickers = paintedStickers.slice();
+    update2DNetUI();
+    goToStep(0);
+  });
+
+  document.getElementById('btnResetSolved').addEventListener('click', () => {
+    paintedStickers = createSolvedStickers();
+    currentBaseStickers = paintedStickers.slice();
+    update2DNetUI();
+    currentSolutions = findBestSolutions(currentBaseStickers, targetCrossMode);
+    renderSolutionsList();
+  });
+
+  document.getElementById('btnApplyPainted').addEventListener('click', () => {
+    currentBaseStickers = paintedStickers.slice();
+    currentSolutions = findBestSolutions(currentBaseStickers, targetCrossMode);
+    renderSolutionsList();
+  });
+
+  // Camera Presets
+  document.getElementById('camStandard').addEventListener('click', () => {
+    viewZ2Mode = false;
+    camRotX = -24;
+    camRotY = -34;
+    document.getElementById('btnToggleZ2View').textContent = '視角：標準 WCA (U=白)';
+    updateCameraTransform();
+  });
+
+  document.getElementById('camFaceD').addEventListener('click', () => {
+    viewZ2Mode = false;
+    camRotX = 88;
+    camRotY = 0;
+    updateCameraTransform();
+  });
+
+  document.getElementById('camFaceF').addEventListener('click', () => {
+    viewZ2Mode = false;
+    camRotX = 0;
+    camRotY = 0;
+    updateCameraTransform();
+  });
+
+  document.getElementById('btnToggleZ2View').addEventListener('click', () => {
+    viewZ2Mode = !viewZ2Mode;
+    document.getElementById('btnToggleZ2View').textContent = viewZ2Mode ? '視角：z2 翻轉 (D面朝上)' : '視角：標準 WCA (U=白)';
+    updateCameraTransform();
+  });
+
+  // Playback buttons
+  document.getElementById('btnStepStart').addEventListener('click', () => { stopAutoPlay(); goToStep(0); });
+  document.getElementById('btnStepPrev').addEventListener('click', () => { stopAutoPlay(); goToStep(currentStepIdx - 1); });
+  document.getElementById('btnStepNext').addEventListener('click', () => { stopAutoPlay(); goToStep(currentStepIdx + 1); });
+  document.getElementById('btnStepEnd').addEventListener('click', () => { stopAutoPlay(); goToStep(playbackTimeline.length - 1); });
+
+  document.getElementById('btnStepPlay').addEventListener('click', () => {
+    if (playInterval) {
+      stopAutoPlay();
+      return;
+    }
+    if (currentStepIdx >= playbackTimeline.length - 1) goToStep(0);
+    document.getElementById('btnStepPlay').textContent = '⏸ 暫停';
+    playInterval = setInterval(() => {
+      if (currentStepIdx < playbackTimeline.length - 1) {
+        goToStep(currentStepIdx + 1);
       } else {
-        tabPaint.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold transition bg-blue-600 text-white shadow';
-        tabScramble.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold transition text-slate-300 hover:text-white';
-      // 啟動時若切到 2D 塗色分頁，預設將 3D 遮罩切為「完整魔方」以便直觀核對每一格顏色
-      if (mode === 'paint') {
-        setMaskMode('full');
+        stopAutoPlay();
       }
+    }, 650);
+  });
+
+  // 15s WCA Inspection Timer
+  let timerId = null;
+  let timeLeft = 15;
+  document.getElementById('btnTimerToggle').addEventListener('click', () => {
+    const txt = document.getElementById('timerText');
+    if (timerId) {
+      clearInterval(timerId);
+      timerId = null;
+      txt.textContent = '待機';
+      return;
     }
-
-    function initPaintPalette() {
-      const container = document.getElementById('paletteContainer');
-      const keys = ['U', 'D', 'F', 'B', 'R', 'L'];
-      container.innerHTML = keys.map(k => {
-        const info = FACE_COLORS[k];
-        const isSel = k === currentPaintColor;
-        return `
-          <button onclick="selectPaintBrush('${k}')"
-                  class="flex items-center gap-1.5 px-2.5 py-2 rounded-lg border text-xs font-bold transition ${
-                    isSel
-                      ? 'border-white ring-2 ring-blue-400 bg-slate-800 text-white'
-                      : 'border-slate-700 bg-slate-950 text-slate-300 hover:border-slate-500'
-                  }">
-            <span class="w-3.5 h-3.5 rounded-sm ${info.twBg} border border-black/30 shrink-0"></span>
-            <span>${info.name}</span>
-          </button>
-        `;
-      }).join('');
-    }
-
-    function selectPaintBrush(colorKey) {
-      currentPaintColor = colorKey;
-      initPaintPalette();
-    }
-
-    function render2DNetGrid() {
-      const grid = document.getElementById('netGridContainer');
-      // 9 列 x 12 欄的展開圖配置:
-      // U 面 (0..8) 在 row 0..2, col 3..5
-      // L (36..44) 在 row 3..5, col 0..2
-      // F (18..26) 在 row 3..5, col 3..5
-      // R (9..17)  在 row 3..5, col 6..8
-      // B (45..53) 在 row 3..5, col 9..11
-      // D (27..35) 在 row 6..8, col 3..5
-      const cellMap = Array.from({ length: 9 }, () => new Array(12).fill(-1));
-
-      function placeFace(faceOffset, startRow, startCol) {
-        for (let r = 0; r < 3; r++) {
-          for (let c = 0; c < 3; c++) {
-            cellMap[startRow + r][startCol + c] = faceOffset + r * 3 + c;
-          }
-        }
-      }
-      placeFace(0, 0, 3);  // U
-      placeFace(36, 3, 0); // L
-      placeFace(18, 3, 3); // F
-      placeFace(9, 3, 6);  // R
-      placeFace(45, 3, 9); // B
-      placeFace(27, 6, 3); // D
-
-      let html = '';
-      for (let r = 0; r < 9; r++) {
-        for (let c = 0; c < 12; c++) {
-          const fIdx = cellMap[r][c];
-          if (fIdx === -1) {
-            html += `<div class="w-6 h-6"></div>`;
-          } else {
-            const isCenter = (fIdx % 9) === 4;
-            const colorKey = paintedFacelets[fIdx];
-            const info = FACE_COLORS[colorKey];
-            const centerLabel = isCenter ? colorKey : '';
-            html += `
-              <button onclick="onClickFaceletCell(${fIdx})"
-                      title="${isCenter ? '中心塊固定為基準面' : '點擊塗色'}"
-                      class="facelet-cell w-6 h-6 rounded-[4px] ${info.twBg} border border-slate-900 flex items-center justify-center text-[10px] font-mono font-extrabold text-slate-900 ${
-                        isCenter ? 'cursor-not-allowed opacity-90 ring-1 ring-slate-950' : 'cursor-pointer'
-                      }">
-                ${centerLabel}
-              </button>
-            `;
-          }
-        }
-      }
-      grid.innerHTML = html;
-      validatePaintedCounts();
-    }
-
-    function onClickFaceletCell(fIdx) {
-      if ((fIdx % 9) === 4) return; // 中心塊固定不可改色
-      paintedFacelets[fIdx] = currentPaintColor;
-      activeInputSource = 'paint';
-      render2DNetGrid();
-
-      // 檢查塗色是否已滿足 54 張貼紙與奇偶校驗
-      const check = faceletsToCubieState(paintedFacelets);
-      if (check.valid && isNineOfEachColor()) {
-        // 狀態合法時：立即更新 3D 魔方並自動算出下方最佳十字與 X-Cross 解法！
-        isLivePaintingPreview = false;
-        runFullAnalysis(check.state);
+    timeLeft = 15;
+    txt.textContent = `${timeLeft}s`;
+    timerId = setInterval(() => {
+      timeLeft--;
+      if (timeLeft > 0) {
+        txt.textContent = `${timeLeft}s`;
       } else {
-        // 還在塗色途中（尚未滿各 9 張）：立即將 2D 貼紙即時投影到下方 3D 魔方，讓使用者看到塗色進度
-        isLivePaintingPreview = true;
-        sync3DCubeDirectFromFacelets(paintedFacelets);
-        document.getElementById('currentOrientationBadge').textContent = '2D 塗色即時預覽中 (U=白, F=綠)';
-        document.getElementById('overlayBadge').textContent = '🎨 手動塗色輸入中';
-        document.getElementById('overlaySlotInfo').textContent = '完成 6 色各 9 張貼紙後將自動計算最佳十字';
+        clearInterval(timerId);
+        timerId = null;
+        txt.textContent = '時間到!';
       }
-    }
+    }, 1000);
+  });
 
-    function isNineOfEachColor() {
-      const counts = { U: 0, R: 0, F: 0, D: 0, L: 0, B: 0 };
-      for (const k of paintedFacelets) counts[k] = (counts[k] || 0) + 1;
-      return Object.values(counts).every(c => c === 9);
-    }
-
-    function validatePaintedCounts() {
-      const counts = { U: 0, R: 0, F: 0, D: 0, L: 0, B: 0 };
-      for (const k of paintedFacelets) counts[k] = (counts[k] || 0) + 1;
-
-      const statusEl = document.getElementById('paintCountStatus');
-      const wrongColors = Object.entries(counts).filter(([_, cnt]) => cnt !== 9);
-
-      if (wrongColors.length > 0) {
-        const msg = wrongColors.map(([k, cnt]) => `${FACE_COLORS[k].name}:${cnt}/9`).join(', ');
-        statusEl.className = 'text-amber-400 font-mono';
-        statusEl.textContent = `⚠ 貼紙數量未滿 9 張：${msg}`;
-        return false;
-      }
-
-      const check = faceletsToCubieState(paintedFacelets);
-      if (!check.valid) {
-        statusEl.className = 'text-rose-400 font-mono';
-        statusEl.textContent = `✗ ${check.error}`;
-        return false;
-      }
-
-      statusEl.className = 'text-emerald-400 font-mono';
-      statusEl.textContent = '✓ 54 張貼紙與方向奇偶完全合法，已同步更新下方解法！';
-      return true;
-    }
-
-    function syncNetFromCurrentCube() {
-      paintedFacelets = cubieStateToFacelets(currentWcaScrambledState);
-      initPaintPalette();
-      render2DNetGrid();
-    }
-
-    function resetPaintNetToSolved() {
-      activeInputSource = 'paint';
-      isLivePaintingPreview = false;
-      paintedFacelets = cubieStateToFacelets(createSolvedCubieState());
-      render2DNetGrid();
-      runFullAnalysis(createSolvedCubieState());
-    }
-
-    function applyPaintedCubeAndSolve() {
-      const check = faceletsToCubieState(paintedFacelets);
-      if (!check.valid || !isNineOfEachColor()) {
-        validatePaintedCounts();
-        // 即使尚未通過奇偶校驗，也先讓下方 3D 魔方強制顯示目前塗色樣貌
-        isLivePaintingPreview = true;
-        sync3DCubeDirectFromFacelets(paintedFacelets);
-        return;
-      }
-      activeInputSource = 'paint';
-      isLivePaintingPreview = false;
-      runFullAnalysis(check.state);
-    }
-
-    /*************************************************************************
-     * 10. 15 秒 WCA 預判計時與盲練模式 (Inspection Mode)
-     *************************************************************************/
-    let inspectionActive = false;
-    let inspectionInterval = null;
-    let inspectionStartTime = 0;
-
-    function toggleInspectionMode() {
-      if (inspectionActive) {
-        stopInspectionMode();
-      } else {
-        startInspectionMode();
-      }
-    }
-
-    function startInspectionMode() {
-      inspectionActive = true;
-      document.getElementById('blindPracticeOverlay').classList.remove('hidden');
-      document.getElementById('blindPracticeOverlay').classList.add('flex');
-      document.getElementById('solutionsListContainer').classList.add('hidden');
-
-      const timerDisplay = document.getElementById('inspectionTimerDisplay');
-      const btnText = document.getElementById('inspectionBtnText');
-      timerDisplay.classList.remove('hidden');
-      btnText.textContent = '結束預判';
-
-      // 先跳回打亂起點方便使用者觀察
-      stepToStart();
-
-      inspectionStartTime = performance.now();
-      inspectionInterval = setInterval(() => {
-        const elapsed = (performance.now() - inspectionStartTime) / 1000;
-        const remain = Math.max(0, 15.0 - elapsed);
-        timerDisplay.textContent = remain.toFixed(1) + 's';
-
-        if (remain <= 3.0) {
-          timerDisplay.className = 'font-mono text-sm font-bold text-rose-400 pl-2 border-l border-slate-700 animate-pulse';
-        } else if (remain <= 7.0) {
-          timerDisplay.className = 'font-mono text-sm font-bold text-amber-400 pl-2 border-l border-slate-700';
-        } else {
-          timerDisplay.className = 'font-mono text-sm font-bold text-emerald-400 pl-2 border-l border-slate-700';
-        }
-
-        if (remain <= 0) {
-          clearInterval(inspectionInterval);
-          timerDisplay.textContent = '時間到!';
-        }
-      }, 100);
-    }
-
-    function stopInspectionMode() {
-      inspectionActive = false;
-      if (inspectionInterval) {
-        clearInterval(inspectionInterval);
-        inspectionInterval = null;
-      }
-      document.getElementById('blindPracticeOverlay').classList.add('hidden');
-      document.getElementById('blindPracticeOverlay').classList.remove('flex');
-      document.getElementById('solutionsListContainer').classList.remove('hidden');
-      document.getElementById('inspectionTimerDisplay').classList.add('hidden');
-      document.getElementById('inspectionBtnText').textContent = '15秒預判練習';
-    }
-
-    function revealSolutionsFromInspection() {
-      stopInspectionMode();
-    }
-
-    // 啟動初始化
-    window.onload = function () {
-      initThreeJS();
-      resetCameraView();
-      initPaintPalette();
-      render2DNetGrid();
-      onScrambleInputChange();
-      runFullAnalysis();
-    };
-  </script>
+  // Initial Boot
+  runScrambleAnalysis();
+})();
+</script>
 </body>
 </html>
