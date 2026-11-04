@@ -1,1 +1,1 @@
-# https-oscarouo.github.io-allf2l
+# Rubik's cube CFOP butter cross
