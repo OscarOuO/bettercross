@@ -970,7 +970,7 @@
           if (item.type === 'connected') {
             return {
               tier: 2,
-              badge: '⭐ 保留連塊 Pair',
+              badge: '⭐ 保留分離 Pair',
               tagClass: 'tag-pair',
               pairDesc,
               continuation: `保留【${pairDesc.text}】→ 接著轉 [${contAlg}] 秒入槽`
@@ -978,7 +978,7 @@
           } else if (!bestSplit) {
             bestSplit = {
               tier: 1,
-              badge: '⚡ 保留分離 Pair',
+              badge: '⚡ 保留連塊 Pair',
               tagClass: 'tag-split',
               pairDesc,
               continuation: `保留【${pairDesc.text}】→ 接著轉 [${contAlg}] 三步入槽`
