@@ -15,6 +15,7 @@
       --accent-hover: #2563eb;
       --gold: #f59e0b;
       --green: #10b981;
+      --cyan: #06b6d4;
       --danger: #ef4444;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -75,6 +76,7 @@
       border-radius: 14px;
       padding: 14px;
       margin-bottom: 14px;
+      position: relative;
     }
     .panel-title {
       font-size: 0.9rem;
@@ -84,6 +86,8 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
     }
     .scramble-box {
       display: flex;
@@ -118,11 +122,49 @@
       gap: 5px;
     }
     .btn:hover { background: #334155; }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
     .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
     .btn-primary:hover { background: var(--accent-hover); }
     .btn-gold { background: var(--gold); border-color: var(--gold); color: #090d16; font-weight: 700; }
     .btn-sm { padding: 5px 10px; font-size: 0.78rem; border-radius: 7px; }
     .btn-group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+
+    /* Loading Overlay & Progress Bar */
+    .solver-loading {
+      background: rgba(9, 13, 22, 0.92);
+      border: 1px solid rgba(59, 130, 246, 0.45);
+      border-radius: 12px;
+      padding: 18px 16px;
+      margin-bottom: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      text-align: center;
+    }
+    .spinner-ring {
+      width: 32px;
+      height: 32px;
+      border: 3px solid rgba(59, 130, 246, 0.25);
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .progress-track {
+      width: 100%;
+      max-width: 320px;
+      height: 8px;
+      background: #1e293b;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #3b82f6, #06b6d4);
+      transition: width 0.12s ease-out;
+    }
 
     /* 2D Unfolded Net */
     .painter-wrap {
@@ -195,10 +237,10 @@
     .swatch-btn.active { border-color: #3b82f6; background: rgba(59,130,246,0.15); }
     .swatch-dot { width: 16px; height: 16px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.3); }
 
-    /* Pure CSS 3D Cube Viewport (Compact & Zero External Dependencies) */
+    /* Pure CSS 3D Cube Viewport */
     .viewport-box {
       position: relative;
-      height: 235px;
+      height: 245px;
       background: radial-gradient(circle at center, #16223b 0%, #090d16 100%);
       border: 1px solid var(--card-border);
       border-radius: 12px;
@@ -249,6 +291,11 @@
       font-size: 11px;
       font-weight: 900;
       color: rgba(15, 23, 42, 0.85);
+      transition: box-shadow 0.15s, border-color 0.15s, opacity 0.15s;
+    }
+    .cubie-face.pair-glow {
+      border: 2.5px solid #00f5d4 !important;
+      box-shadow: 0 0 8px rgba(0, 245, 212, 0.85);
     }
     .face-U { transform: rotateX(90deg) translateZ(17px); }
     .face-D { transform: rotateX(-90deg) translateZ(17px); }
@@ -277,7 +324,9 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: rgba(9, 13, 22, 0.85);
+      flex-wrap: wrap;
+      gap: 6px;
+      background: rgba(9, 13, 22, 0.88);
       border: 1px solid var(--card-border);
       padding: 5px 10px;
       border-radius: 8px;
@@ -305,7 +354,7 @@
       color: #cbd5e1;
       font-family: ui-monospace, monospace;
       font-weight: 700;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       cursor: pointer;
       border: 1px solid transparent;
     }
@@ -313,12 +362,14 @@
       background: var(--accent);
       color: #fff;
       border-color: #93c5fd;
-      transform: scale(1.06);
+      transform: scale(1.05);
     }
-    .move-pill.rot-pill {
-      background: rgba(245, 158, 11, 0.18);
+    .move-pill.hold-pill {
+      background: rgba(245, 158, 11, 0.16);
       color: #fbbf24;
       border-color: rgba(245, 158, 11, 0.4);
+      font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif;
+      font-size: 0.8rem;
     }
 
     /* Solutions List */
@@ -326,7 +377,7 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
-      max-height: 480px;
+      max-height: 500px;
       overflow-y: auto;
     }
     .sol-card {
@@ -342,7 +393,7 @@
       border-color: var(--accent);
       background: rgba(59, 130, 246, 0.1);
     }
-    .sol-top { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 5px; flex-wrap: wrap; }
+    .sol-top { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
     .tag {
       font-size: 0.72rem;
       font-weight: 800;
@@ -353,8 +404,45 @@
     .tag-pair { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.45); }
     .tag-split { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.45); }
     .tag-cross { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; }
-    .sol-alg { font-family: ui-monospace, monospace; font-size: 0.98rem; font-weight: 700; color: #fff; }
-    .sol-meta { font-size: 0.76rem; color: var(--muted); margin-top: 4px; }
+    .hold-badge {
+      font-size: 0.76rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: #1e293b;
+      color: #f8fafc;
+      border: 1px solid #334155;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .pair-target-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: rgba(6, 182, 212, 0.15);
+      color: #22d3ee;
+      border: 1px solid rgba(6, 182, 212, 0.4);
+      margin-top: 4px;
+    }
+    .mini-dots {
+      display: inline-flex;
+      gap: 2px;
+      align-items: center;
+    }
+    .mini-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 2px;
+      border: 1px solid rgba(0,0,0,0.5);
+      display: inline-block;
+    }
+    .sol-alg { font-family: ui-monospace, monospace; font-size: 1rem; font-weight: 800; color: #fff; margin: 4px 0 2px; }
+    .sol-meta { font-size: 0.77rem; color: var(--muted); margin-top: 3px; }
     .hidden { display: none !important; }
   </style>
 </head>
@@ -419,10 +507,10 @@
   <!-- Left: Compact 3D Cube & Step Playback -->
   <div class="panel" style="margin-bottom:0;">
     <div class="panel-title">
-      <span>3D 魔方同步檢視（單指/滑鼠拖曳旋轉）</span>
+      <span>3D 魔方同步檢視（青色發光框 = 目標 Pair 方塊）</span>
       <div class="btn-group">
         <button type="button" class="btn btn-sm btn-primary mask-btn" data-mask="full">完整魔方</button>
-        <button type="button" class="btn btn-sm mask-btn" data-mask="highlight">十字 + Pair 高亮</button>
+        <button type="button" class="btn btn-sm mask-btn" data-mask="highlight">十字 + 目標 Pair 高亮</button>
         <button type="button" class="btn btn-sm mask-btn" data-mask="cross">僅顯示十字</button>
       </div>
     </div>
@@ -443,7 +531,7 @@
 
       <div class="step-banner">
         <span id="stepStatusLabel">Step 0：原始打亂起點（與 2D 展開圖 100% 同步）</span>
-        <span id="activeSlotLabel" style="color:#fbbf24;font-weight:700;"></span>
+        <span id="activeSlotLabel" style="color:#22d3ee;font-weight:700;"></span>
       </div>
     </div>
 
@@ -467,6 +555,17 @@
       <span>最佳十字 & X-Cross / 保留 Pair 推薦路線（≤ 8 步）</span>
       <span id="solverPerfText" style="font-size:0.76rem;color:var(--green);">準備就緒</span>
     </div>
+
+    <!-- Asynchronous Progress Overlay -->
+    <div class="solver-loading hidden" id="solverLoadingBox">
+      <div class="spinner-ring"></div>
+      <div style="font-size:0.88rem;font-weight:700;color:#fff;" id="loadingStageTitle">正在分析最佳十字與 F2L Pair...</div>
+      <div class="progress-track">
+        <div class="progress-fill" id="loadingProgressBar"></div>
+      </div>
+      <div style="font-size:0.76rem;color:var(--muted);" id="loadingSubText">進度 0%</div>
+    </div>
+
     <div class="sol-list" id="solutionsList"></div>
   </div>
 </div>
@@ -477,14 +576,6 @@
 
   // =========================================================================
   // 1. UNIFIED 3D COORDINATE GEOMETRY ENGINE (Single Source of Truth)
-  // Coordinates:
-  //   x in {-1 (L), 0, +1 (R)}
-  //   y in {-1 (D), 0, +1 (U)}
-  //   z in {-1 (B), 0, +1 (F)}
-  // Standard WCA Orientation:
-  //   U (+y) = White (W), D (-y) = Yellow (Y)
-  //   F (+z) = Green (G), B (-z) = Blue (B)
-  //   L (-x) = Orange (O), R (+x) = Red (R)
   // =========================================================================
   const FACE_INFO = {
     U: { color: 'W', hex: '#f8fafc', name: '白 (U)', normal: [0, 1, 0] },
@@ -500,11 +591,12 @@
     B: '#3b82f6', O: '#f97316', R: '#ef4444'
   };
 
-  // Build canonical 54 stickers in 2D Unfolded Net order:
-  // Faces order: U (0..8), L (9..17), F (18..26), R (27..35), B (36..44), D (45..53)
+  const COLOR_NAMES_TW = {
+    W: '白', Y: '黃', G: '綠', B: '藍', O: '橘', R: '紅'
+  };
+
   const STICKER_DEFS = [];
   function buildStickerDefs() {
-    // U face: row 0..2 (z = -1, 0, 1), col 0..2 (x = -1, 0, 1), normal = (0, 1, 0)
     for (let r = 0; r < 3; r++) {
       for (let c = 0; c < 3; c++) {
         STICKER_DEFS.push({
@@ -514,7 +606,6 @@
         });
       }
     }
-    // L face: row 0..2 (y = 1, 0, -1), col 0..2 (z = -1, 0, 1), normal = (-1, 0, 0)
     for (let r = 0; r < 3; r++) {
       for (let c = 0; c < 3; c++) {
         STICKER_DEFS.push({
@@ -524,7 +615,6 @@
         });
       }
     }
-    // F face: row 0..2 (y = 1, 0, -1), col 0..2 (x = -1, 0, 1), normal = (0, 0, 1)
     for (let r = 0; r < 3; r++) {
       for (let c = 0; c < 3; c++) {
         STICKER_DEFS.push({
@@ -534,7 +624,6 @@
         });
       }
     }
-    // R face: row 0..2 (y = 1, 0, -1), col 0..2 (z = 1, 0, -1), normal = (1, 0, 0)
     for (let r = 0; r < 3; r++) {
       for (let c = 0; c < 3; c++) {
         STICKER_DEFS.push({
@@ -544,7 +633,6 @@
         });
       }
     }
-    // B face: row 0..2 (y = 1, 0, -1), col 0..2 (x = 1, 0, -1), normal = (0, 0, -1)
     for (let r = 0; r < 3; r++) {
       for (let c = 0; c < 3; c++) {
         STICKER_DEFS.push({
@@ -554,7 +642,6 @@
         });
       }
     }
-    // D face: row 0..2 (z = 1, 0, -1), col 0..2 (x = -1, 0, 1), normal = (0, -1, 0)
     for (let r = 0; r < 3; r++) {
       for (let c = 0; c < 3; c++) {
         STICKER_DEFS.push({
@@ -567,15 +654,25 @@
   }
   buildStickerDefs();
 
-  // Map (x,y,z,nx,ny,nz) -> sticker index 0..53
   const COORD_TO_STICKER = new Map();
   STICKER_DEFS.forEach(s => {
     const key = `${s.pos[0]},${s.pos[1]},${s.pos[2]}|${s.normal[0]},${s.normal[1]},${s.normal[2]}`;
     COORD_TO_STICKER.set(key, s.id);
   });
 
-  // Rotate a 3D vector [x, y, z] 90 degrees around an axis ('x', 'y', 'z')
-  // dir = +1 means 90 deg counter-clockwise looking down positive axis
+  // Group sticker indices by their cubie coordinate (x,y,z) so we can identify pieces accurately
+  const CUBIE_GROUPS = [];
+  const cubieMap = new Map();
+  STICKER_DEFS.forEach(s => {
+    const cKey = `${s.pos[0]},${s.pos[1]},${s.pos[2]}`;
+    if (!cubieMap.has(cKey)) {
+      const grp = { pos: s.pos, stickerIds: [] };
+      cubieMap.set(cKey, grp);
+      CUBIE_GROUPS.push(grp);
+    }
+    cubieMap.get(cKey).stickerIds.push(s.id);
+  });
+
   function rotVec90([x, y, z], axis, dir) {
     if (axis === 'y') return dir === 1 ? [z, y, -x] : [-z, y, x];
     if (axis === 'x') return dir === 1 ? [x, -z, y] : [x, z, -y];
@@ -583,7 +680,6 @@
     return [x, y, z];
   }
 
-  // Precompute exact 54-sticker permutation table for every WCA move and whole-cube rotation
   const MOVE_PERMS = {};
   const BASE_MOVES_SPEC = {
     'U': { axis: 'y', layer: [1], dir: -1 },
@@ -606,7 +702,6 @@
   Object.keys(BASE_MOVES_SPEC).forEach(m => {
     const spec = BASE_MOVES_SPEC[m];
     const axisIdx = spec.axis === 'x' ? 0 : (spec.axis === 'y' ? 1 : 2);
-    // perm[dest] = src (meaning after move, sticker at dest gets color from src)
     const perm1 = new Uint8Array(54);
     for (let i = 0; i < 54; i++) {
       const s = STICKER_DEFS[i];
@@ -652,20 +747,19 @@
   }
 
   // =========================================================================
-  // 2. PURE CSS 3D CUBE RENDERER (Zero External Dependencies, Mobile Safe)
+  // 2. PURE CSS 3D CUBE RENDERER
   // =========================================================================
   const cube3dRoot = document.getElementById('cube3dRoot');
   const STICKER_DOM_MAP = new Array(54);
 
   function initCSS3DCube() {
     cube3dRoot.innerHTML = '';
-    const spacing = 35; // px between cubie centers
+    const spacing = 35;
     for (let x = -1; x <= 1; x++) {
       for (let y = -1; y <= 1; y++) {
         for (let z = -1; z <= 1; z++) {
           const cubie = document.createElement('div');
           cubie.className = 'cubie';
-          // In CSS 3D: +X is right, +Y is DOWN (so we invert y to -y for 3D up), +Z is front
           cubie.style.transform = `translate3d(${x * spacing}px, ${-y * spacing}px, ${z * spacing}px)`;
 
           const faces = [
@@ -699,10 +793,9 @@
   }
   initCSS3DCube();
 
-  // Camera Orbit Control
   let camRotX = -24;
   let camRotY = -34;
-  let viewZ2Mode = false; // If true, flips whole cube z2 for bottom-down inspection
+  let viewZ2Mode = false;
 
   function updateCameraTransform() {
     const z2Flip = viewZ2Mode ? 'rotateZ(180deg)' : '';
@@ -735,11 +828,8 @@
   })();
 
   // =========================================================================
-  // 3. CUBIE-LEVEL SOLVER & F2L PAIR ANALYZER (IDA* <= 8 Moves)
-  // Evaluates Cross on D face + all 4 F2L slots (FR, FL, BL, BR)
+  // 3. FAST IDA* SOLVER WITH PRUNING & F2L PAIR COLOR IDENTIFICATION
   // =========================================================================
-  // To guarantee 100% consistency with the 54-sticker array, we evaluate
-  // Cross and F2L slots directly on the 54-sticker state using fast Uint8Array moves!
   const SOLVER_MOVES = [
     'U', "U'", 'U2',
     'D', "D'", 'D2',
@@ -756,8 +846,7 @@
     return 2;
   });
 
-  // Sticker indices for D-Cross edges:
-  // DF: D(46) & F(25), DR: D(50) & R(34), DB: D(52) & B(43), DL: D(48) & L(16)
+  // Sticker indices for D-Cross edges: DF, DR, DB, DL
   const CROSS_EDGE_STICKERS = [
     [46, 25], // DF (D center=49, F center=22)
     [50, 34], // DR (D center=49, R center=31)
@@ -766,16 +855,13 @@
   ];
   const SIDE_CENTERS = [22, 31, 40, 13]; // F, R, B, L centers
 
-  // 4 F2L Slots in D-layer + middle layer:
-  // Each slot has Corner [D-sticker, Side1-sticker, Side2-sticker] and Edge [Side1-sticker, Side2-sticker]
   const F2L_SLOTS = [
-    { name: 'FR', corner: [47, 26, 33], edge: [23, 30], cCenters: [49, 22, 31], eCenters: [22, 31] },
-    { name: 'FL', corner: [45, 24, 17], edge: [21, 14], cCenters: [49, 22, 13], eCenters: [22, 13] },
-    { name: 'BR', corner: [53, 42, 35], edge: [39, 32], cCenters: [49, 40, 31], eCenters: [40, 31] },
-    { name: 'BL', corner: [51, 44, 15], edge: [41, 12], cCenters: [49, 40, 13], eCenters: [40, 13] }
+    { name: '右前槽 (FR)', shortName: 'FR', corner: [47, 26, 33], edge: [23, 30], cCenters: [49, 22, 31], eCenters: [22, 31] },
+    { name: '左前槽 (FL)', shortName: 'FL', corner: [45, 24, 17], edge: [21, 14], cCenters: [49, 22, 13], eCenters: [22, 13] },
+    { name: '右後槽 (BR)', shortName: 'BR', corner: [53, 42, 35], edge: [39, 32], cCenters: [49, 40, 31], eCenters: [40, 31] },
+    { name: '左後槽 (BL)', shortName: 'BL', corner: [51, 44, 15], edge: [41, 12], cCenters: [49, 40, 13], eCenters: [40, 13] }
   ];
 
-  // Fast heuristic: count how many of the 4 cross edges are NOT solved on D
   function countMisplacedCrossEdges(state) {
     const dCol = state[49];
     let bad = 0;
@@ -786,7 +872,23 @@
     return bad;
   }
 
-  // Check if a specific F2L slot (0..3) is solved in `state`
+  // Tighter admissible heuristic for D-Cross:
+  // Any cross edge sticker currently on U face (indices 0..8) needs at least 1 move to reach D;
+  // Also count how many D-layer positions are missing the D color.
+  function estimateCrossMinMoves(state, badCount) {
+    if (badCount === 0) return 0;
+    const dCol = state[49];
+    let notInDLayer = 0;
+    for (let i = 0; i < 4; i++) {
+      const [dIdx] = CROSS_EDGE_STICKERS[i];
+      if (state[dIdx] !== dCol) notInDLayer++;
+    }
+    // One move of F/R/B/L can put at most 1 edge into D layer (2 only if U/D doesn't change D layer count)
+    // And 1 move of D can fix up to 4 already-in-D-layer edges.
+    if (notInDLayer === 0) return 1; // At least a D turn or flip
+    return notInDLayer;
+  }
+
   function isSlotSolved(state, slotIdx) {
     const sl = F2L_SLOTS[slotIdx];
     for (let i = 0; i < 3; i++) {
@@ -798,8 +900,6 @@
     return true;
   }
 
-  // Test if after Cross is solved, any F2L slot has a 3-move insertable Connected Pair (e.g. U* R U R' or U* L' U' L)
-  // or a 3-move Split Pair (e.g. U* R U' R')
   const PAIR_INSERT_TRIGGERS = [
     { slot: 0, type: 'connected', trig: ['R', 'U', "R'"], label: "R U R'" },
     { slot: 0, type: 'connected', trig: ["F'", "U'", 'F'], label: "F' U' F" },
@@ -825,22 +925,37 @@
     { moves: ['U2'], str: 'U2 ' }
   ];
 
+  // Build human-readable Pair Color description (e.g. "白-綠-紅 Pair [右前 FR 槽]")
+  function describePairColors(state, slotIdx) {
+    if (slotIdx < 0 || slotIdx > 3) return null;
+    const sl = F2L_SLOTS[slotIdx];
+    const cCols = sl.cCenters.map(ci => state[ci]); // [D_col, Side1_col, Side2_col]
+    const eCols = sl.eCenters.map(ei => state[ei]); // [Side1_col, Side2_col]
+    const nameStr = `${COLOR_NAMES_TW[cCols[0]]}-${COLOR_NAMES_TW[cCols[1]]}-${COLOR_NAMES_TW[cCols[2]]} Pair (${sl.name})`;
+    return {
+      slotIdx,
+      slotName: sl.name,
+      shortName: sl.shortName,
+      cornerColors: cCols,
+      edgeColors: eCols,
+      text: nameStr
+    };
+  }
+
   function evaluatePostCrossPairs(state) {
-    // 1. Check direct X-Cross (any slot already solved!)
     for (let s = 0; s < 4; s++) {
       if (isSlotSolved(state, s)) {
+        const pairDesc = describePairColors(state, s);
         return {
           tier: 3,
           badge: '🏆 X-Cross 完成',
           tagClass: 'tag-xcross',
-          slotName: F2L_SLOTS[s].name,
-          slotIdx: s,
-          continuation: '已直接完成十字 + ' + F2L_SLOTS[s].name + ' 槽位！'
+          pairDesc,
+          continuation: `十字完成同時直接做好【${pairDesc.text}】！`
         };
       }
     }
 
-    // 2. Check Connected Free Pair or 3-Move Split Pair via AUF + 3-move trigger
     let bestSplit = null;
     for (const auf of AUF_LIST) {
       let sAuf = state;
@@ -852,23 +967,22 @@
 
         if (countMisplacedCrossEdges(sTest) === 0 && isSlotSolved(sTest, item.slot)) {
           const contAlg = (auf.str + item.label).trim();
+          const pairDesc = describePairColors(state, item.slot);
           if (item.type === 'connected') {
             return {
               tier: 2,
               badge: '⭐ 保留連塊 Pair',
               tagClass: 'tag-pair',
-              slotName: F2L_SLOTS[item.slot].name,
-              slotIdx: item.slot,
-              continuation: `接 [${contAlg}] 秒入 ${F2L_SLOTS[item.slot].name} 槽`
+              pairDesc,
+              continuation: `保留【${pairDesc.text}】→ 接著轉 [${contAlg}] 秒入槽`
             };
           } else if (!bestSplit) {
             bestSplit = {
               tier: 1,
               badge: '⚡ 保留分離 Pair',
               tagClass: 'tag-split',
-              slotName: F2L_SLOTS[item.slot].name,
-              slotIdx: item.slot,
-              continuation: `接 [${contAlg}] 三步入 ${F2L_SLOTS[item.slot].name} 槽`
+              pairDesc,
+              continuation: `保留【${pairDesc.text}】→ 接著轉 [${contAlg}] 三步入槽`
             };
           }
         }
@@ -880,9 +994,8 @@
       tier: 0,
       badge: '純十字最佳解',
       tagClass: 'tag-cross',
-      slotName: '',
-      slotIdx: -1,
-      continuation: '標準最佳步數十字'
+      pairDesc: null,
+      continuation: '標準最佳步數十字（無預組好之 3 步內 Pair）'
     };
   }
 
@@ -898,34 +1011,96 @@
     return Math.max(40, score);
   }
 
-  // Main IDA* Search for optimal Cross + X-Cross/Free Pair within <= 8 moves
-  function findBestSolutions(baseStickers, targetMode) {
-    const t0 = performance.now();
-    const orientations = [];
-
+  // Convert whole-cube rotation into intuitive "Which face is on Bottom & Front"
+  function getHoldOrientationList(targetMode) {
+    const list = [];
+    // Standard WCA starts with U=White, D=Yellow, F=Green, R=Red, B=Blue, L=Orange
     if (targetMode === 'W' || targetMode === 'DUAL') {
-      orientations.push({ rotAlg: ['z2'], label: '白底 [z2]', colorName: '白底' });
-      orientations.push({ rotAlg: ['z2', 'y'], label: '白底 [z2 y]', colorName: '白底' });
-      orientations.push({ rotAlg: ['z2', "y'"], label: "白底 [z2 y']", colorName: '白底' });
-      orientations.push({ rotAlg: ['z2', 'y2'], label: '白底 [z2 y2]', colorName: '白底' });
+      list.push({
+        rotAlg: ['z2'],
+        holdBadge: '⚪ 白底 · 🟩 綠面朝前 (F=綠)',
+        shortHold: '白底·綠前 (F=綠)'
+      });
+      list.push({
+        rotAlg: ['z2', 'y'],
+        holdBadge: '⚪ 白底 · 🟥 紅面朝前 (F=紅)',
+        shortHold: '白底·紅前 (F=紅)'
+      });
+      list.push({
+        rotAlg: ['z2', "y'"],
+        holdBadge: '⚪ 白底 · 🟧 橘面朝前 (F=橘)',
+        shortHold: '白底·橘前 (F=橘)'
+      });
+      list.push({
+        rotAlg: ['z2', 'y2'],
+        holdBadge: '⚪ 白底 · 🟦 藍面朝前 (F=藍)',
+        shortHold: '白底·藍前 (F=藍)'
+      });
     }
     if (targetMode === 'Y' || targetMode === 'DUAL') {
-      orientations.push({ rotAlg: [], label: '黃底 [不翻轉]', colorName: '黃底' });
-      orientations.push({ rotAlg: ['y'], label: '黃底 [y]', colorName: '黃底' });
-      orientations.push({ rotAlg: ["y'"], label: "黃底 [y']", colorName: '黃底' });
-      orientations.push({ rotAlg: ['y2'], label: '黃底 [y2]', colorName: '黃底' });
+      list.push({
+        rotAlg: [],
+        holdBadge: '🟡 黃底 · 🟩 綠面朝前 (F=綠)',
+        shortHold: '黃底·綠前 (F=綠)'
+      });
+      list.push({
+        rotAlg: ['y'],
+        holdBadge: '🟡 黃底 · 🟥 紅面朝前 (F=紅)',
+        shortHold: '黃底·紅前 (F=紅)'
+      });
+      list.push({
+        rotAlg: ["y'"],
+        holdBadge: '🟡 黃底 · 🟧 橘面朝前 (F=橘)',
+        shortHold: '黃底·橘前 (F=橘)'
+      });
+      list.push({
+        rotAlg: ['y2'],
+        holdBadge: '🟡 黃底 · 🟦 藍面朝前 (F=藍)',
+        shortHold: '黃底·藍前 (F=藍)'
+      });
     }
+    return list;
+  }
 
+  // Asynchronous Chunked Solver with Real-time Progress Bar
+  let activeSearchToken = 0;
+
+  async function findBestSolutionsAsync(baseStickers, targetMode) {
+    const myToken = ++activeSearchToken;
+    const loadingBox = document.getElementById('solverLoadingBox');
+    const progBar = document.getElementById('loadingProgressBar');
+    const stageTitle = document.getElementById('loadingStageTitle');
+    const subText = document.getElementById('loadingSubText');
+    const listEl = document.getElementById('solutionsList');
+
+    loadingBox.classList.remove('hidden');
+    listEl.style.opacity = '0.35';
+    progBar.style.width = '5%';
+
+    const orientations = getHoldOrientationList(targetMode);
     const candidates = [];
-    const path = [];
+    const t0 = performance.now();
 
-    for (const ori of orientations) {
+    for (let idx = 0; idx < orientations.length; idx++) {
+      if (myToken !== activeSearchToken) return null; // Cancelled by newer search
+
+      const ori = orientations[idx];
+      const pct = Math.round(((idx) / orientations.length) * 100);
+      progBar.style.width = `${Math.max(8, pct)}%`;
+      stageTitle.textContent = `正在計算：${ori.holdBadge}`;
+      subText.textContent = `已完成 ${idx} / ${orientations.length} 種拿法角度 (${pct}%)`;
+
+      // Yield to browser UI thread so spinner & progress bar animate smoothly!
+      await new Promise(r => setTimeout(r, 12));
+      if (myToken !== activeSearchToken) return null;
+
       const startState = applyAlgToStickers(baseStickers, ori.rotAlg);
       let minDepthFound = -1;
       let solutionsForOri = 0;
+      const path = [];
 
       function dfs(state, depth, maxDepth, lastFace, lastAxis) {
-        if (solutionsForOri >= 18) return;
+        if (solutionsForOri >= 14) return;
         const bad = countMisplacedCrossEdges(state);
         if (bad === 0) {
           if (minDepthFound === -1) minDepthFound = depth;
@@ -934,7 +1109,8 @@
           const movesCopy = path.slice();
           const ergo = scoreErgonomics(movesCopy);
           candidates.push({
-            oriLabel: ori.label,
+            holdBadge: ori.holdBadge,
+            shortHold: ori.shortHold,
             rotAlg: ori.rotAlg,
             moves: movesCopy,
             stepCount: movesCopy.length,
@@ -946,40 +1122,45 @@
         }
 
         const rem = maxDepth - depth;
-        // Pruning: 1 move can fix at most 2 cross edges (or 4 only if D move aligns all 4)
         if (rem <= 0) return;
-        if (rem === 1 && bad > 4) return;
+        // Admissible pruning bound:
+        const minNeeded = estimateCrossMinMoves(state, bad);
+        if (minNeeded > rem) return;
 
         for (let mIdx = 0; mIdx < 18; mIdx++) {
           const face = SOLVER_MOVE_FACE[mIdx];
           const axis = SOLVER_MOVE_AXIS[mIdx];
           if (face === lastFace) continue;
-          // Canonical order for opposite faces (e.g. U before D, R before L, F before B)
           if (axis === lastAxis && (face === 'D' || face === 'L' || face === 'B')) continue;
 
           const mv = SOLVER_MOVES[mIdx];
           path.push(mv);
           dfs(applyMoveToStickers(state, mv), depth + 1, maxDepth, face, axis);
           path.pop();
-          if (solutionsForOri >= 18) return;
+          if (solutionsForOri >= 14) return;
         }
       }
 
       for (let d = 0; d <= 8; d++) {
         dfs(startState, 0, d, '', -1);
-        // Once we found shortest Cross at depth d, also search d+1 to catch X-Cross or Free Pairs!
         if (minDepthFound !== -1 && d >= Math.min(8, minDepthFound + 1)) {
           break;
         }
       }
     }
 
-    // Deduplicate identical visual paths and sort by X-Cross > Free Pair > Shortest Steps > Ergonomics
+    progBar.style.width = '100%';
+    await new Promise(r => setTimeout(r, 40));
+    if (myToken !== activeSearchToken) return null;
+
+    loadingBox.classList.add('hidden');
+    listEl.style.opacity = '1';
+
     candidates.sort((a, b) => b.totalRankScore - a.totalRankScore);
     const unique = [];
     const seen = new Set();
     for (const c of candidates) {
-      const key = c.oriLabel + ':' + c.moves.join(' ');
+      const key = c.holdBadge + ':' + c.moves.join(' ');
       if (!seen.has(key)) {
         seen.add(key);
         unique.push(c);
@@ -987,69 +1168,71 @@
       }
     }
 
-    const dt = (performance.now() - t0).toFixed(1);
+    const dt = (performance.now() - t0).toFixed(0);
     document.getElementById('solverPerfText').textContent = `搜尋完成 (${dt} ms · 保證 ≤ 8 步)`;
     return unique;
   }
 
   // =========================================================================
-  // 4. APPLICATION STATE & SYNCHRONIZATION (2D Net <-> 3D Cube <-> Playback)
+  // 4. APPLICATION STATE & 3D TARGET PAIR GLOW HIGHLIGHTING
   // =========================================================================
-  let currentBaseStickers = createSolvedStickers(); // Always stored in standard WCA orientation (U=White, F=Green, D=Yellow)
+  let currentBaseStickers = createSolvedStickers();
   let paintedStickers = createSolvedStickers();
   let activeBrushColor = 'W';
   let targetCrossMode = 'W';
-  let maskMode = 'full'; // 'full' | 'highlight' | 'cross'
+  let maskMode = 'full';
 
   let currentSolutions = [];
   let selectedSolution = null;
-  let playbackTimeline = []; // Array of { label, move, state (in standard WCA coords) }
+  let playbackTimeline = [];
   let currentStepIdx = 0;
   let playInterval = null;
 
-  // Render 3D Cube from any 54-sticker array (in standard WCA coordinates)
-  function render3DStickers(stickers54, highlightSlotIdx = -1, targetDColor = 'W') {
-    // Identify which cubies belong to Target Cross and Target F2L Pair so masking works accurately
-    for (let i = 0; i < 54; i++) {
-      const dom = STICKER_DOM_MAP[i];
-      if (!dom) continue;
-      const colCode = stickers54[i];
-      const hex = COLOR_HEX[colCode] || '#334155';
-
-      let dim = false;
-      if (maskMode !== 'full') {
-        const isCenter = (dom.def.r === 1 && dom.def.c === 1);
-        const [x, y, z] = dom.cubiePos;
-        const isEdge = (Math.abs(x) + Math.abs(y) + Math.abs(z) === 2);
-        // Find all sticker colors on this cubie to see if it's a target cross edge
-        let cubieHasTargetCrossColor = false;
-        if (isEdge) {
-          // Check all stickers sharing this cubiePos
-          for (let k = 0; k < 54; k++) {
-            const d2 = STICKER_DOM_MAP[k];
-            if (d2 && d2.cubiePos[0] === x && d2.cubiePos[1] === y && d2.cubiePos[2] === z) {
-              if (stickers54[k] === targetDColor) cubieHasTargetCrossColor = true;
-            }
-          }
-        }
-        if (maskMode === 'cross') {
-          if (!isCenter && !cubieHasTargetCrossColor) dim = true;
-        } else if (maskMode === 'highlight') {
-          // Highlight centers, target cross edges, and any cubie that has targetDColor
-          let hasTargetColor = false;
-          for (let k = 0; k < 54; k++) {
-            const d2 = STICKER_DOM_MAP[k];
-            if (d2 && d2.cubiePos[0] === x && d2.cubiePos[1] === y && d2.cubiePos[2] === z) {
-              if (stickers54[k] === targetDColor) hasTargetColor = true;
-            }
-          }
-          if (!isCenter && !hasTargetColor) dim = true;
-        }
-      }
-
-      dom.el.style.background = dim ? '#1e293b' : hex;
-      dom.el.style.opacity = dim ? '0.35' : '1';
+  // Check if a cubie (by its sticker colors in `stickers54`) is one of the 2 pieces of `pairDesc`
+  function isCubiePartOfTargetPair(cubieStickerIds, stickers54, pairDesc) {
+    if (!pairDesc) return false;
+    const cols = cubieStickerIds.map(id => stickers54[id]).sort().join('');
+    if (cubieStickerIds.length === 3) {
+      const targetCorner = pairDesc.cornerColors.slice().sort().join('');
+      return cols === targetCorner;
     }
+    if (cubieStickerIds.length === 2) {
+      const targetEdge = pairDesc.edgeColors.slice().sort().join('');
+      return cols === targetEdge;
+    }
+    return false;
+  }
+
+  function isCubiePartOfTargetCross(cubieStickerIds, stickers54, targetDColor) {
+    if (cubieStickerIds.length !== 2) return false;
+    return cubieStickerIds.some(id => stickers54[id] === targetDColor);
+  }
+
+  function render3DStickers(stickers54, pairDesc = null, targetDColor = 'W') {
+    // Classify each of the 26 outer cubies
+    CUBIE_GROUPS.forEach(grp => {
+      const isCenter = (grp.stickerIds.length === 1);
+      const isPairPiece = isCubiePartOfTargetPair(grp.stickerIds, stickers54, pairDesc);
+      const isCrossPiece = isCubiePartOfTargetCross(grp.stickerIds, stickers54, targetDColor);
+
+      grp.stickerIds.forEach(sIdx => {
+        const dom = STICKER_DOM_MAP[sIdx];
+        if (!dom) return;
+        const colCode = stickers54[sIdx];
+        const hex = COLOR_HEX[colCode] || '#334155';
+
+        let dim = false;
+        if (maskMode === 'cross') {
+          if (!isCenter && !isCrossPiece) dim = true;
+        } else if (maskMode === 'highlight') {
+          if (!isCenter && !isCrossPiece && !isPairPiece) dim = true;
+        }
+
+        dom.el.style.background = dim ? '#1e293b' : hex;
+        dom.el.style.opacity = dim ? '0.32' : '1';
+        dom.el.classList.toggle('pair-glow', isPairPiece && !dim);
+      });
+    });
   }
 
   // Build 2D Unfolded Net DOM
@@ -1084,7 +1267,6 @@
           paintedStickers[sDef.id] = activeBrushColor;
           currentBaseStickers = paintedStickers.slice();
           update2DNetUI();
-          // Immediately sync 3D cube in real-time!
           render3DStickers(currentBaseStickers);
           document.getElementById('stepStatusLabel').textContent = '即時預覽：2D 手動塗色狀態（與展開圖 100% 同步）';
         });
@@ -1132,9 +1314,6 @@
     }
   }
 
-  // Build playback timeline for a selected solution
-  // CRITICAL: Step 0 is ALWAYS `currentBaseStickers` in standard WCA orientation (matching the 2D net 100%!)
-  // Subsequent steps apply the solution's moves mapped back to the standard WCA cube so the cube never mysteriously jumps at Step 0!
   function selectSolution(solIdx) {
     stopAutoPlay();
     selectedSolution = currentSolutions[solIdx];
@@ -1144,25 +1323,22 @@
 
     if (!selectedSolution) return;
 
-    // Build timeline where Step 0 = exact scrambled state
     playbackTimeline = [];
     let curState = currentBaseStickers.slice();
     playbackTimeline.push({
-      label: '起點',
-      isRot: false,
+      label: '起點 (標準白頂綠前)',
+      isHold: false,
       state: curState.slice(),
       desc: 'Step 0：原始打亂起點（與 2D 展開圖 100% 同步）'
     });
 
-    // If solution has pre-inspection rotation (e.g. z2, y), include it as Step 1 so user sees how the cube flips!
     if (selectedSolution.rotAlg.length > 0) {
-      const rotStr = '[' + selectedSolution.rotAlg.join(' ') + ']';
       curState = applyAlgToStickers(curState, selectedSolution.rotAlg);
       playbackTimeline.push({
-        label: rotStr,
-        isRot: true,
+        label: `拿法：${selectedSolution.shortHold}`,
+        isHold: true,
         state: curState.slice(),
-        desc: `預判翻轉 ${rotStr}（將目標十字底面轉至 D 面）`
+        desc: `預判擺放：${selectedSolution.holdBadge}`
       });
     }
 
@@ -1170,27 +1346,27 @@
       curState = applyMoveToStickers(curState, mv);
       playbackTimeline.push({
         label: mv,
-        isRot: false,
+        isHold: false,
         state: curState.slice(),
-        desc: `第 ${idx + 1} 步：執行 ${mv}`
+        desc: `第 ${idx + 1} 步：執行 ${mv} （${selectedSolution.shortHold}）`
       });
     });
 
-    document.getElementById('activeSlotLabel').textContent = selectedSolution.pairInfo.badge +
-      (selectedSolution.pairInfo.slotName ? ` (${selectedSolution.pairInfo.slotName})` : '');
+    const pDesc = selectedSolution.pairInfo.pairDesc;
+    document.getElementById('activeSlotLabel').textContent = pDesc
+      ? `目標 Pair：${pDesc.text}`
+      : selectedSolution.pairInfo.badge;
 
-    // Render move pills
     const track = document.getElementById('movesTrack');
     track.innerHTML = '';
     playbackTimeline.forEach((step, idx) => {
       const pill = document.createElement('span');
-      pill.className = 'move-pill' + (step.isRot ? ' rot-pill' : '');
+      pill.className = 'move-pill' + (step.isHold ? ' hold-pill' : '');
       pill.textContent = step.label;
       pill.addEventListener('click', () => goToStep(idx));
       track.appendChild(pill);
     });
 
-    // Default to Step 0 so user can immediately verify 3D cube == 2D Net / WCA Scramble!
     goToStep(0);
   }
 
@@ -1198,8 +1374,10 @@
     if (!playbackTimeline.length) return;
     currentStepIdx = Math.max(0, Math.min(playbackTimeline.length - 1, idx));
     const step = playbackTimeline[currentStepIdx];
-    const targetCol = (selectedSolution && selectedSolution.oriLabel.startsWith('黃')) ? 'Y' : 'W';
-    render3DStickers(step.state, selectedSolution ? selectedSolution.pairInfo.slotIdx : -1, targetCol);
+    const targetCol = (selectedSolution && selectedSolution.holdBadge.includes('黃底')) ? 'Y' : 'W';
+    const pairDesc = selectedSolution ? selectedSolution.pairInfo.pairDesc : null;
+
+    render3DStickers(step.state, pairDesc, targetCol);
 
     document.getElementById('stepStatusLabel').textContent = step.desc;
     document.getElementById('stepCounterText').textContent = `${currentStepIdx} / ${playbackTimeline.length - 1}`;
@@ -1216,10 +1394,23 @@
     }
   }
 
+  function buildPairBadgeHTML(pairDesc) {
+    if (!pairDesc) return '';
+    const dotsHtml = pairDesc.cornerColors
+      .map(c => `<span class="mini-dot" style="background:${COLOR_HEX[c]}"></span>`)
+      .join('');
+    return `
+      <div class="pair-target-pill">
+        <span class="mini-dots">${dotsHtml}</span>
+        <span>目標組 Pair：${pairDesc.text}</span>
+      </div>
+    `;
+  }
+
   function renderSolutionsList() {
     const listEl = document.getElementById('solutionsList');
     listEl.innerHTML = '';
-    if (!currentSolutions.length) {
+    if (!currentSolutions || !currentSolutions.length) {
       listEl.innerHTML = `<div style="color:var(--muted);padding:12px;">找不到解法，請檢查魔方貼紙狀態是否正確。</div>`;
       return;
     }
@@ -1227,17 +1418,19 @@
     currentSolutions.forEach((sol, idx) => {
       const card = document.createElement('div');
       card.className = 'sol-card' + (idx === 0 ? ' selected' : '');
-      const rotPrefix = sol.rotAlg.length ? `<span style="color:#fbbf24;">[${sol.rotAlg.join(' ')}]</span> ` : '';
       const movesStr = sol.moves.length ? sol.moves.join(' ') : '(已還原)';
+      const pairPillHtml = buildPairBadgeHTML(sol.pairInfo.pairDesc);
+
       card.innerHTML = `
         <div class="sol-top">
-          <div style="display:flex;align-items:center;gap:6px;">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
             <span class="tag ${sol.pairInfo.tagClass}">${sol.pairInfo.badge}</span>
-            <span style="font-size:0.78rem;color:var(--muted);font-weight:700;">${sol.oriLabel}</span>
+            <span class="hold-badge">🧭 ${sol.holdBadge}</span>
           </div>
           <span style="font-size:0.78rem;font-weight:700;color:#93c5fd;">${sol.stepCount} 步 · 順手度 ${sol.ergo}</span>
         </div>
-        <div class="sol-alg">${rotPrefix}${movesStr}</div>
+        <div class="sol-alg">${movesStr}</div>
+        ${pairPillHtml}
         <div class="sol-meta">${sol.pairInfo.continuation}</div>
       `;
       card.addEventListener('click', () => selectSolution(idx));
@@ -1247,19 +1440,24 @@
     selectSolution(0);
   }
 
-  function runScrambleAnalysis() {
+  async function runScrambleAnalysis() {
     const raw = document.getElementById('scrambleInput').value;
     const tokens = parseAlg(raw);
     document.getElementById('scrambleStepCount').textContent = `${tokens.length} 步`;
     currentBaseStickers = applyAlgToStickers(createSolvedStickers(), tokens);
     paintedStickers = currentBaseStickers.slice();
     update2DNetUI();
-    currentSolutions = findBestSolutions(currentBaseStickers, targetCrossMode);
-    renderSolutionsList();
+    render3DStickers(currentBaseStickers);
+
+    const res = await findBestSolutionsAsync(currentBaseStickers, targetCrossMode);
+    if (res) {
+      currentSolutions = res;
+      renderSolutionsList();
+    }
   }
 
   // =========================================================================
-  // 5. EVENT LISTENERS (All Verified & Isolated)
+  // 5. EVENT LISTENERS
   // =========================================================================
   document.getElementById('tabBtnScramble').addEventListener('click', () => {
     document.getElementById('tabBtnScramble').classList.add('active');
@@ -1295,18 +1493,20 @@
   });
 
   document.getElementById('btnDemoXCross').addEventListener('click', () => {
-    // Setup a clean scramble where White Cross + FR pair can be solved as an X-Cross in 5 moves!
     document.getElementById('scrambleInput').value = "z2 R U' R' D' F' R' D2 z2";
     runScrambleAnalysis();
   });
 
   document.querySelectorAll('.cross-color-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       document.querySelectorAll('.cross-color-btn').forEach(b => b.classList.remove('btn-primary'));
       btn.classList.add('btn-primary');
       targetCrossMode = btn.getAttribute('data-color');
-      currentSolutions = findBestSolutions(currentBaseStickers, targetCrossMode);
-      renderSolutionsList();
+      const res = await findBestSolutionsAsync(currentBaseStickers, targetCrossMode);
+      if (res) {
+        currentSolutions = res;
+        renderSolutionsList();
+      }
     });
   });
 
@@ -1319,7 +1519,6 @@
     });
   });
 
-  // Painter buttons
   document.getElementById('btnSyncFromScramble').addEventListener('click', () => {
     const tokens = parseAlg(document.getElementById('scrambleInput').value);
     paintedStickers = applyAlgToStickers(createSolvedStickers(), tokens);
@@ -1328,18 +1527,24 @@
     goToStep(0);
   });
 
-  document.getElementById('btnResetSolved').addEventListener('click', () => {
+  document.getElementById('btnResetSolved').addEventListener('click', async () => {
     paintedStickers = createSolvedStickers();
     currentBaseStickers = paintedStickers.slice();
     update2DNetUI();
-    currentSolutions = findBestSolutions(currentBaseStickers, targetCrossMode);
-    renderSolutionsList();
+    const res = await findBestSolutionsAsync(currentBaseStickers, targetCrossMode);
+    if (res) {
+      currentSolutions = res;
+      renderSolutionsList();
+    }
   });
 
-  document.getElementById('btnApplyPainted').addEventListener('click', () => {
+  document.getElementById('btnApplyPainted').addEventListener('click', async () => {
     currentBaseStickers = paintedStickers.slice();
-    currentSolutions = findBestSolutions(currentBaseStickers, targetCrossMode);
-    renderSolutionsList();
+    const res = await findBestSolutionsAsync(currentBaseStickers, targetCrossMode);
+    if (res) {
+      currentSolutions = res;
+      renderSolutionsList();
+    }
   });
 
   // Camera Presets
