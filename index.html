@@ -16,6 +16,7 @@
       --gold: #f59e0b;
       --green: #10b981;
       --cyan: #06b6d4;
+      --purple: #a855f7;
       --danger: #ef4444;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -25,7 +26,7 @@
       color: var(--text);
       line-height: 1.5;
       padding: 12px;
-      max-width: 1200px;
+      max-width: 1220px;
       margin: 0 auto;
     }
     header {
@@ -50,7 +51,7 @@
       border: 1px solid rgba(59, 130, 246, 0.35);
       font-weight: 700;
     }
-    .tabs { display: flex; gap: 6px; background: #090d16; padding: 4px; border-radius: 10px; border: 1px solid var(--card-border); }
+    .tabs { display: flex; gap: 6px; background: #090d16; padding: 4px; border-radius: 10px; border: 1px solid var(--card-border); flex-wrap: wrap; }
     .tab-btn {
       background: transparent;
       color: var(--muted);
@@ -67,8 +68,8 @@
       grid-template-columns: 1fr;
       gap: 14px;
     }
-    @media (min-width: 900px) {
-      .grid-main { grid-template-columns: 1.05fr 0.95fr; }
+    @media (min-width: 920px) {
+      .grid-main { grid-template-columns: 1.08fr 0.92fr; align-items: start; }
     }
     .panel {
       background: var(--card);
@@ -126,6 +127,8 @@
     .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
     .btn-primary:hover { background: var(--accent-hover); }
     .btn-gold { background: var(--gold); border-color: var(--gold); color: #090d16; font-weight: 700; }
+    .btn-purple { background: rgba(168, 85, 247, 0.2); border-color: rgba(168, 85, 247, 0.5); color: #e9d5ff; }
+    .btn-purple.active { background: var(--purple); border-color: var(--purple); color: #fff; }
     .btn-sm { padding: 5px 10px; font-size: 0.78rem; border-radius: 7px; }
     .btn-group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 
@@ -240,7 +243,7 @@
     /* Pure CSS 3D Cube Viewport */
     .viewport-box {
       position: relative;
-      height: 245px;
+      height: 240px;
       background: radial-gradient(circle at center, #16223b 0%, #090d16 100%);
       border: 1px solid var(--card-border);
       border-radius: 12px;
@@ -357,6 +360,9 @@
       font-size: 0.88rem;
       cursor: pointer;
       border: 1px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
     .move-pill.active {
       background: var(--accent);
@@ -371,13 +377,105 @@
       font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif;
       font-size: 0.8rem;
     }
+    .move-pill.pair-setup-pill {
+      border-color: rgba(168, 85, 247, 0.65);
+      background: rgba(168, 85, 247, 0.18);
+      color: #e9d5ff;
+    }
+    .move-pill.pair-setup-pill.active {
+      background: var(--purple);
+      color: #fff;
+      border-color: #f3e8ff;
+    }
+
+    /* Step-by-Step Tactical Explanation Box */
+    .explain-panel {
+      margin-top: 12px;
+      background: #090d16;
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      border-radius: 12px;
+      padding: 12px;
+    }
+    .explain-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: #e9d5ff;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .explain-current-spotlight {
+      background: rgba(59, 130, 246, 0.12);
+      border-left: 3px solid var(--accent);
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      margin-bottom: 10px;
+      color: #f1f5f9;
+    }
+    .explain-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 230px;
+      overflow-y: auto;
+    }
+    .explain-row {
+      display: grid;
+      grid-template-columns: 54px 96px 1fr;
+      gap: 8px;
+      align-items: center;
+      padding: 7px 9px;
+      border-radius: 8px;
+      background: #111827;
+      border: 1px solid #1f2937;
+      font-size: 0.79rem;
+      cursor: pointer;
+      transition: 0.12s;
+    }
+    @media (max-width: 520px) {
+      .explain-row {
+        grid-template-columns: 46px 86px 1fr;
+        font-size: 0.75rem;
+      }
+    }
+    .explain-row:hover { border-color: #374151; }
+    .explain-row.active-step {
+      border-color: var(--accent);
+      background: rgba(59, 130, 246, 0.14);
+    }
+    .explain-move-code {
+      font-family: ui-monospace, monospace;
+      font-weight: 800;
+      font-size: 0.92rem;
+      color: #fff;
+      text-align: center;
+      background: #1e293b;
+      padding: 3px 6px;
+      border-radius: 5px;
+    }
+    .role-badge {
+      font-size: 0.7rem;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 5px;
+      text-align: center;
+      white-space: nowrap;
+    }
+    .role-pair-only { background: rgba(168, 85, 247, 0.22); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.5); }
+    .role-cross-insert { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.45); }
+    .role-cross-setup { background: rgba(59, 130, 246, 0.2); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.45); }
+    .role-d-align { background: rgba(245, 158, 11, 0.2); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.45); }
 
     /* Solutions List */
     .sol-list {
       display: flex;
       flex-direction: column;
       gap: 8px;
-      max-height: 500px;
+      max-height: 600px;
       overflow-y: auto;
     }
     .sol-card {
@@ -429,6 +527,16 @@
       border: 1px solid rgba(6, 182, 212, 0.4);
       margin-top: 4px;
     }
+    .pure-cross-hint {
+      display: inline-block;
+      margin-top: 4px;
+      font-size: 0.74rem;
+      color: #d8b4fe;
+      background: rgba(168, 85, 247, 0.12);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      padding: 2px 7px;
+      border-radius: 5px;
+    }
     .mini-dots {
       display: inline-flex;
       gap: 2px;
@@ -451,7 +559,7 @@
 <header>
   <div class="brand">
     <span>🧊 CubeFlow Pro</span>
-    <span class="badge">≤ 8步 CROSS & X-CROSS / PAIR 引擎</span>
+    <span class="badge">≤ 8步 CROSS & X-CROSS / 逐步戰術解析</span>
   </div>
   <div class="tabs">
     <button type="button" class="tab-btn active" id="tabBtnScramble">公式打亂輸入</button>
@@ -504,7 +612,7 @@
 
 <!-- Main Interactive Workspace -->
 <div class="grid-main">
-  <!-- Left: Compact 3D Cube & Step Playback -->
+  <!-- Left: Compact 3D Cube, Step Playback & Tactical Step Analyzer -->
   <div class="panel" style="margin-bottom:0;">
     <div class="panel-title">
       <span>3D 魔方同步檢視（青色發光框 = 目標 Pair 方塊）</span>
@@ -539,13 +647,28 @@
 
     <div class="btn-group" style="justify-content:space-between;">
       <div class="btn-group">
-        <button type="button" class="btn btn-sm" id="btnStepStart">⏮ 起點 (Step 0)</button>
+        <button type="button" class="btn btn-sm" id="btnStepStart">⏮ 起點</button>
         <button type="button" class="btn btn-sm" id="btnStepPrev">◀ 上一步</button>
         <button type="button" class="btn btn-sm btn-primary" id="btnStepPlay">▶ 自動播放</button>
         <button type="button" class="btn btn-sm" id="btnStepNext">下一步 ▶</button>
         <button type="button" class="btn btn-sm" id="btnStepEnd">⏭ 完成態</button>
       </div>
-      <span id="stepCounterText" style="font-size:0.82rem;color:var(--muted);font-family:monospace;">0 / 0</span>
+      <div class="btn-group">
+        <button type="button" class="btn btn-sm btn-purple active" id="btnToggleExplain">💡 逐步戰術解析：開啟</button>
+        <span id="stepCounterText" style="font-size:0.82rem;color:var(--muted);font-family:monospace;">0 / 0</span>
+      </div>
+    </div>
+
+    <!-- Step-by-Step Tactical Explanation Panel -->
+    <div class="explain-panel" id="explainPanel">
+      <div class="explain-header">
+        <span>🔍 每一步戰術意圖拆解（點擊任一行可直接跳至該步）</span>
+        <span id="explainSummaryTag" style="font-size:0.75rem;color:#c084fc;"></span>
+      </div>
+      <div class="explain-current-spotlight" id="explainSpotlight">
+        點選上方步進按鈕或下方步驟列，查看該步對十字邊塊與目標 F2L Pair 的具體作用。
+      </div>
+      <div class="explain-list" id="explainList"></div>
     </div>
   </div>
 
@@ -675,6 +798,22 @@
     }
     cubieMap.get(cKey).stickerIds.push(s.id);
   });
+
+  function getEdgePositionName([x, y, z]) {
+    const yStr = y === 1 ? '頂層 U' : (y === -1 ? '底層 D' : '中層');
+    const fb = z === 1 ? 'F' : (z === -1 ? 'B' : '');
+    const rl = x === 1 ? 'R' : (x === -1 ? 'L' : '');
+    const code = (y === 1 ? 'U' : (y === -1 ? 'D' : '')) + fb + rl;
+    return `${yStr}(${code})`;
+  }
+
+  function getCornerPositionName([x, y, z]) {
+    const yStr = y === 1 ? '頂層' : '底層';
+    const ud = y === 1 ? 'U' : 'D';
+    const fb = z === 1 ? 'F' : 'B';
+    const rl = x === 1 ? 'R' : 'L';
+    return `${yStr} ${ud}${fb}${rl}`;
+  }
 
   function rotVec90([x, y, z], axis, dir) {
     if (axis === 'y') return dir === 1 ? [z, y, -x] : [-z, y, x];
@@ -831,7 +970,7 @@
   })();
 
   // =========================================================================
-  // 3. FAST IDA* SOLVER WITH DYNAMIC CENTER-COLOR ORIENTATION LABELS
+  // 3. FAST IDA* SOLVER & COUNTERFACTUAL STEP-BY-STEP TACTICAL EXPLAINER
   // =========================================================================
   const SOLVER_MOVES = [
     'U', "U'", 'U2',
@@ -926,8 +1065,8 @@
   function describePairColors(state, slotIdx) {
     if (slotIdx < 0 || slotIdx > 3) return null;
     const sl = F2L_SLOTS[slotIdx];
-    const cCols = sl.cCenters.map(ci => state[ci]); // [D_col, Side1_col, Side2_col]
-    const eCols = sl.eCenters.map(ei => state[ei]); // [Side1_col, Side2_col]
+    const cCols = sl.cCenters.map(ci => state[ci]);
+    const eCols = sl.eCenters.map(ei => state[ei]);
     const nameStr = `${COLOR_NAMES_TW[cCols[0]]}-${COLOR_NAMES_TW[cCols[1]]}-${COLOR_NAMES_TW[cCols[2]]} Pair (${sl.name})`;
     return {
       slotIdx,
@@ -996,6 +1135,180 @@
     };
   }
 
+  // =========================================================================
+  // STEP-BY-STEP TACTICAL EXPLAINER ENGINE
+  // Analyzes every move in `sol.moves` on `startState`:
+  //   1. Counterfactual check: If we skip move `i`, does the remaining sequence still solve Cross?
+  //   2. Which of the 4 Cross edges moved, and did they land on D-layer or get slotted?
+  //   3. Which of the Target F2L Pair pieces (corner / edge) moved and why?
+  // =========================================================================
+  function findCrossEdgeLocations(state, dCol) {
+    // Returns Map: sideCol -> { pos: [x,y,z], dStickerOnD: boolean, solvedOnD: boolean }
+    const res = new Map();
+    CUBIE_GROUPS.forEach(grp => {
+      if (grp.stickerIds.length !== 2) return;
+      const [id1, id2] = grp.stickerIds;
+      const c1 = state[id1], c2 = state[id2];
+      if (c1 !== dCol && c2 !== dCol) return;
+      const sideCol = (c1 === dCol) ? c2 : c1;
+      const dStickerId = (c1 === dCol) ? id1 : id2;
+      const dNormalY = STICKER_DEFS[dStickerId].normal[1];
+      const inDLayer = (grp.pos[1] === -1 && dNormalY === -1);
+      // Check if completely aligned with side center
+      let solved = false;
+      for (let i = 0; i < 4; i++) {
+        const [cdIdx, csIdx] = CROSS_EDGE_STICKERS[i];
+        if ((id1 === cdIdx || id2 === cdIdx) && state[cdIdx] === dCol && state[csIdx] === state[SIDE_CENTERS[i]]) {
+          solved = true;
+        }
+      }
+      res.set(sideCol, {
+        pos: grp.pos,
+        posName: getEdgePositionName(grp.pos),
+        inDLayer,
+        solved
+      });
+    });
+    return res;
+  }
+
+  function findTargetPairLocations(state, pairDesc) {
+    if (!pairDesc) return null;
+    const targetCornerKey = pairDesc.cornerColors.slice().sort().join('');
+    const targetEdgeKey = pairDesc.edgeColors.slice().sort().join('');
+    let cornerPos = null, edgePos = null;
+    CUBIE_GROUPS.forEach(grp => {
+      const key = grp.stickerIds.map(id => state[id]).sort().join('');
+      if (grp.stickerIds.length === 3 && key === targetCornerKey) {
+        cornerPos = getCornerPositionName(grp.pos);
+      } else if (grp.stickerIds.length === 2 && key === targetEdgeKey) {
+        edgePos = getEdgePositionName(grp.pos);
+      }
+    });
+    return { cornerPos, edgePos };
+  }
+
+  function analyzeSolutionSteps(startState, moves, dCol, pairDesc, shortestPureCrossAlg) {
+    const dName = COLOR_NAMES_TW[dCol];
+    const stepDetails = [];
+    let cur = startState.slice();
+
+    for (let i = 0; i < moves.length; i++) {
+      const mv = moves[i];
+      const next = applyMoveToStickers(cur, mv);
+
+      // 1. Check if skipping this single move STILL solves the Cross!
+      const movesWithoutI = moves.slice(0, i).concat(moves.slice(i + 1));
+      const stateWithoutI = applyAlgToStickers(startState, movesWithoutI);
+      const crossStillSolvedWithoutI = (countMisplacedCrossEdges(stateWithoutI) === 0);
+
+      // 2. Compare Cross edges before vs after this move
+      const edgesBefore = findCrossEdgeLocations(cur, dCol);
+      const edgesAfter = findCrossEdgeLocations(next, dCol);
+      const movedCrossEdges = [];
+      const newlyInD = [];
+      const newlySolved = [];
+
+      edgesBefore.forEach((beforeInfo, sideCol) => {
+        const afterInfo = edgesAfter.get(sideCol);
+        if (!afterInfo) return;
+        const edgeName = `【${dName}${COLOR_NAMES_TW[sideCol]}】邊塊`;
+        if (beforeInfo.posName !== afterInfo.posName) {
+          movedCrossEdges.push({ edgeName, from: beforeInfo.posName, to: afterInfo.posName, afterInfo, beforeInfo });
+          if (!beforeInfo.inDLayer && afterInfo.inDLayer) newlyInD.push(edgeName);
+          if (!beforeInfo.solved && afterInfo.solved) newlySolved.push(edgeName);
+        }
+      });
+
+      // 3. Compare Target Pair pieces before vs after this move
+      const pairBefore = findTargetPairLocations(cur, pairDesc);
+      const pairAfter = findTargetPairLocations(next, pairDesc);
+      const pairMovements = [];
+      if (pairDesc && pairBefore && pairAfter) {
+        const cLabel = `【${pairDesc.cornerColors.map(c => COLOR_NAMES_TW[c]).join('')}】角塊`;
+        const eLabel = `【${pairDesc.edgeColors.map(c => COLOR_NAMES_TW[c]).join('')}】邊塊`;
+        if (pairBefore.cornerPos !== pairAfter.cornerPos) {
+          pairMovements.push(`將目標 ${cLabel} 從 ${pairBefore.cornerPos} 移至 ${pairAfter.cornerPos}`);
+        }
+        if (pairBefore.edgePos !== pairAfter.edgePos) {
+          pairMovements.push(`將目標 ${eLabel} 從 ${pairBefore.edgePos} 移至 ${pairAfter.edgePos}`);
+        }
+      }
+
+      // 4. Synthesize clear tactical explanation for this step
+      let roleType = 'cross-setup';
+      let roleLabel = '📐 十字過度/搭橋';
+      let roleClass = 'role-cross-setup';
+      let explanation = '';
+
+      if (movedCrossEdges.length === 0 || crossStillSolvedWithoutI) {
+        // Pure Pair preservation / setup move! (Like the user's U2 example!)
+        roleType = 'pair-only';
+        roleLabel = '🎯 純保 Pair 走位';
+        roleClass = 'role-pair-only';
+        const omitStr = crossStillSolvedWithoutI
+          ? `（若省略此步，僅轉其餘 ${movesWithoutI.length} 步 [${movesWithoutI.join(' ')}] 即可完成純十字！）`
+          : (shortestPureCrossAlg ? `（純十字僅需 [${shortestPureCrossAlg}]）` : '');
+        const pairAct = pairMovements.length > 0
+          ? pairMovements.join('、')
+          : '調整頂層方塊位置';
+        explanation = `此步 ${mv} 對純十字沒有直接作用 ${omitStr}。目的是先${pairAct}，避免被後續下底步驟切開，順手保留/配對目標 Pair！`;
+      } else if (mv[0] === 'D') {
+        roleType = 'd-align';
+        roleLabel = '🔄 底層 D 對齊';
+        roleClass = 'role-d-align';
+        if (newlySolved.length > 0) {
+          explanation = `轉動底層 ${mv}，將 ${newlySolved.join('、')} 對齊側面中心塊歸位`;
+        } else {
+          explanation = `轉動底層 ${mv} 預先錯開 D 層槽位（騰出空間迎接下一顆邊塊下底，最後再轉回對齊）`;
+        }
+        if (pairMovements.length > 0) {
+          explanation += `；同時${pairMovements.join('、')}。`;
+        }
+      } else if (newlyInD.length > 0 || newlySolved.length > 0) {
+        roleType = 'cross-insert';
+        roleLabel = '➕ 十字邊塊下底';
+        roleClass = 'role-cross-insert';
+        const targetNames = newlySolved.length > 0 ? newlySolved.join('、') : newlyInD.join('、');
+        const statusWord = newlySolved.length > 0 ? '直接打入底層正確位置歸位' : '打入底層 D 面（等待最後 D 層對齊）';
+        explanation = `執行 ${mv} 將 ${targetNames} ${statusWord}`;
+        if (movedCrossEdges.length > 1) {
+          const others = movedCrossEdges
+            .filter(e => !newlyInD.includes(e.edgeName) && !newlySolved.includes(e.edgeName))
+            .map(e => `${e.edgeName} 帶至 ${e.to}`);
+          if (others.length) explanation += `，並順勢將 ${others.join('、')}`;
+        }
+        if (pairMovements.length > 0) {
+          explanation += `（同時${pairMovements.join('、')}）`;
+        }
+        explanation += '。';
+      } else {
+        roleType = 'cross-setup';
+        roleLabel = '📐 十字搭橋調整';
+        roleClass = 'role-cross-setup';
+        const descEdges = movedCrossEdges.map(e => `將 ${e.edgeName} 從 ${e.from} 轉至 ${e.to}`).join('、');
+        explanation = `執行 ${mv} ${descEdges}，調整色向以便下一步直接下底`;
+        if (pairMovements.length > 0) {
+          explanation += `（同時${pairMovements.join('、')}）`;
+        }
+        explanation += '。';
+      }
+
+      stepDetails.push({
+        stepNumber: i + 1,
+        move: mv,
+        roleType,
+        roleLabel,
+        roleClass,
+        explanation
+      });
+
+      cur = next;
+    }
+
+    return stepDetails;
+  }
+
   function scoreErgonomics(moves) {
     let score = 100;
     for (const m of moves) {
@@ -1008,8 +1321,6 @@
     return Math.max(40, score);
   }
 
-  // DYNAMICALLY compute the exact D-center (index 49) and F-center (index 22) colors
-  // after applying `rotAlg` to a solved cube! Never hardcode strings so it can NEVER mismatch!
   function getHoldOrientationList(targetMode) {
     const rawRots = [];
     if (targetMode === 'W' || targetMode === 'DUAL') {
@@ -1022,8 +1333,8 @@
     const baseSolved = createSolvedStickers();
     return rawRots.map(rotAlg => {
       const rotated = applyAlgToStickers(baseSolved, rotAlg);
-      const dCol = rotated[49]; // Actual D face center color
-      const fCol = rotated[22]; // Actual F face center color
+      const dCol = rotated[49];
+      const fCol = rotated[22];
       const dName = COLOR_NAMES_TW[dCol];
       const fName = COLOR_NAMES_TW[fCol];
       const dEmoji = COLOR_EMOJI[dCol];
@@ -1071,26 +1382,34 @@
 
       const startState = applyAlgToStickers(baseStickers, ori.rotAlg);
       let minDepthFound = -1;
+      let shortestPureCrossAlg = '';
       let solutionsForOri = 0;
       const path = [];
+      const oriCandidates = [];
 
       function dfs(state, depth, maxDepth, lastFace, lastAxis) {
-        if (solutionsForOri >= 14) return;
+        if (solutionsForOri >= 16) return;
         const bad = countMisplacedCrossEdges(state);
         if (bad === 0) {
-          if (minDepthFound === -1) minDepthFound = depth;
+          if (minDepthFound === -1) {
+            minDepthFound = depth;
+            shortestPureCrossAlg = path.join(' ');
+          }
           solutionsForOri++;
           const pairInfo = evaluatePostCrossPairs(state);
           const movesCopy = path.slice();
           const ergo = scoreErgonomics(movesCopy);
-          candidates.push({
+          oriCandidates.push({
             holdBadge: ori.holdBadge,
             shortHold: ori.shortHold,
             dCol: ori.dCol,
             fCol: ori.fCol,
             rotAlg: ori.rotAlg,
+            startState,
             moves: movesCopy,
             stepCount: movesCopy.length,
+            minCrossDepthForOri: minDepthFound,
+            shortestPureCrossAlg,
             ergo,
             pairInfo,
             totalRankScore: pairInfo.tier * 250 - movesCopy.length * 25 + ergo
@@ -1113,7 +1432,7 @@
           path.push(mv);
           dfs(applyMoveToStickers(state, mv), depth + 1, maxDepth, face, axis);
           path.pop();
-          if (solutionsForOri >= 14) return;
+          if (solutionsForOri >= 16) return;
         }
       }
 
@@ -1123,10 +1442,16 @@
           break;
         }
       }
+
+      oriCandidates.forEach(c => {
+        c.minCrossDepthForOri = minDepthFound;
+        c.shortestPureCrossAlg = shortestPureCrossAlg;
+        candidates.push(c);
+      });
     }
 
     progBar.style.width = '100%';
-    await new Promise(r => setTimeout(r, 40));
+    await new Promise(r => setTimeout(r, 35));
     if (myToken !== activeSearchToken) return null;
 
     loadingBox.classList.add('hidden');
@@ -1139,6 +1464,13 @@
       const key = c.holdBadge + ':' + c.moves.join(' ');
       if (!seen.has(key)) {
         seen.add(key);
+        c.stepExplanations = analyzeSolutionSteps(
+          c.startState,
+          c.moves,
+          c.dCol,
+          c.pairInfo.pairDesc,
+          c.shortestPureCrossAlg
+        );
         unique.push(c);
         if (unique.length >= 12) break;
       }
@@ -1150,13 +1482,14 @@
   }
 
   // =========================================================================
-  // 4. APPLICATION STATE & 3D TARGET PAIR GLOW HIGHLIGHTING
+  // 4. APPLICATION STATE, 3D PAIR GLOW & TACTICAL EXPLANATION UI
   // =========================================================================
   let currentBaseStickers = createSolvedStickers();
   let paintedStickers = createSolvedStickers();
   let activeBrushColor = 'W';
   let targetCrossMode = 'W';
   let maskMode = 'full';
+  let explainVisible = true;
 
   let currentSolutions = [];
   let selectedSolution = null;
@@ -1301,6 +1634,8 @@
     playbackTimeline.push({
       label: '起點 (標準白頂綠前)',
       isHold: false,
+      isPairSetup: false,
+      explainObj: null,
       state: curState.slice(),
       desc: 'Step 0：原始打亂起點（與 2D 展開圖 100% 同步）'
     });
@@ -1310,6 +1645,11 @@
       playbackTimeline.push({
         label: `拿法：${selectedSolution.shortHold}`,
         isHold: true,
+        isPairSetup: false,
+        explainObj: {
+          roleLabel: '🧭 預判擺放',
+          explanation: `先將魔方擺成【${selectedSolution.holdBadge}】，接下來的所有轉動都以這個方向為準。`
+        },
         state: curState.slice(),
         desc: `預判擺放：${selectedSolution.holdBadge}`
       });
@@ -1317,11 +1657,15 @@
 
     selectedSolution.moves.forEach((mv, idx) => {
       curState = applyMoveToStickers(curState, mv);
+      const expObj = selectedSolution.stepExplanations ? selectedSolution.stepExplanations[idx] : null;
+      const isPairOnly = expObj && expObj.roleType === 'pair-only';
       playbackTimeline.push({
-        label: mv,
+        label: isPairOnly ? `🎯 ${mv}` : mv,
         isHold: false,
+        isPairSetup: isPairOnly,
+        explainObj: expObj,
         state: curState.slice(),
-        desc: `第 ${idx + 1} 步：執行 ${mv} （${selectedSolution.shortHold}）`
+        desc: `第 ${idx + 1} 步：${mv} — ${expObj ? expObj.roleLabel : ''}`
       });
     });
 
@@ -1330,17 +1674,55 @@
       ? `目標 Pair：${pDesc.text}`
       : selectedSolution.pairInfo.badge;
 
+    // Render move pills
     const track = document.getElementById('movesTrack');
     track.innerHTML = '';
     playbackTimeline.forEach((step, idx) => {
       const pill = document.createElement('span');
-      pill.className = 'move-pill' + (step.isHold ? ' hold-pill' : '');
+      let cls = 'move-pill';
+      if (step.isHold) cls += ' hold-pill';
+      if (step.isPairSetup) cls += ' pair-setup-pill';
+      pill.className = cls;
       pill.textContent = step.label;
+      pill.title = step.explainObj ? step.explainObj.explanation : step.desc;
       pill.addEventListener('click', () => goToStep(idx));
       track.appendChild(pill);
     });
 
+    // Render Tactical Explanation List
+    renderExplanationPanel(selectedSolution);
+
     goToStep(0);
+  }
+
+  function renderExplanationPanel(sol) {
+    const listEl = document.getElementById('explainList');
+    const summaryTag = document.getElementById('explainSummaryTag');
+    listEl.innerHTML = '';
+
+    if (!sol || !sol.stepExplanations) return;
+
+    const extraSteps = sol.stepCount - sol.minCrossDepthForOri;
+    if (extraSteps > 0 && sol.pairInfo.tier > 0) {
+      summaryTag.textContent = `比純十字 (${sol.minCrossDepthForOri}步: ${sol.shortestPureCrossAlg}) 多投資 ${extraSteps} 步以換取 ${sol.pairInfo.badge}`;
+    } else {
+      summaryTag.textContent = `與純十字最短步數相同 (${sol.stepCount}步)，零額外步數順手完成！`;
+    }
+
+    const offset = sol.rotAlg.length > 0 ? 2 : 1; // Timeline index offset for move 0
+    sol.stepExplanations.forEach((exp, idx) => {
+      const timelineIdx = idx + offset;
+      const row = document.createElement('div');
+      row.className = 'explain-row';
+      row.setAttribute('data-timeline-idx', timelineIdx);
+      row.innerHTML = `
+        <div class="explain-move-code">${exp.stepNumber}. ${exp.move}</div>
+        <div class="role-badge ${exp.roleClass}">${exp.roleLabel}</div>
+        <div style="color:#cbd5e1;line-height:1.4;">${exp.explanation}</div>
+      `;
+      row.addEventListener('click', () => goToStep(timelineIdx));
+      listEl.appendChild(row);
+    });
   }
 
   function goToStep(idx) {
@@ -1357,6 +1739,19 @@
 
     const pills = document.querySelectorAll('#movesTrack .move-pill');
     pills.forEach((p, i) => p.classList.toggle('active', i === currentStepIdx));
+
+    // Update Spotlight & active row in Explanation Panel
+    const spotlight = document.getElementById('explainSpotlight');
+    if (step.explainObj) {
+      spotlight.innerHTML = `<strong style="color:#93c5fd;">[${step.label}] ${step.explainObj.roleLabel}：</strong>${step.explainObj.explanation}`;
+    } else {
+      spotlight.innerHTML = `<strong style="color:#93c5fd;">[起點 Step 0]：</strong>原始打亂狀態（白頂綠前）。點選下一步或下方任一步驟查看戰術作用。`;
+    }
+
+    document.querySelectorAll('#explainList .explain-row').forEach(row => {
+      const tIdx = parseInt(row.getAttribute('data-timeline-idx'), 10);
+      row.classList.toggle('active-step', tIdx === currentStepIdx);
+    });
   }
 
   function stopAutoPlay() {
@@ -1391,8 +1786,21 @@
     currentSolutions.forEach((sol, idx) => {
       const card = document.createElement('div');
       card.className = 'sol-card' + (idx === 0 ? ' selected' : '');
-      const movesStr = sol.moves.length ? sol.moves.join(' ') : '(已還原)';
+
+      // Highlight pure pair-setup moves in purple inside the card's algorithm display
+      const formattedMoves = sol.moves.map((mv, mIdx) => {
+        const exp = sol.stepExplanations ? sol.stepExplanations[mIdx] : null;
+        if (exp && exp.roleType === 'pair-only') {
+          return `<span style="color:#d8b4fe;text-decoration:underline dotted;" title="${exp.explanation}">🎯${mv}</span>`;
+        }
+        return mv;
+      }).join(' ');
+
       const pairPillHtml = buildPairBadgeHTML(sol.pairInfo.pairDesc);
+      const extraSteps = sol.stepCount - sol.minCrossDepthForOri;
+      const pureCrossCompareHtml = (extraSteps > 0 && sol.pairInfo.tier > 0)
+        ? `<div class="pure-cross-hint">💡 若只做純十字僅需 ${sol.minCrossDepthForOri} 步：<code>${sol.shortestPureCrossAlg}</code>（多 1 步 🎯 為保 Pair 走位）</div>`
+        : '';
 
       card.innerHTML = `
         <div class="sol-top">
@@ -1402,8 +1810,9 @@
           </div>
           <span style="font-size:0.78rem;font-weight:700;color:#93c5fd;">${sol.stepCount} 步 · 順手度 ${sol.ergo}</span>
         </div>
-        <div class="sol-alg">${movesStr}</div>
+        <div class="sol-alg">${formattedMoves || '(已還原)'}</div>
         ${pairPillHtml}
+        ${pureCrossCompareHtml}
         <div class="sol-meta">${sol.pairInfo.continuation}</div>
       `;
       card.addEventListener('click', () => selectSolution(idx));
@@ -1468,6 +1877,15 @@
   document.getElementById('btnDemoXCross').addEventListener('click', () => {
     document.getElementById('scrambleInput').value = "z2 R U' R' D' F' R' D2 z2";
     runScrambleAnalysis();
+  });
+
+  document.getElementById('btnToggleExplain').addEventListener('click', () => {
+    explainVisible = !explainVisible;
+    const btn = document.getElementById('btnToggleExplain');
+    const panel = document.getElementById('explainPanel');
+    btn.classList.toggle('active', explainVisible);
+    btn.textContent = explainVisible ? '💡 逐步戰術解析：開啟' : '💡 逐步戰術解析：隱藏';
+    panel.classList.toggle('hidden', !explainVisible);
   });
 
   document.querySelectorAll('.cross-color-btn').forEach(btn => {
