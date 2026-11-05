@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Better Cross—最佳的十字解法</title>
+  <title>CubeFlow Pro — 3x3 Cross & X-Cross 最佳解分析器</title>
   <style>
     :root {
       --bg: #0b101e;
@@ -450,7 +450,8 @@
 
 <header>
   <div class="brand">
-    <span>🧊 Better Cross</span>
+    <span>🧊 CubeFlow Pro</span>
+    <span class="badge">≤ 8步 CROSS & X-CROSS / PAIR 引擎</span>
   </div>
   <div class="tabs">
     <button type="button" class="tab-btn active" id="tabBtnScramble">公式打亂輸入</button>
@@ -594,6 +595,10 @@
     W: '白', Y: '黃', G: '綠', B: '藍', O: '橘', R: '紅'
   };
 
+  const COLOR_EMOJI = {
+    W: '⚪', Y: '🟡', G: '🟩', B: '🟦', O: '🟧', R: '🟥'
+  };
+
   const STICKER_DEFS = [];
   function buildStickerDefs() {
     for (let r = 0; r < 3; r++) {
@@ -659,7 +664,6 @@
     COORD_TO_STICKER.set(key, s.id);
   });
 
-  // Group sticker indices by their cubie coordinate (x,y,z) so we can identify pieces accurately
   const CUBIE_GROUPS = [];
   const cubieMap = new Map();
   STICKER_DEFS.forEach(s => {
@@ -827,7 +831,7 @@
   })();
 
   // =========================================================================
-  // 3. FAST IDA* SOLVER WITH PRUNING & F2L PAIR COLOR IDENTIFICATION
+  // 3. FAST IDA* SOLVER WITH DYNAMIC CENTER-COLOR ORIENTATION LABELS
   // =========================================================================
   const SOLVER_MOVES = [
     'U', "U'", 'U2',
@@ -871,9 +875,6 @@
     return bad;
   }
 
-  // Tighter admissible heuristic for D-Cross:
-  // Any cross edge sticker currently on U face (indices 0..8) needs at least 1 move to reach D;
-  // Also count how many D-layer positions are missing the D color.
   function estimateCrossMinMoves(state, badCount) {
     if (badCount === 0) return 0;
     const dCol = state[49];
@@ -882,9 +883,7 @@
       const [dIdx] = CROSS_EDGE_STICKERS[i];
       if (state[dIdx] !== dCol) notInDLayer++;
     }
-    // One move of F/R/B/L can put at most 1 edge into D layer (2 only if U/D doesn't change D layer count)
-    // And 1 move of D can fix up to 4 already-in-D-layer edges.
-    if (notInDLayer === 0) return 1; // At least a D turn or flip
+    if (notInDLayer === 0) return 1;
     return notInDLayer;
   }
 
@@ -924,7 +923,6 @@
     { moves: ['U2'], str: 'U2 ' }
   ];
 
-  // Build human-readable Pair Color description (e.g. "白-綠-紅 Pair [右前 FR 槽]")
   function describePairColors(state, slotIdx) {
     if (slotIdx < 0 || slotIdx > 3) return null;
     const sl = F2L_SLOTS[slotIdx];
@@ -1010,58 +1008,37 @@
     return Math.max(40, score);
   }
 
-  // Convert whole-cube rotation into intuitive "Which face is on Bottom & Front"
+  // DYNAMICALLY compute the exact D-center (index 49) and F-center (index 22) colors
+  // after applying `rotAlg` to a solved cube! Never hardcode strings so it can NEVER mismatch!
   function getHoldOrientationList(targetMode) {
-    const list = [];
-    // Standard WCA starts with U=White, D=Yellow, F=Green, R=Red, B=Blue, L=Orange
+    const rawRots = [];
     if (targetMode === 'W' || targetMode === 'DUAL') {
-      list.push({
-        rotAlg: ['z2'],
-        holdBadge: '⚪ 白底 · 🟩 綠面朝前 (F=綠)',
-        shortHold: '白底·綠前 (F=綠)'
-      });
-      list.push({
-        rotAlg: ['z2', 'y'],
-        holdBadge: '⚪ 白底 · 🟥 紅面朝前 (F=紅)',
-        shortHold: '白底·紅前 (F=紅)'
-      });
-      list.push({
-        rotAlg: ['z2', "y'"],
-        holdBadge: '⚪ 白底 · 🟧 橘面朝前 (F=橘)',
-        shortHold: '白底·橘前 (F=橘)'
-      });
-      list.push({
-        rotAlg: ['z2', 'y2'],
-        holdBadge: '⚪ 白底 · 🟦 藍面朝前 (F=藍)',
-        shortHold: '白底·藍前 (F=藍)'
-      });
+      rawRots.push(['z2'], ['z2', 'y'], ['z2', "y'"], ['z2', 'y2']);
     }
     if (targetMode === 'Y' || targetMode === 'DUAL') {
-      list.push({
-        rotAlg: [],
-        holdBadge: '🟡 黃底 · 🟩 綠面朝前 (F=綠)',
-        shortHold: '黃底·綠前 (F=綠)'
-      });
-      list.push({
-        rotAlg: ['y'],
-        holdBadge: '🟡 黃底 · 🟥 紅面朝前 (F=紅)',
-        shortHold: '黃底·紅前 (F=紅)'
-      });
-      list.push({
-        rotAlg: ["y'"],
-        holdBadge: '🟡 黃底 · 🟧 橘面朝前 (F=橘)',
-        shortHold: '黃底·橘前 (F=橘)'
-      });
-      list.push({
-        rotAlg: ['y2'],
-        holdBadge: '🟡 黃底 · 🟦 藍面朝前 (F=藍)',
-        shortHold: '黃底·藍前 (F=藍)'
-      });
+      rawRots.push([], ['y'], ["y'"], ['y2']);
     }
-    return list;
+
+    const baseSolved = createSolvedStickers();
+    return rawRots.map(rotAlg => {
+      const rotated = applyAlgToStickers(baseSolved, rotAlg);
+      const dCol = rotated[49]; // Actual D face center color
+      const fCol = rotated[22]; // Actual F face center color
+      const dName = COLOR_NAMES_TW[dCol];
+      const fName = COLOR_NAMES_TW[fCol];
+      const dEmoji = COLOR_EMOJI[dCol];
+      const fEmoji = COLOR_EMOJI[fCol];
+
+      return {
+        rotAlg,
+        dCol,
+        fCol,
+        holdBadge: `${dEmoji} ${dName}底 · ${fEmoji} ${fName}面朝前 (F=${fName})`,
+        shortHold: `${dName}底·${fName}前 (F=${fName})`
+      };
+    });
   }
 
-  // Asynchronous Chunked Solver with Real-time Progress Bar
   let activeSearchToken = 0;
 
   async function findBestSolutionsAsync(baseStickers, targetMode) {
@@ -1081,7 +1058,7 @@
     const t0 = performance.now();
 
     for (let idx = 0; idx < orientations.length; idx++) {
-      if (myToken !== activeSearchToken) return null; // Cancelled by newer search
+      if (myToken !== activeSearchToken) return null;
 
       const ori = orientations[idx];
       const pct = Math.round(((idx) / orientations.length) * 100);
@@ -1089,7 +1066,6 @@
       stageTitle.textContent = `正在計算：${ori.holdBadge}`;
       subText.textContent = `已完成 ${idx} / ${orientations.length} 種拿法角度 (${pct}%)`;
 
-      // Yield to browser UI thread so spinner & progress bar animate smoothly!
       await new Promise(r => setTimeout(r, 12));
       if (myToken !== activeSearchToken) return null;
 
@@ -1110,6 +1086,8 @@
           candidates.push({
             holdBadge: ori.holdBadge,
             shortHold: ori.shortHold,
+            dCol: ori.dCol,
+            fCol: ori.fCol,
             rotAlg: ori.rotAlg,
             moves: movesCopy,
             stepCount: movesCopy.length,
@@ -1122,7 +1100,6 @@
 
         const rem = maxDepth - depth;
         if (rem <= 0) return;
-        // Admissible pruning bound:
         const minNeeded = estimateCrossMinMoves(state, bad);
         if (minNeeded > rem) return;
 
@@ -1187,7 +1164,6 @@
   let currentStepIdx = 0;
   let playInterval = null;
 
-  // Check if a cubie (by its sticker colors in `stickers54`) is one of the 2 pieces of `pairDesc`
   function isCubiePartOfTargetPair(cubieStickerIds, stickers54, pairDesc) {
     if (!pairDesc) return false;
     const cols = cubieStickerIds.map(id => stickers54[id]).sort().join('');
@@ -1208,7 +1184,6 @@
   }
 
   function render3DStickers(stickers54, pairDesc = null, targetDColor = 'W') {
-    // Classify each of the 26 outer cubies
     CUBIE_GROUPS.forEach(grp => {
       const isCenter = (grp.stickerIds.length === 1);
       const isPairPiece = isCubiePartOfTargetPair(grp.stickerIds, stickers54, pairDesc);
@@ -1234,7 +1209,6 @@
     });
   }
 
-  // Build 2D Unfolded Net DOM
   const cubeNetGrid = document.getElementById('cubeNetGrid');
   const NET_DOM_CELLS = new Array(54);
 
@@ -1373,7 +1347,7 @@
     if (!playbackTimeline.length) return;
     currentStepIdx = Math.max(0, Math.min(playbackTimeline.length - 1, idx));
     const step = playbackTimeline[currentStepIdx];
-    const targetCol = (selectedSolution && selectedSolution.holdBadge.includes('黃底')) ? 'Y' : 'W';
+    const targetCol = selectedSolution ? selectedSolution.dCol : 'W';
     const pairDesc = selectedSolution ? selectedSolution.pairInfo.pairDesc : null;
 
     render3DStickers(step.state, pairDesc, targetCol);
